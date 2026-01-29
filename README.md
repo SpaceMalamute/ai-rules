@@ -1,115 +1,157 @@
 # Claude Code Configurations
 
-Boilerplate de configurations Claude Code par technologie.
+Boilerplate Claude Code configurations by technology.
 
 ## Structure
 
 ```
 ai/
-├── angular/                    # Config Angular 21 + Nx + NgRx
-│   ├── CLAUDE.md               # Instructions principales
+├── angular/                    # Angular 21 + Nx + NgRx
+│   ├── CLAUDE.md
 │   └── .claude/
-│       ├── settings.json       # Permissions Nx
+│       ├── settings.json
 │       └── rules/
-│           ├── components.md   # Smart/Dumb, signals, OnPush
-│           ├── state.md        # NgRx, entity adapter, effects
-│           └── testing.md      # Vitest, marble, Playwright
+│           ├── components.md
+│           ├── state.md
+│           └── testing.md
 │
-├── _shared/                    # Conventions communes (toutes technos)
-│   ├── CLAUDE.md               # Git, TypeScript, code quality
+├── next/                     # Next.js 15 + React 19 + Nx
+│   ├── CLAUDE.md
+│   └── .claude/
+│       ├── settings.json
+│       └── rules/
+│           ├── components.md
+│           ├── testing.md
+│           └── state/          # Choose one
+│               ├── zustand.md
+│               └── redux-toolkit.md
+│
+├── _shared/                    # Common conventions
+│   ├── CLAUDE.md
 │   └── .claude/
 │       └── skills/
-│           └── learning/       # Skill pédagogique
+│           └── learning/
 │               └── SKILL.md
 │
-└── README.md                   # Ce fichier
+├── CLAUDE.md                   # Repository instructions
+└── README.md                   # This file
 ```
 
-## Utilisation
+## Usage
 
-### 1. Copier la config dans ton projet
+### 1. Copy config to your project
 
 ```bash
-# Pour un projet Angular
-cp -r angular/.claude /chemin/vers/ton/projet/
-cp angular/CLAUDE.md /chemin/vers/ton/projet/
+# For an Angular project
+cp -r angular/.claude /path/to/your/project/
+cp angular/CLAUDE.md /path/to/your/project/
 
-# Copier aussi le shared (importé automatiquement via @../_shared/CLAUDE.md)
-# OU fusionner le contenu dans ton CLAUDE.md
+# Also copy shared (or merge content into your CLAUDE.md)
+cp -r _shared/.claude/skills /path/to/your/project/.claude/
 ```
 
-### 2. Adapter le CLAUDE.md
+### 2. Adapt CLAUDE.md
 
-Le fichier `CLAUDE.md` importe le shared via :
+The `CLAUDE.md` file imports shared conventions via:
 
 ```markdown
-@../_shared/CLAUDE.md
+@../\_shared/CLAUDE.md
 ```
 
-Si tu copies dans un projet isolé, remplace cette ligne par le contenu de `_shared/CLAUDE.md` directement.
+If copying to a standalone project, replace this line with the content of `_shared/CLAUDE.md` directly.
 
-### 3. Personnaliser
+### 3. Customize
 
-- **Préfixe composants** : modifier `app-` dans les règles
-- **Commandes** : ajuster les scripts npm/nx selon ton projet
-- **Permissions** : éditer `.claude/settings.json`
+- **Component prefix**: modify `app-` in rules
+- **Commands**: adjust npm/nx scripts for your project
+- **Permissions**: edit `.claude/settings.json`
 
-## Skills disponibles
+## Available Skills
 
-### `/learning` - Mode apprentissage
+### `/learning` - Learning Mode
 
-Active un mode pédagogique où Claude :
-- Explique avant d'implémenter
-- Attend ta validation
-- Source toutes les décisions (docs officielles)
-- Montre les alternatives
+Activates a pedagogical coding mode where Claude:
 
-**Usage** :
+- Explains before implementing
+- Waits for your validation
+- Sources all decisions (official docs)
+- Shows alternatives
+
+**Usage**:
+
 ```
-/learning           # Mode général
-/learning nextjs    # Focalisé sur Next.js
-/learning vue       # Focalisé sur Vue
+/learning           # General mode
+/learning next    # Focused on Next.js
+/learning vue       # Focused on Vue
 ```
 
-**Désactivation** : `exit learning mode` ou `mode normal`
+**Deactivation**: `exit learning mode` or `normal mode`
 
-Pour utiliser cette skill dans un projet :
+To use this skill in a project:
+
 ```bash
-cp -r _shared/.claude/skills /chemin/vers/ton/projet/.claude/
+cp -r _shared/.claude/skills /path/to/your/project/.claude/
 ```
 
-## Règles communes (`_shared/CLAUDE.md`)
+## Shared Conventions (`_shared/CLAUDE.md`)
 
-| Règle | Description |
-|-------|-------------|
-| Nommage explicite | Pas de `c`, `x`, `tmp` - noms descriptifs |
-| Pas de lint disable | Sauf avec justification + ticket |
-| Conventional commits | `feat:`, `fix:`, `refactor:`, etc. |
-| TypeScript strict | Pas de `any`, types explicites |
-| Code auto-documenté | Commentaires = "pourquoi", pas "quoi" |
+| Rule                  | Description                                |
+| --------------------- | ------------------------------------------ |
+| Explicit naming       | No `c`, `x`, `tmp` - use descriptive names |
+| No lint disable       | Unless with justification + ticket         |
+| Conventional commits  | `feat:`, `fix:`, `refactor:`, etc.         |
+| TypeScript strict     | No `any`, explicit types                   |
+| Self-documenting code | Comments = "why", not "what"               |
 
-## Angular - Points clés
+## Angular - Key Points
 
-| Aspect | Convention |
-|--------|------------|
-| Components | `standalone` par défaut (ne pas ajouter) |
-| Templates | Toujours dans fichiers `.html` séparés |
-| Inputs/Outputs | `input()`, `output()`, `model()` - pas de decorators |
-| Change Detection | `OnPush` obligatoire |
-| State | NgRx + Entity Adapter + Functional Effects |
-| Tests RxJS | Marble testing uniquement (pas de `.subscribe()`) |
-| Tests E2E | Playwright |
+| Aspect           | Convention                                        |
+| ---------------- | ------------------------------------------------- |
+| Components       | `standalone` by default (don't add it)            |
+| Templates        | Always in separate `.html` files                  |
+| Inputs/Outputs   | `input()`, `output()`, `model()` - not decorators |
+| Change Detection | `OnPush` required                                 |
+| State            | NgRx + Entity Adapter + Functional Effects        |
+| RxJS Tests       | Marble testing only (no `.subscribe()`)           |
+| E2E Tests        | Playwright                                        |
 
-## Ajouter une nouvelle techno
+## Next.js - Key Points
 
-1. Créer le dossier : `mkdir -p nouvelle-techno/.claude/rules`
-2. Créer `nouvelle-techno/CLAUDE.md` avec `@../_shared/CLAUDE.md` en haut
-3. Ajouter les règles spécifiques dans `.claude/rules/`
-4. Optionnel : `.claude/settings.json` pour les permissions
+| Aspect            | Convention                       |
+| ----------------- | -------------------------------- |
+| Components        | Server Components by default     |
+| Client Components | Add `'use client'` directive     |
+| Data Fetching     | Server Components with `fetch()` |
+| Mutations         | Server Actions                   |
+| State (simple)    | Zustand                          |
+| State (complex)   | Redux Toolkit                    |
+| Tests             | Vitest/Jest + Testing Library    |
+| E2E Tests         | Playwright                       |
 
-## Todo
+### State Management
 
-- [ ] Next.js (App Router, Server Components)
+Copy only the state manager you need:
+
+```bash
+# For Zustand (small/medium projects)
+cp next/.claude/rules/state/zustand.md /your/project/.claude/rules/
+
+# For Redux Toolkit (large projects)
+cp next/.claude/rules/state/redux-toolkit.md /your/project/.claude/rules/
+```
+
+## Adding a New Technology
+
+1. Create folder: `mkdir -p [tech]/.claude/rules`
+2. Create `[tech]/CLAUDE.md` with `@../_shared/CLAUDE.md` import
+3. Add technology-specific rules in `.claude/rules/`
+4. Optional: `.claude/settings.json` for permissions
+5. Update this README
+
+## Roadmap
+
+- [x] Angular (Angular 21 + Nx + NgRx)
+- [x] Next.js (App Router, Server Components, Zustand/Redux)
 - [ ] Vue 3 (Composition API, Pinia)
 - [ ] NestJS (backend)
 - [ ] React (Vite, Zustand/Jotai)

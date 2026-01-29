@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nx serve *)",
+      "Bash(nx dev *)",
+      "Bash(nx build *)",
+      "Bash(nx test *)",
+      "Bash(nx lint *)",
+      "Bash(nx run-many *)",
+      "Bash(nx affected *)",
+      "Bash(nx g *)",
+      "Bash(nx generate *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npm ci)",
+      "Bash(npx nx *)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(nx reset)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)"
+    ]
+  }
+}
