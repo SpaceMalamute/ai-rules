@@ -81,19 +81,20 @@ form.controls.name();  // ''
 form.valid();        // boolean signal
 ```
 
-### Standalone Components Only
+### Standalone Components (Default)
 
 - No NgModules for components
-- Use `standalone: true` (default in Angular 21)
+- `standalone: true` is the default - don't add it
 - Import dependencies directly in component
+- Always use separate template files (`.html`)
 
 ```typescript
 @Component({
   selector: 'app-example',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `...`
+  templateUrl: './example.component.html',
+  styleUrl: './example.component.scss',
 })
 export class ExampleComponent {}
 ```
@@ -110,6 +111,23 @@ export class MyComponent {
 // Avoid constructor injection
 ```
 
+### Signal Inputs/Outputs (not decorators)
+
+```typescript
+// Inputs - use input() function, NOT @Input() decorator
+name = input<string>();              // Optional
+name = input('default');             // With default
+name = input.required<string>();     // Required
+
+// Outputs - use output() function, NOT @Output() decorator
+clicked = output<void>();
+selected = output<Item>();
+
+// Two-way binding - use model() function
+value = model<string>('');           // Creates input + output pair
+value = model.required<string>();    // Required two-way binding
+```
+
 ## Component Architecture
 
 ### Smart Components (feature/)
@@ -120,17 +138,12 @@ export class MyComponent {
 - Pass data to UI components via inputs
 
 ```typescript
+// user-list-page.component.ts
 @Component({
   selector: 'app-user-list-page',
-  standalone: true,
   imports: [UserListComponent],
-  template: `
-    <app-user-list
-      [users]="users()"
-      [loading]="loading()"
-      (userSelected)="onUserSelect($event)"
-    />
-  `
+  templateUrl: './user-list-page.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserListPageComponent {
   private readonly store = inject(Store);
@@ -144,6 +157,15 @@ export class UserListPageComponent {
 }
 ```
 
+```html
+<!-- user-list-page.component.html -->
+<app-user-list
+  [users]="users()"
+  [loading]="loading()"
+  (userSelected)="onUserSelect($event)"
+/>
+```
+
 ### UI Components (ui/)
 
 - Located in `ui/` libs
@@ -152,21 +174,28 @@ export class UserListPageComponent {
 - Fully presentational
 
 ```typescript
+// user-list.component.ts
 @Component({
   selector: 'app-user-list',
-  standalone: true,
-  imports: [CommonModule],
+  templateUrl: './user-list.component.html',
+  styleUrl: './user-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    @for (user of users(); track user.id) {
-      <div (click)="userSelected.emit(user)">{{ user.name }}</div>
-    }
-  `
 })
 export class UserListComponent {
   users = input.required<User[]>();
   loading = input(false);
   userSelected = output<User>();
+}
+```
+
+```html
+<!-- user-list.component.html -->
+@for (user of users(); track user.id) {
+  <div class="user-item" (click)="userSelected.emit(user)">
+    {{ user.name }}
+  </div>
+} @empty {
+  <p>No users found</p>
 }
 ```
 

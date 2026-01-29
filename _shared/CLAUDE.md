@@ -119,6 +119,8 @@ function getUser(id: string) {
 - Deep nesting (max 3 levels)
 - Long functions (max ~50 lines)
 - Commented-out code
+- Useless comments (code should be self-documenting)
+- Cryptic variable names (`c`, `x`, `tmp`, `data`)
 
 ### Prefer
 
@@ -127,6 +129,32 @@ function getUser(id: string) {
 - Single responsibility principle
 - Composition over inheritance
 - Immutable data patterns
+
+### Naming - Be Explicit
+
+```typescript
+// BAD
+const c = getConfig();
+users.filter(u => u.a);
+const handleClick = (e) => { ... };
+
+// GOOD
+const appConfig = getConfig();
+users.filter(user => user.isActive);
+const handleUserSelection = (event: MouseEvent) => { ... };
+```
+
+### Lint Rules - Never Disable Without Justification
+
+```typescript
+// FORBIDDEN
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const data: any = response;
+
+// ONLY IF ABSOLUTELY NECESSARY - with explicit reason
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API returns untyped, see ticket TECH-456
+const legacyData: any = legacyApi.fetch();
+```
 
 ## Documentation
 

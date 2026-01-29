@@ -2,6 +2,7 @@
 paths:
   - "**/*.spec.ts"
   - "**/*.test.ts"
+  - "**/*.e2e.ts"
 ---
 
 # Testing Guidelines
@@ -9,8 +10,44 @@ paths:
 ## Framework
 
 - **Vitest** (preferred for Angular 21+)
+- **Playwright** for E2E testing
 - Jest as fallback when required
-- Follow framework recommendations
+
+## Critical Rules
+
+### No `.subscribe()` for RxJS Testing
+
+Never use `.subscribe()` for testing RxJS streams (services, effects, observables). Always use `TestScheduler` with marble testing.
+
+```typescript
+// FORBIDDEN - async callback hell
+it('should load users', (done) => {
+  service.getUsers().subscribe(users => {
+    expect(users.length).toBe(2);
+    done();
+  });
+});
+
+// FORBIDDEN - fakeAsync with subscribe
+it('should load users', fakeAsync(() => {
+  let result: User[];
+  service.getUsers().subscribe(users => result = users);
+  tick();
+  expect(result.length).toBe(2);
+}));
+
+// CORRECT - marble testing with TestScheduler
+it('should load users', () => {
+  testScheduler.run(({ cold, expectObservable }) => {
+    const users = [{ id: '1' }, { id: '2' }];
+    jest.spyOn(service, 'getUsers').mockReturnValue(cold('--a|', { a: users }));
+
+    expectObservable(service.getUsers()).toBe('--a|', { a: users });
+  });
+});
+```
+
+**Exception**: Component `output()` testing uses `.subscribe()` because OutputEmitterRef is event-based, not RxJS stream-based.
 
 ## Test File Structure
 
@@ -25,11 +62,10 @@ __tests__/
 
 ## Component Testing (Zoneless)
 
-Angular 21 is zoneless - tests must not rely on zone.js:
+Angular 21 is zoneless by default - tests must not rely on zone.js:
 
 ```typescript
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideExperimentalZonelessChangeDetection } from '@angular/core';
 
 describe('UserListComponent', () => {
   let component: UserListComponent;
@@ -38,9 +74,7 @@ describe('UserListComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [UserListComponent],
-      providers: [
-        provideExperimentalZonelessChangeDetection(),
-      ],
+      // No need for provideZonelessChangeDetection() - it's the default in Angular 21
     }).compileComponents();
 
     fixture = TestBed.createComponent(UserListComponent);
@@ -54,7 +88,7 @@ describe('UserListComponent', () => {
       { id: '2', name: 'Jane' },
     ]);
 
-    // Trigger change detection manually (zoneless)
+    // Use whenStable() instead of detectChanges() for zoneless
     await fixture.whenStable();
 
     const items = fixture.nativeElement.querySelectorAll('.user-item');
@@ -63,15 +97,37 @@ describe('UserListComponent', () => {
 
   it('should emit on user click', async () => {
     const spy = vi.fn();
-    component.userSelected.subscribe(spy);
+
+    // Subscribe to output signal
+    const subscription = component.userSelected.subscribe(spy);
 
     fixture.componentRef.setInput('users', [{ id: '1', name: 'John' }]);
     await fixture.whenStable();
 
     fixture.nativeElement.querySelector('.user-item').click();
+    await fixture.whenStable();
+
     expect(spy).toHaveBeenCalledWith({ id: '1', name: 'John' });
+    subscription.unsubscribe();
   });
 });
+```
+
+### Key Testing Patterns for Zoneless
+
+```typescript
+// Use whenStable() instead of detectChanges()
+await fixture.whenStable();
+
+// For signal inputs
+fixture.componentRef.setInput('inputName', value);
+
+// For checking signal values directly
+expect(component.mySignal()).toBe(expectedValue);
+
+// For outputs (OutputEmitterRef)
+const spy = vi.fn();
+component.myOutput.subscribe(spy);
 ```
 
 ## Service Mocking with createSpyFromClass
@@ -257,9 +313,110 @@ describe('FeatureName', () => {
 });
 ```
 
+## E2E Testing with Playwright
+
+Prefer Playwright for E2E tests when possible.
+
+### Setup
+
+```typescript
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  use: {
+    baseURL: 'http://localhost:4200',
+    trace: 'on-first-retry',
+  },
+  webServer: {
+    command: 'nx serve app-name',
+    url: 'http://localhost:4200',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+### E2E Test Example
+
+```typescript
+// e2e/user-flow.e2e.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('User Management', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/users');
+  });
+
+  test('should display user list', async ({ page }) => {
+    await expect(page.getByTestId('user-list')).toBeVisible();
+    await expect(page.getByTestId('user-item')).toHaveCount(3);
+  });
+
+  test('should filter users by name', async ({ page }) => {
+    await page.getByPlaceholder('Search users').fill('John');
+    await expect(page.getByTestId('user-item')).toHaveCount(1);
+    await expect(page.getByText('John Doe')).toBeVisible();
+  });
+
+  test('should navigate to user details', async ({ page }) => {
+    await page.getByTestId('user-item').first().click();
+    await expect(page).toHaveURL(/\/users\/\d+/);
+    await expect(page.getByTestId('user-details')).toBeVisible();
+  });
+});
+```
+
+### Page Object Pattern
+
+```typescript
+// e2e/pages/user-list.page.ts
+import { Page, Locator } from '@playwright/test';
+
+export class UserListPage {
+  readonly page: Page;
+  readonly searchInput: Locator;
+  readonly userItems: Locator;
+  readonly addUserButton: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.searchInput = page.getByPlaceholder('Search users');
+    this.userItems = page.getByTestId('user-item');
+    this.addUserButton = page.getByRole('button', { name: 'Add User' });
+  }
+
+  async goto(): Promise<void> {
+    await this.page.goto('/users');
+  }
+
+  async searchUser(name: string): Promise<void> {
+    await this.searchInput.fill(name);
+  }
+
+  async selectUser(index: number): Promise<void> {
+    await this.userItems.nth(index).click();
+  }
+}
+```
+
+### Commands
+
+```bash
+# Run E2E tests
+nx e2e app-name-e2e
+
+# Run with UI mode
+nx e2e app-name-e2e --ui
+
+# Run specific test file
+nx e2e app-name-e2e --grep "User Management"
+```
+
 ## Coverage Expectations
 
 - Aim for >80% coverage on business logic
 - 100% coverage on reducers and selectors
-- Effects: test success and error paths
+- Effects: test success and error paths (with marble)
 - UI components: test inputs, outputs, rendering
+- E2E: critical user flows
