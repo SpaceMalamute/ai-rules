@@ -1,7 +1,10 @@
 ---
 paths:
-  - "**/*.ts"
-  - "**/*.html"
+  - "**/*.component.ts"
+  - "**/*.component.html"
+  - "**/*.store.ts"
+  - "**/+state/**/*.ts"
+  - "**/data-access/**/*.ts"
 ---
 
 # Angular Signals & Reactivity

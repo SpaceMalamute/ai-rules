@@ -2,8 +2,9 @@
 paths:
   - "**/app.config.ts"
   - "**/app.config.server.ts"
+  - "**/app.routes.server.ts"
   - "**/server.ts"
-  - "**/*.component.ts"
+  - "**/main.server.ts"
 ---
 
 # Angular SSR & Hydration

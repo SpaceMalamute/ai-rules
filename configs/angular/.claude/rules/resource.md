@@ -1,8 +1,9 @@
 ---
 paths:
   - "**/*.component.ts"
-  - "**/*.ts"
+  - "**/*.store.ts"
   - "**/services/**/*.ts"
+  - "**/data-access/**/*.ts"
 ---
 
 # Angular Resource API

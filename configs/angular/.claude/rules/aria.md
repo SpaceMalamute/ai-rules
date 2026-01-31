@@ -1,8 +1,10 @@
 ---
 paths:
-  - "**/*.component.ts"
-  - "**/*.component.html"
-  - "**/ui/**/*.ts"
+  - "**/ui/**/*.component.ts"
+  - "**/ui/**/*.component.html"
+  - "**/shared/ui/**/*.ts"
+  - "**/*-dialog.component.ts"
+  - "**/*-modal.component.ts"
 ---
 
 # Angular ARIA (Accessibility)

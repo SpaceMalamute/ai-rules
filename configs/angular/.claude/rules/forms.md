@@ -1,8 +1,10 @@
 ---
 paths:
   - "**/*.component.ts"
-  - "**/*.ts"
-  - "**/*.html"
+  - "**/*.component.html"
+  - "**/forms/**/*.ts"
+  - "**/*-form.component.ts"
+  - "**/*-form/**/*.ts"
 ---
 
 # Angular Signal-Based Forms
