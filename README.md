@@ -1,8 +1,33 @@
 # AI Rules
 
 [![npm version](https://badge.fury.io/js/@malamute/ai-rules.svg)](https://www.npmjs.com/package/@malamute/ai-rules)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 
-CLI to install Claude Code configuration boilerplates for Angular, Next.js, NestJS, .NET, Python and more.
+**Supercharge Claude Code with framework-specific rules, skills, and best practices.**
+
+AI Rules installs curated configuration boilerplates that teach Claude Code your stack's conventions, patterns, and guardrails. Stop explaining the same things over and over — let Claude understand your architecture from the start.
+
+## Why Use This?
+
+| Without AI Rules | With AI Rules |
+|------------------|---------------|
+| Claude uses generic patterns | Claude follows your framework's idioms |
+| You repeat "use signals, not decorators" | Angular 21 patterns are built-in |
+| Security issues slip through | OWASP Top 10 rules catch vulnerabilities |
+| Inconsistent code style | Consistent conventions across the team |
+
+## Quick Start
+
+```bash
+# Interactive setup (recommended)
+npx @malamute/ai-rules init
+
+# Or specify your stack directly
+npx @malamute/ai-rules init angular nestjs --all
+```
+
+That's it. Claude Code now understands your stack.
 
 ## Installation
 
@@ -10,228 +35,275 @@ CLI to install Claude Code configuration boilerplates for Angular, Next.js, Nest
 # Global install
 npm install -g @malamute/ai-rules
 
-# Or use directly with npx
-npx @malamute/ai-rules init angular
+# Or use with npx (no install needed)
+npx @malamute/ai-rules <command>
 ```
 
-## Usage
+## Supported Technologies
 
-```bash
-# Interactive mode (recommended for first time)
-ai-rules init
-
-# Single technology
-ai-rules init angular
-ai-rules init nestjs
-ai-rules init python
-
-# Fullstack (combines multiple configs)
-ai-rules init angular nestjs
-ai-rules init nextjs python
-ai-rules init nextjs dotnet
-
-# With extras
-ai-rules init angular --with-skills     # /learning, /review, /spec, /debug, etc.
-ai-rules init nextjs --with-rules       # security, performance, accessibility
-ai-rules init angular nestjs --all      # Everything
-
-# Preview changes without modifying files
-ai-rules init angular --dry-run
-
-# Custom target directory
-ai-rules init dotnet --target ./my-project
-
-# Check installation status
-ai-rules status
-
-# Update to latest configs
-ai-rules update
-ai-rules update --dry-run    # Preview update
-ai-rules update --force      # Update without backup
-
-# List available technologies
-ai-rules list
-```
+| Technology | Stack | Version |
+|------------|-------|---------|
+| **Angular** | Nx + NgRx + Signals + Vitest | 21+ |
+| **Next.js** | App Router + React 19 + Server Components | 15+ |
+| **NestJS** | Prisma/TypeORM + Passport + Vitest | 11+ |
+| **.NET** | Clean Architecture + MediatR + EF Core | 9+ |
+| **Python** | FastAPI/Flask + SQLAlchemy 2.0 + pytest | 3.12+ |
 
 ## Commands
 
-| Command  | Description                                         |
-| -------- | --------------------------------------------------- |
-| `init`   | Install configuration (interactive if no tech)      |
-| `update` | Update installed configs to latest version          |
-| `status` | Show current installation status                    |
-| `list`   | List available technologies                         |
+```bash
+ai-rules init [tech...]     # Install configs (interactive if no tech)
+ai-rules update             # Update to latest rules
+ai-rules status             # Show installation info
+ai-rules list               # List available technologies
+```
 
-## Options
+### Options
 
-| Option           | Description                                    |
-| ---------------- | ---------------------------------------------- |
-| `--with-skills`  | Include skills (/learning, /review, etc.)      |
-| `--with-rules`   | Include shared rules (security, performance)   |
-| `--all`          | Include skills and rules                       |
-| `--target <dir>` | Target directory (default: current directory)  |
-| `--dry-run`      | Preview changes without writing files          |
-| `--force`        | Overwrite files without backup                 |
-
-## Available Technologies
-
-| Technology | Stack                                 |
-| ---------- | ------------------------------------- |
-| `angular`  | Angular 21 + Nx + NgRx + Signals      |
-| `nextjs`   | Next.js 15 + React 19 + App Router    |
-| `nestjs`   | NestJS 11 + Prisma/TypeORM + Passport |
-| `dotnet`   | .NET 9 + ASP.NET Core + EF Core       |
-| `python`   | FastAPI/Flask + SQLAlchemy 2.0        |
+| Option | Description |
+|--------|-------------|
+| `--with-skills` | Add skills: `/learning`, `/review`, `/debug`, etc. |
+| `--with-rules` | Add shared rules: security, performance, accessibility |
+| `--all` | Include both skills and rules |
+| `--dry-run` | Preview changes without writing files |
+| `--target <dir>` | Install to a specific directory |
+| `--force` | Overwrite without creating backups |
 
 ## What Gets Installed
 
 ```
 your-project/
-├── CLAUDE.md              # Main instructions for Claude
+├── CLAUDE.md                    # Architecture & conventions
 └── .claude/
-    ├── settings.json      # Permissions (allow/deny)
-    ├── .ai-rules.json     # Installation manifest (version tracking)
-    ├── rules/             # Technology-specific rules
-    ├── skills/            # Optional: /learning, /review, /spec, etc.
-    └── backups/           # Auto-backup of overwritten files
+    ├── settings.json            # Allowed/denied commands
+    ├── rules/                   # Framework-specific patterns
+    │   ├── components.md
+    │   ├── state.md
+    │   └── testing.md
+    └── skills/                  # Optional workflows
+        ├── learning/
+        ├── review/
+        └── debug/
 ```
 
-## Available Skills
+### CLAUDE.md
 
-When using `--with-skills` or `--all`, these skills are included:
+The main instruction file. Contains:
+- Project architecture overview
+- Technology stack and versions
+- Coding conventions (naming, structure, patterns)
+- Commands to run (build, test, lint)
 
-| Skill             | Usage                       | Description                                     |
-| ----------------- | --------------------------- | ----------------------------------------------- |
-| `/learning`       | `/learning nextjs`          | Pedagogical mode - explains before implementing |
-| `/review`         | `/review src/users/`        | Code review with structured checklist           |
-| `/spec`           | `/spec add auth`            | Technical specification before implementing     |
-| `/debug`          | `/debug TypeError...`       | Systematic debugging workflow                   |
-| `/fix-issue`      | `/fix-issue 123`            | Fetch GitHub issue and implement fix            |
-| `/review-pr`      | `/review-pr 456`            | Review PR diff with checklist                   |
-| `/generate-tests` | `/generate-tests src/user/` | Generate tests for a file                       |
-| `/api-endpoint`   | `/api-endpoint POST /users` | Generate complete API endpoint                  |
-| `/migration`      | `/migration add users`      | Generate database migration                     |
-| `/security-audit` | `/security-audit`           | Security audit of the codebase                  |
-| `/docker`         | `/docker`                   | Generate Dockerfile and docker-compose          |
-| `/deploy`         | `/deploy`                   | Generate deployment configuration               |
-| `/explore`        | `/explore`                  | Deep repository analysis                        |
+### Rules
+
+Context-aware rules that activate based on file paths:
+
+```markdown
+---
+paths:
+  - "**/*.component.ts"
+---
+# Angular Component Rules
+- Use `ChangeDetectionStrategy.OnPush`
+- Use `input()`, `output()`, not decorators
+- Template in separate `.html` file
+```
+
+### Skills
+
+Interactive workflows invoked with `/skill-name`:
+
+| Skill | Description |
+|-------|-------------|
+| `/learning` | Pedagogical mode — explains before coding |
+| `/review` | Code review with security/perf checklist |
+| `/debug` | Structured debugging workflow |
+| `/spec` | Write technical spec before implementing |
+| `/fix-issue` | Analyze GitHub issue and implement fix |
+| `/generate-tests` | Generate comprehensive tests |
+
+<details>
+<summary><strong>See all 13 skills</strong></summary>
+
+| Skill | Usage | Description |
+|-------|-------|-------------|
+| `/learning` | `/learning nextjs` | Explains concepts before implementing |
+| `/review` | `/review src/users/` | Code review with checklist |
+| `/spec` | `/spec add auth` | Technical specification |
+| `/debug` | `/debug TypeError...` | Systematic debugging |
+| `/fix-issue` | `/fix-issue 123` | Fix GitHub issue |
+| `/review-pr` | `/review-pr 456` | Review pull request |
+| `/generate-tests` | `/generate-tests src/user.ts` | Generate tests |
+| `/api-endpoint` | `/api-endpoint POST /users` | Generate API endpoint |
+| `/migration` | `/migration add users` | Database migration |
+| `/security-audit` | `/security-audit` | Security analysis |
+| `/docker` | `/docker` | Dockerfile generation |
+| `/deploy` | `/deploy` | Deployment config |
+| `/explore` | `/explore` | Repository analysis |
+
+</details>
 
 ## Shared Rules
 
-When using `--with-rules` or `--all`, these transversal rules are included:
+Cross-framework rules included with `--with-rules`:
 
-- **security.md** - OWASP Top 10 (injection, XSS, CSRF, auth, secrets)
-- **performance.md** - N+1 queries, caching, memoization, lazy loading
-- **accessibility.md** - WCAG 2.1 (semantic HTML, ARIA, keyboard nav)
-- **testing-patterns.md** - AAA pattern, mocking, coverage guidelines
-- **error-handling.md** - Error categories, response formats
-- **logging.md** - Log levels, structured logging
-- **observability.md** - Metrics, traces, health checks
-- **git.md** - Conventional commits, branching, PRs
+| Rule | What It Covers |
+|------|----------------|
+| **security.md** | OWASP Top 10: injection, XSS, CSRF, secrets |
+| **performance.md** | N+1 queries, caching, lazy loading |
+| **accessibility.md** | WCAG 2.1, semantic HTML, ARIA |
+| **testing-patterns.md** | AAA pattern, mocking, coverage |
+| **error-handling.md** | Error categories, response formats |
+| **git.md** | Conventional commits, branching, PRs |
+| **observability.md** | Logging, metrics, tracing |
 
-## Technology Details
+## Examples
 
-### Angular
-
-| Aspect         | Convention                                  |
-| -------------- | ------------------------------------------- |
-| Components     | Standalone by default, OnPush required      |
-| Templates      | Always in separate `.html` files            |
-| Inputs/Outputs | `input()`, `output()`, `model()` functions  |
-| State          | NgRx + Entity Adapter + Functional Effects  |
-| Tests          | Vitest + Marble testing (no `.subscribe()`) |
-
-### Next.js
-
-| Aspect            | Convention                                 |
-| ----------------- | ------------------------------------------ |
-| Components        | Server Components by default               |
-| Client Components | Add `'use client'` directive               |
-| Data Fetching     | Server Components + `fetch()`              |
-| Mutations         | Server Actions                             |
-| State             | Zustand (simple) / Redux Toolkit (complex) |
-
-### NestJS
-
-| Aspect       | Convention                             |
-| ------------ | -------------------------------------- |
-| Architecture | Modular Monolith                       |
-| Validation   | class-validator + class-transformer    |
-| Database     | Prisma (modern) / TypeORM (decorators) |
-| Auth         | Passport + JWT                         |
-| Tests        | Vitest + Supertest                     |
-
-### .NET
-
-| Aspect       | Convention                                |
-| ------------ | ----------------------------------------- |
-| Architecture | Clean Architecture (Domain → App → Infra) |
-| API Style    | Minimal APIs or Controllers               |
-| CQRS         | MediatR (Commands/Queries)                |
-| ORM          | Entity Framework Core                     |
-| Tests        | xUnit + NSubstitute + FluentAssertions    |
-
-### Python
-
-| Aspect     | Convention                                  |
-| ---------- | ------------------------------------------- |
-| Frameworks | FastAPI (async) / Flask (traditional)       |
-| Validation | Pydantic v2 (FastAPI) / Marshmallow (Flask) |
-| ORM        | SQLAlchemy 2.0 (async support)              |
-| Tests      | pytest + httpx                              |
-| Migrations | Alembic                                     |
-
-## Package Structure
-
-```
-ai-rules/
-├── package.json
-├── bin/
-│   └── cli.js              # CLI entry point
-├── src/
-│   └── install.js          # Installation logic
-├── __tests__/              # Unit tests
-└── configs/
-    ├── angular/
-    ├── nextjs/
-    ├── nestjs/
-    ├── dotnet/
-    ├── python/
-    └── _shared/
-        ├── CLAUDE.md       # Base conventions
-        └── .claude/
-            ├── skills/     # Shared skills
-            └── rules/      # Shared rules
-```
-
-## Updating Configs
-
-When a new version of ai-rules is released with updated rules:
+### Fullstack Setup
 
 ```bash
-# Check current status
-ai-rules status
+# Angular frontend + NestJS backend
+ai-rules init angular nestjs --all
 
-# Preview what would change
-ai-rules update --dry-run
-
-# Apply update (creates backups automatically)
-ai-rules update
-
-# Force update without backups
-ai-rules update --force
+# Next.js frontend + Python backend
+ai-rules init nextjs python --all
 ```
 
-Backups are stored in `.claude/backups/` with timestamps.
+### Preview Before Installing
+
+```bash
+ai-rules init angular --dry-run
+```
+
+Output:
+```
+DRY RUN - No files will be modified
+
+ℹ Would install to: /your/project
+
+ℹ Would install angular...
+○   CLAUDE.md (create)
+○   settings.json (create)
+○   rules/ (8 files)
+
+Summary:
+  10 file(s) would be created
+  0 file(s) would be modified
+```
+
+### Update Configs
+
+```bash
+# Check current version
+ai-rules status
+
+# Preview updates
+ai-rules update --dry-run
+
+# Apply updates (auto-backup enabled)
+ai-rules update
+```
+
+## Technology Conventions
+
+<details>
+<summary><strong>Angular</strong></summary>
+
+| Aspect | Convention |
+|--------|------------|
+| Components | Standalone, OnPush change detection |
+| Signals | `input()`, `output()`, `model()` functions |
+| State | NgRx with Entity Adapter + Functional Effects |
+| Structure | Nx monorepo with feature/ui/data-access libs |
+| Tests | Vitest + Marble testing |
+
+</details>
+
+<details>
+<summary><strong>Next.js</strong></summary>
+
+| Aspect | Convention |
+|--------|------------|
+| Components | Server Components by default |
+| Client | `'use client'` directive for interactivity |
+| Data | Server Components + fetch, Server Actions |
+| State | Zustand (simple) / Redux Toolkit (complex) |
+| Structure | App Router with route groups |
+
+</details>
+
+<details>
+<summary><strong>NestJS</strong></summary>
+
+| Aspect | Convention |
+|--------|------------|
+| Architecture | Modular Monolith |
+| Validation | class-validator + class-transformer |
+| Database | Prisma (modern) / TypeORM (decorators) |
+| Auth | Passport + JWT |
+| Tests | Vitest + Supertest |
+
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+| Aspect | Convention |
+|--------|------------|
+| Architecture | Clean Architecture (Domain → App → Infra) |
+| API | Minimal APIs (preferred) or Controllers |
+| CQRS | MediatR for Commands/Queries |
+| ORM | Entity Framework Core |
+| Tests | xUnit + NSubstitute + FluentAssertions |
+
+</details>
+
+<details>
+<summary><strong>Python</strong></summary>
+
+| Aspect | Convention |
+|--------|------------|
+| Framework | FastAPI (async) / Flask (traditional) |
+| Validation | Pydantic v2 / Marshmallow |
+| ORM | SQLAlchemy 2.0 with async support |
+| Tests | pytest + httpx |
+| Migrations | Alembic |
+
+</details>
+
+## How It Works
+
+1. **CLAUDE.md** is read by Claude Code at session start
+2. **Rules** activate based on file paths you're editing
+3. **Skills** are invoked on-demand with `/skill-name`
+4. **Settings** define what commands Claude can run
+
+Claude Code sees your conventions as first-class instructions, not just suggestions in the chat.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a new technology folder in `configs/`
-3. Add `CLAUDE.md` and `.claude/rules/`
-4. Add tests in `__tests__/`
+```bash
+# Clone and install
+git clone https://github.com/malamute/ai-rules.git
+cd ai-rules
+npm install
+
+# Run tests
+npm test
+
+# Add a new technology
+mkdir configs/your-tech
+# Add CLAUDE.md and .claude/rules/
+```
+
+### Adding a Technology
+
+1. Create `configs/[tech]/CLAUDE.md` — start with `@../_shared/CLAUDE.md`
+2. Add rules in `configs/[tech]/.claude/rules/`
+3. Add `configs/[tech]/.claude/settings.json` for permissions
+4. Add tests
 5. Submit a PR
 
 ## License
 
-MIT
+MIT © Mehdi Chaabi
