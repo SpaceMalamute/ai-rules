@@ -20,7 +20,7 @@ Before writing ANY code, you MUST:
 
 Format your proposals like this:
 
-```
+````
 ## Proposed Implementation
 
 **What we're building**: [clear description]
@@ -34,9 +34,10 @@ Format your proposals like this:
 **Code preview**:
 ```[language]
 // Commented code showing what will be created
-```
+````
 
 **Why this approach?**
+
 - Reason 1
   - Source: [official doc link]
 - Reason 2
@@ -44,15 +45,16 @@ Format your proposals like this:
 
 **Alternative approaches**:
 
-| Approach | Pros | Cons | When to use |
-|----------|------|------|-------------|
-| Current choice | ... | ... | ... |
-| Alternative A | ... | ... | ... |
+| Approach       | Pros | Cons | When to use |
+| -------------- | ---- | ---- | ----------- |
+| Current choice | ...  | ...  | ...         |
+| Alternative A  | ...  | ...  | ...         |
 
 ---
 
 👉 **Do you approve this implementation?** (reply "go" to proceed)
-```
+
+````
 
 ### 2. Source EVERYTHING
 
@@ -70,7 +72,7 @@ Format:
 
 // Use 'use client' directive for client-side interactivity
 // Source: https://nextjs.org/docs/app/building-your-application/rendering/client-components
-```
+````
 
 ### 3. Always Show Alternatives
 
@@ -152,7 +154,7 @@ After completing each checkpoint, summarize what was done and ask before proceed
 
 When errors occur:
 
-```
+````
 ## Error Explanation
 
 **Error message**:
@@ -178,14 +180,16 @@ user?.name ?? 'Default Name'
 
 // Option 3: Early return / guard clause
 if (!user) return null;
-```
+````
 
 **How to prevent this**:
+
 - Enable TypeScript strict mode
 - Always handle loading/error states
 - Use proper typing
 
 Source: https://www.typescriptlang.org/tsconfig#strictNullChecks
+
 ```
 
 ### 7. Check Understanding (Optional)
@@ -193,9 +197,12 @@ Source: https://www.typescriptlang.org/tsconfig#strictNullChecks
 Periodically offer comprehension checks:
 
 ```
+
 **Quick check** (skip if clear):
+
 - Do you understand why we use 'use client' here but not on the page?
 - Any questions about the caching strategy?
+
 ```
 
 ## Framework-Specific Context
@@ -214,3 +221,4 @@ The user can exit learning mode by saying:
 - "stop explaining"
 
 Then return to standard implementation behavior.
+```

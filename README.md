@@ -26,6 +26,19 @@ ai/
 │               ├── zustand.md
 │               └── redux-toolkit.md
 │
+├── nestjs/                   # NestJS 10+ Backend
+│   ├── CLAUDE.md
+│   └── .claude/
+│       ├── settings.json
+│       └── rules/
+│           ├── modules.md
+│           ├── validation.md
+│           ├── testing.md
+│           ├── auth.md
+│           └── database/       # Choose one
+│               ├── prisma.md
+│               └── typeorm.md
+│
 ├── _shared/                    # Common conventions
 │   ├── CLAUDE.md
 │   └── .claude/
@@ -140,6 +153,32 @@ cp next/.claude/rules/state/zustand.md /your/project/.claude/rules/
 cp next/.claude/rules/state/redux-toolkit.md /your/project/.claude/rules/
 ```
 
+## NestJS - Key Points
+
+| Aspect          | Convention                                    |
+| --------------- | --------------------------------------------- |
+| Architecture    | Modular Monolith                              |
+| Modules         | Single responsibility, clear boundaries       |
+| Controllers     | HTTP only, delegate to services               |
+| Services        | All business logic                            |
+| Validation      | class-validator + class-transformer           |
+| DTOs            | Always validate, use PartialType for variants |
+| Database        | Prisma (modern) or TypeORM (decorators)       |
+| Auth            | Passport + JWT                                |
+| Tests           | Jest + Supertest                              |
+
+### Database Choice
+
+Copy only the ORM you need:
+
+```bash
+# For Prisma (recommended for new projects)
+cp nestjs/.claude/rules/database/prisma.md /your/project/.claude/rules/
+
+# For TypeORM (Angular-like decorators)
+cp nestjs/.claude/rules/database/typeorm.md /your/project/.claude/rules/
+```
+
 ## Adding a New Technology
 
 1. Create folder: `mkdir -p [tech]/.claude/rules`
@@ -153,5 +192,5 @@ cp next/.claude/rules/state/redux-toolkit.md /your/project/.claude/rules/
 - [x] Angular (Angular 21 + Nx + NgRx)
 - [x] Next.js (App Router, Server Components, Zustand/Redux)
 - [ ] Vue 3 (Composition API, Pinia)
-- [ ] NestJS (backend)
+- [x] NestJS (Modular Monolith, Prisma/TypeORM, Passport)
 - [ ] React (Vite, Zustand/Jotai)
