@@ -38,52 +38,6 @@ libs/
 | `data-access` | `data-access`, `util` only |
 | `util` | `util` only |
 
-## Core Principles
-
-### Zoneless & Signals
-
-- No zone.js - signals are the reactivity model
-- `ChangeDetectionStrategy.OnPush` on ALL components
-- Use `signal()`, `computed()`, `effect()` for state
-- Use `input()`, `output()`, `model()` - NOT decorators
-
-### Components
-
-- Standalone by default (don't add `standalone: true`)
-- Templates in separate `.html` files always
-- Use `inject()` function, not constructor injection
-- Smart components in `feature/`, dumb in `ui/`
-
-### Smart vs Dumb
-
-| Smart (feature/) | Dumb (ui/) |
-|------------------|------------|
-| Inject Store, dispatch actions | Only inputs/outputs |
-| Handle routing, side effects | Pure presentation |
-| Page-level components | Reusable anywhere |
-
-### NgRx
-
-- `createActionGroup` for related actions
-- `createFeature` for reducers
-- Entity Adapter for collections
-- Functional effects with `{ functional: true }`
-- `selectSignal()` in components
-
-### Signals vs RxJS
-
-| Use Signals | Use RxJS |
-|-------------|----------|
-| Local component state | Async streams, events |
-| Derived/computed values | Complex async pipelines |
-| Simple reactivity | Race conditions, debounce |
-
-- `toSignal()` - Convert observable to signal
-- `toObservable()` - Convert signal to observable
-- `effect()` can set signals by default (no `allowSignalWrites` needed)
-- `toSignal()` supports custom equality function
-- `takeUntilDestroyed()` for cleanup
-
 ## Commands
 
 ```bash
