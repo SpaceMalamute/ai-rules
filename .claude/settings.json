@@ -1,13 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(*)",
-      "WebSearch",
-      "WebFetch(*)",
-      "Edit",
-      "Write",
-      "Read"
-    ],
+    "allow": ["Bash(*)", "WebSearch", "WebFetch(*)", "Edit", "Write", "Read"],
     "deny": []
   }
 }

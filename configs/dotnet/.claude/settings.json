@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet run *)",
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet watch *)",
+      "Bash(dotnet ef *)",
+      "Bash(dotnet add *)",
+      "Bash(dotnet restore)",
+      "Bash(dotnet format *)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Read(appsettings.*.json)",
+      "Read(**/secrets.json)",
+      "Read(**/*.pfx)"
+    ]
+  },
+  "env": {
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "DOTNET_WATCH_RESTART_ON_RUDE_EDIT": "true"
+  }
+}

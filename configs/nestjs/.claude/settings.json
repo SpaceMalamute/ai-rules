@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run start:dev)",
+      "Bash(npm run start:debug)",
+      "Bash(npm run build)",
+      "Bash(npm run test*)",
+      "Bash(npm run lint*)",
+      "Bash(npm run format*)",
+      "Bash(npm install *)",
+      "Bash(npm ci)",
+      "Bash(npx prisma *)",
+      "Bash(npx typeorm *)",
+      "Bash(npx nest *)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)"
+    ]
+  },
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

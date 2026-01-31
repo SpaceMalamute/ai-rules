@@ -1,256 +1,173 @@
-# Claude Code Configurations
+# AI Rules
 
-Boilerplate Claude Code configurations by technology.
+[![npm version](https://badge.fury.io/js/@malamute/ai-rules.svg)](https://www.npmjs.com/package/@malamute/ai-rules)
 
-## Structure
+CLI to install Claude Code configuration boilerplates for Angular, Next.js, NestJS, .NET, Python and more.
 
-```
-ai/
-├── angular/                    # Angular 21 + Nx + NgRx
-│   ├── CLAUDE.md
-│   └── .claude/
-│       ├── settings.json
-│       └── rules/
-│           ├── components.md
-│           ├── state.md
-│           └── testing.md
-│
-├── next/                     # Next.js 15 + React 19 + Nx
-│   ├── CLAUDE.md
-│   └── .claude/
-│       ├── settings.json
-│       └── rules/
-│           ├── components.md
-│           ├── testing.md
-│           └── state/          # Choose one
-│               ├── zustand.md
-│               └── redux-toolkit.md
-│
-├── nestjs/                   # NestJS 10+ Backend
-│   ├── CLAUDE.md
-│   └── .claude/
-│       ├── settings.json
-│       └── rules/
-│           ├── modules.md
-│           ├── validation.md
-│           ├── testing.md
-│           ├── auth.md
-│           └── database/       # Choose one
-│               ├── prisma.md
-│               └── typeorm.md
-│
-├── dotnet/                    # .NET 8+ / ASP.NET Core
-│   ├── CLAUDE.md
-│   └── .claude/
-│       ├── settings.json
-│       └── rules/
-│           ├── architecture.md
-│           ├── api.md
-│           ├── testing.md
-│           └── database/
-│               └── efcore.md
-│
-├── python/                    # Python (FastAPI, Flask)
-│   ├── CLAUDE.md
-│   └── .claude/
-│       ├── settings.json
-│       └── rules/
-│           ├── fastapi.md
-│           ├── flask.md
-│           ├── testing.md
-│           └── database/
-│               └── sqlalchemy.md
-│
-├── _shared/                    # Common conventions
-│   ├── CLAUDE.md
-│   └── .claude/
-│       └── skills/
-│           └── learning/
-│               └── SKILL.md
-│
-├── CLAUDE.md                   # Repository instructions
-└── README.md                   # This file
+## Installation
+
+```bash
+# Global install
+npm install -g @malamute/ai-rules
+
+# Or use directly with npx
+npx @malamute/ai-rules init angular
 ```
 
 ## Usage
 
-### 1. Copy config to your project
-
 ```bash
-# For an Angular project
-cp -r angular/.claude /path/to/your/project/
-cp angular/CLAUDE.md /path/to/your/project/
+# Single technology
+ai-rules init angular
+ai-rules init nestjs
+ai-rules init python
 
-# Also copy shared (or merge content into your CLAUDE.md)
-cp -r _shared/.claude/skills /path/to/your/project/.claude/
+# Fullstack (combines multiple configs)
+ai-rules init angular nestjs
+ai-rules init nextjs python
+ai-rules init nextjs dotnet
+
+# With extras
+ai-rules init angular --with-skills              # /learning, /review, /spec, /debug
+ai-rules init angular nestjs --with-commands     # fix-issue, review-pr, generate-tests
+ai-rules init nextjs --with-rules                # security, performance, accessibility
+ai-rules init angular nestjs --all               # Everything
+
+# Custom target directory
+ai-rules init dotnet --target ./my-project
+
+# List available technologies
+ai-rules list
 ```
 
-### 2. Adapt CLAUDE.md
+## Available Technologies
 
-The `CLAUDE.md` file imports shared conventions via:
+| Technology | Stack                                 |
+| ---------- | ------------------------------------- |
+| `angular`  | Angular 21 + Nx + NgRx + Signals      |
+| `nextjs`   | Next.js 15 + React 19 + App Router    |
+| `nestjs`   | NestJS 10 + Prisma/TypeORM + Passport |
+| `dotnet`   | .NET 8 + ASP.NET Core + EF Core       |
+| `python`   | FastAPI/Flask + SQLAlchemy 2.0        |
 
-```markdown
-@../\_shared/CLAUDE.md
+## What Gets Installed
+
 ```
-
-If copying to a standalone project, replace this line with the content of `_shared/CLAUDE.md` directly.
-
-### 3. Customize
-
-- **Component prefix**: modify `app-` in rules
-- **Commands**: adjust npm/nx scripts for your project
-- **Permissions**: edit `.claude/settings.json`
+your-project/
+├── CLAUDE.md              # Main instructions for Claude
+└── .claude/
+    ├── settings.json      # Permissions
+    ├── rules/             # Technology-specific rules
+    ├── skills/            # Optional: /learning, /review, /spec, /debug
+    └── commands/          # Optional: fix-issue, review-pr, generate-tests
+```
 
 ## Available Skills
 
-### `/learning` - Learning Mode
+| Skill       | Usage                 | Description                                     |
+| ----------- | --------------------- | ----------------------------------------------- |
+| `/learning` | `/learning nextjs`    | Pedagogical mode - explains before implementing |
+| `/review`   | `/review src/users/`  | Code review with structured checklist           |
+| `/spec`     | `/spec add auth`      | Technical specification before implementing     |
+| `/debug`    | `/debug TypeError...` | Systematic debugging workflow                   |
 
-Activates a pedagogical coding mode where Claude:
+## Available Commands
 
-- Explains before implementing
-- Waits for your validation
-- Sources all decisions (official docs)
-- Shows alternatives
+| Command          | Usage                                | Description                          |
+| ---------------- | ------------------------------------ | ------------------------------------ |
+| `fix-issue`      | `/project:fix-issue 123`             | Fetch GitHub issue and implement fix |
+| `review-pr`      | `/project:review-pr 456`             | Review PR diff with checklist        |
+| `generate-tests` | `/project:generate-tests src/users/` | Generate tests for a file            |
 
-**Usage**:
+## Shared Rules
+
+When using `--with-rules` or `--all`, these transversal rules are included:
+
+- **security.md** - OWASP Top 10 (injection, XSS, CSRF, auth, secrets)
+- **performance.md** - N+1 queries, caching, memoization, lazy loading
+- **accessibility.md** - WCAG 2.1 (semantic HTML, ARIA, keyboard nav)
+
+## Technology Details
+
+### Angular
+
+| Aspect         | Convention                                  |
+| -------------- | ------------------------------------------- |
+| Components     | Standalone by default, OnPush required      |
+| Templates      | Always in separate `.html` files            |
+| Inputs/Outputs | `input()`, `output()`, `model()` functions  |
+| State          | NgRx + Entity Adapter + Functional Effects  |
+| Tests          | Vitest + Marble testing (no `.subscribe()`) |
+
+### Next.js
+
+| Aspect            | Convention                                 |
+| ----------------- | ------------------------------------------ |
+| Components        | Server Components by default               |
+| Client Components | Add `'use client'` directive               |
+| Data Fetching     | Server Components + `fetch()`              |
+| Mutations         | Server Actions                             |
+| State             | Zustand (simple) / Redux Toolkit (complex) |
+
+### NestJS
+
+| Aspect       | Convention                             |
+| ------------ | -------------------------------------- |
+| Architecture | Modular Monolith                       |
+| Validation   | class-validator + class-transformer    |
+| Database     | Prisma (modern) / TypeORM (decorators) |
+| Auth         | Passport + JWT                         |
+| Tests        | Jest + Supertest                       |
+
+### .NET
+
+| Aspect       | Convention                                |
+| ------------ | ----------------------------------------- |
+| Architecture | Clean Architecture (Domain → App → Infra) |
+| API Style    | Minimal APIs or Controllers               |
+| CQRS         | MediatR (Commands/Queries)                |
+| ORM          | Entity Framework Core                     |
+| Tests        | xUnit + NSubstitute + FluentAssertions    |
+
+### Python
+
+| Aspect     | Convention                                  |
+| ---------- | ------------------------------------------- |
+| Frameworks | FastAPI (async) / Flask (traditional)       |
+| Validation | Pydantic v2 (FastAPI) / Marshmallow (Flask) |
+| ORM        | SQLAlchemy 2.0 (async support)              |
+| Tests      | pytest + httpx                              |
+| Migrations | Alembic                                     |
+
+## Package Structure
 
 ```
-/learning           # General mode
-/learning next    # Focused on Next.js
-/learning vue       # Focused on Vue
+claude-code-configs/
+├── package.json
+├── bin/
+│   └── cli.js              # CLI entry point
+├── src/
+│   └── install.js          # Installation logic
+└── configs/
+    ├── angular/
+    ├── nextjs/
+    ├── nestjs/
+    ├── dotnet/
+    ├── python/
+    └── _shared/
+        ├── CLAUDE.md
+        └── .claude/
+            ├── skills/
+            └── rules/
 ```
 
-**Deactivation**: `exit learning mode` or `normal mode`
+## Contributing
 
-To use this skill in a project:
+1. Fork the repository
+2. Create a new technology folder in `configs/`
+3. Add `CLAUDE.md` and `.claude/rules/`
+4. Submit a PR
 
-```bash
-cp -r _shared/.claude/skills /path/to/your/project/.claude/
-```
+## License
 
-## Shared Conventions (`_shared/CLAUDE.md`)
-
-| Rule                  | Description                                |
-| --------------------- | ------------------------------------------ |
-| Explicit naming       | No `c`, `x`, `tmp` - use descriptive names |
-| No lint disable       | Unless with justification + ticket         |
-| Conventional commits  | `feat:`, `fix:`, `refactor:`, etc.         |
-| TypeScript strict     | No `any`, explicit types                   |
-| Self-documenting code | Comments = "why", not "what"               |
-
-## Angular - Key Points
-
-| Aspect           | Convention                                        |
-| ---------------- | ------------------------------------------------- |
-| Components       | `standalone` by default (don't add it)            |
-| Templates        | Always in separate `.html` files                  |
-| Inputs/Outputs   | `input()`, `output()`, `model()` - not decorators |
-| Change Detection | `OnPush` required                                 |
-| State            | NgRx + Entity Adapter + Functional Effects        |
-| RxJS Tests       | Marble testing only (no `.subscribe()`)           |
-| E2E Tests        | Playwright                                        |
-
-## Next.js - Key Points
-
-| Aspect            | Convention                       |
-| ----------------- | -------------------------------- |
-| Components        | Server Components by default     |
-| Client Components | Add `'use client'` directive     |
-| Data Fetching     | Server Components with `fetch()` |
-| Mutations         | Server Actions                   |
-| State (simple)    | Zustand                          |
-| State (complex)   | Redux Toolkit                    |
-| Tests             | Vitest/Jest + Testing Library    |
-| E2E Tests         | Playwright                       |
-
-### State Management
-
-Copy only the state manager you need:
-
-```bash
-# For Zustand (small/medium projects)
-cp next/.claude/rules/state/zustand.md /your/project/.claude/rules/
-
-# For Redux Toolkit (large projects)
-cp next/.claude/rules/state/redux-toolkit.md /your/project/.claude/rules/
-```
-
-## NestJS - Key Points
-
-| Aspect          | Convention                                    |
-| --------------- | --------------------------------------------- |
-| Architecture    | Modular Monolith                              |
-| Modules         | Single responsibility, clear boundaries       |
-| Controllers     | HTTP only, delegate to services               |
-| Services        | All business logic                            |
-| Validation      | class-validator + class-transformer           |
-| DTOs            | Always validate, use PartialType for variants |
-| Database        | Prisma (modern) or TypeORM (decorators)       |
-| Auth            | Passport + JWT                                |
-| Tests           | Jest + Supertest                              |
-
-### Database Choice
-
-Copy only the ORM you need:
-
-```bash
-# For Prisma (recommended for new projects)
-cp nestjs/.claude/rules/database/prisma.md /your/project/.claude/rules/
-
-# For TypeORM (Angular-like decorators)
-cp nestjs/.claude/rules/database/typeorm.md /your/project/.claude/rules/
-```
-
-## .NET - Key Points
-
-| Aspect          | Convention                                  |
-| --------------- | ------------------------------------------- |
-| Architecture    | Clean Architecture (Domain → App → Infra)   |
-| API Style       | Minimal APIs or Controllers                 |
-| CQRS            | MediatR (Commands/Queries)                  |
-| Validation      | FluentValidation                            |
-| ORM             | Entity Framework Core                       |
-| Naming          | PascalCase C# → snake_case DB               |
-| Tests           | xUnit + NSubstitute + FluentAssertions      |
-| Integration     | WebApplicationFactory + TestContainers      |
-
-## Python - Key Points
-
-| Aspect          | Convention                                  |
-| --------------- | ------------------------------------------- |
-| Structure       | Domain-based (monolith) or file-type (micro)|
-| Type Hints      | Required everywhere (Python 3.11+)          |
-| FastAPI         | Async-first, Pydantic v2, dependencies      |
-| Flask           | Application factory, blueprints             |
-| ORM             | SQLAlchemy 2.0 (async support)              |
-| Validation      | Pydantic (FastAPI) / Marshmallow (Flask)    |
-| Tests           | pytest + httpx (FastAPI) / pytest (Flask)   |
-| Migrations      | Alembic                                     |
-
-### Framework Choice
-
-Copy only the framework you need:
-
-```bash
-# For FastAPI (async, modern, recommended)
-cp python/.claude/rules/fastapi.md /your/project/.claude/rules/
-
-# For Flask (traditional, simpler)
-cp python/.claude/rules/flask.md /your/project/.claude/rules/
-```
-
-## Adding a New Technology
-
-1. Create folder: `mkdir -p [tech]/.claude/rules`
-2. Create `[tech]/CLAUDE.md` with `@../_shared/CLAUDE.md` import
-3. Add technology-specific rules in `.claude/rules/`
-4. Optional: `.claude/settings.json` for permissions
-5. Update this README
-
-## Roadmap
-
-- [x] Angular (Angular 21 + Nx + NgRx)
-- [x] Next.js (App Router, Server Components, Zustand/Redux)
-- [x] NestJS (Modular Monolith, Prisma/TypeORM, Passport)
-- [x] .NET (Clean Architecture, EF Core, MediatR)
-- [x] Python (FastAPI, Flask, SQLAlchemy)
+MIT
