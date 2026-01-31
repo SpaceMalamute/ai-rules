@@ -1,13 +1,17 @@
 {
   "name": "@malamute/ai-rules",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Claude Code configuration boilerplates for Angular, Next.js, NestJS, .NET, Python and more",
   "main": "src/install.js",
   "bin": {
     "ai-rules": "./bin/cli.js"
   },
   "scripts": {
-    "test": "node bin/cli.js --help"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src bin",
+    "prepare": "node -e \"console.log('Ready to publish')\""
   },
   "keywords": [
     "claude",
@@ -24,12 +28,16 @@
     "python",
     "fastapi"
   ],
-  "author": "",
+  "author": "Mehdi Chaabi",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/malamute/ai-rules.git"
   },
+  "bugs": {
+    "url": "https://github.com/malamute/ai-rules/issues"
+  },
+  "homepage": "https://github.com/malamute/ai-rules#readme",
   "files": [
     "bin",
     "src",
@@ -37,5 +45,8 @@
   ],
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
   }
 }
