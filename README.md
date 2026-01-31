@@ -50,6 +50,17 @@ ai/
 │           └── database/
 │               └── efcore.md
 │
+├── python/                    # Python (FastAPI, Flask)
+│   ├── CLAUDE.md
+│   └── .claude/
+│       ├── settings.json
+│       └── rules/
+│           ├── fastapi.md
+│           ├── flask.md
+│           ├── testing.md
+│           └── database/
+│               └── sqlalchemy.md
+│
 ├── _shared/                    # Common conventions
 │   ├── CLAUDE.md
 │   └── .claude/
@@ -203,6 +214,31 @@ cp nestjs/.claude/rules/database/typeorm.md /your/project/.claude/rules/
 | Tests           | xUnit + NSubstitute + FluentAssertions      |
 | Integration     | WebApplicationFactory + TestContainers      |
 
+## Python - Key Points
+
+| Aspect          | Convention                                  |
+| --------------- | ------------------------------------------- |
+| Structure       | Domain-based (monolith) or file-type (micro)|
+| Type Hints      | Required everywhere (Python 3.11+)          |
+| FastAPI         | Async-first, Pydantic v2, dependencies      |
+| Flask           | Application factory, blueprints             |
+| ORM             | SQLAlchemy 2.0 (async support)              |
+| Validation      | Pydantic (FastAPI) / Marshmallow (Flask)    |
+| Tests           | pytest + httpx (FastAPI) / pytest (Flask)   |
+| Migrations      | Alembic                                     |
+
+### Framework Choice
+
+Copy only the framework you need:
+
+```bash
+# For FastAPI (async, modern, recommended)
+cp python/.claude/rules/fastapi.md /your/project/.claude/rules/
+
+# For Flask (traditional, simpler)
+cp python/.claude/rules/flask.md /your/project/.claude/rules/
+```
+
 ## Adding a New Technology
 
 1. Create folder: `mkdir -p [tech]/.claude/rules`
@@ -217,4 +253,4 @@ cp nestjs/.claude/rules/database/typeorm.md /your/project/.claude/rules/
 - [x] Next.js (App Router, Server Components, Zustand/Redux)
 - [x] NestJS (Modular Monolith, Prisma/TypeORM, Passport)
 - [x] .NET (Clean Architecture, EF Core, MediatR)
-- [ ] Python (FastAPI, Django)
+- [x] Python (FastAPI, Flask, SQLAlchemy)
