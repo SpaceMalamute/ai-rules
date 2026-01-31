@@ -48,18 +48,16 @@ ${colors.bold('Technologies:')}
   python     FastAPI/Flask + SQLAlchemy
 
 ${colors.bold('Options:')}
-  --with-skills    Include skills (/learning, /review, /spec, /debug, etc.)
-  --with-rules     Include shared rules (security, performance, accessibility)
-  --all            Include skills and rules
+  --minimal        Only install CLAUDE.md, settings.json, and tech rules (no shared skills/rules)
   --target <dir>   Target directory (default: current directory)
   --dry-run        Preview changes without writing files
   --force          Overwrite files without backup (update command)
 
 ${colors.bold('Examples:')}
   ai-rules init                          # Interactive mode
-  ai-rules init angular
-  ai-rules init angular nestjs --all
-  ai-rules init nextjs --with-skills --dry-run
+  ai-rules init angular                  # Full install (skills + rules)
+  ai-rules init angular --minimal        # Minimal install
+  ai-rules init nextjs --dry-run
   ai-rules update
   ai-rules update --force
   ai-rules status
@@ -504,7 +502,7 @@ function init(techs, options) {
     }
 
     // Copy tech-specific skills (if --with-skills)
-    if (options.withSkills || options.all) {
+    if (options.withSkills) {
       const techSkillsDir = path.join(techDir, '.claude', 'skills');
       if (fs.existsSync(techSkillsDir)) {
         const ops = copyDirRecursive(
@@ -520,7 +518,7 @@ function init(techs, options) {
   // Install shared resources
   const sharedDir = path.join(CONFIGS_DIR, '_shared');
 
-  if (options.withSkills || options.all) {
+  if (options.withSkills) {
     log.info(`${dryRun ? 'Would install' : 'Installing'} skills...`);
     const skillsDir = path.join(sharedDir, '.claude', 'skills');
     if (fs.existsSync(skillsDir)) {
@@ -539,7 +537,7 @@ function init(techs, options) {
     }
   }
 
-  if (options.withRules || options.all) {
+  if (options.withRules) {
     log.info(`${dryRun ? 'Would install' : 'Installing'} shared rules...`);
     const rulesDir = path.join(sharedDir, '.claude', 'rules');
     if (fs.existsSync(rulesDir)) {
@@ -581,8 +579,8 @@ function init(techs, options) {
     {
       technologies: techs,
       options: {
-        withSkills: options.withSkills || options.all,
-        withRules: options.withRules || options.all,
+        withSkills: options.withSkills,
+        withRules: options.withRules,
       },
     },
     dryRun
@@ -605,10 +603,10 @@ function init(techs, options) {
     console.log('');
     console.log('Installed:');
     console.log(`  - Technologies: ${techs.join(', ')}`);
-    if (options.withSkills || options.all) {
+    if (options.withSkills) {
       console.log('  - Skills: /learning, /review, /spec, /debug, and more');
     }
-    if (options.withRules || options.all) {
+    if (options.withRules) {
       console.log('  - Rules: security, performance, accessibility');
     }
     console.log('');
@@ -708,11 +706,11 @@ async function run(args) {
   }
 
   if (command === 'init') {
+    const minimal = args.includes('--minimal');
     const options = {
       target: null,
-      withSkills: false,
-      withRules: false,
-      all: false,
+      withSkills: !minimal,
+      withRules: !minimal,
       dryRun: args.includes('--dry-run'),
       force: args.includes('--force'),
     };
@@ -722,12 +720,8 @@ async function run(args) {
     for (let i = 1; i < args.length; i++) {
       const arg = args[i];
 
-      if (arg === '--with-skills') {
-        options.withSkills = true;
-      } else if (arg === '--with-rules') {
-        options.withRules = true;
-      } else if (arg === '--all') {
-        options.all = true;
+      if (arg === '--minimal') {
+        // Already handled above
       } else if (arg === '--target') {
         options.target = args[++i];
       } else if (arg === '--dry-run' || arg === '--force') {
