@@ -39,6 +39,17 @@ ai/
 │               ├── prisma.md
 │               └── typeorm.md
 │
+├── dotnet/                    # .NET 8+ / ASP.NET Core
+│   ├── CLAUDE.md
+│   └── .claude/
+│       ├── settings.json
+│       └── rules/
+│           ├── architecture.md
+│           ├── api.md
+│           ├── testing.md
+│           └── database/
+│               └── efcore.md
+│
 ├── _shared/                    # Common conventions
 │   ├── CLAUDE.md
 │   └── .claude/
@@ -179,6 +190,19 @@ cp nestjs/.claude/rules/database/prisma.md /your/project/.claude/rules/
 cp nestjs/.claude/rules/database/typeorm.md /your/project/.claude/rules/
 ```
 
+## .NET - Key Points
+
+| Aspect          | Convention                                  |
+| --------------- | ------------------------------------------- |
+| Architecture    | Clean Architecture (Domain → App → Infra)   |
+| API Style       | Minimal APIs or Controllers                 |
+| CQRS            | MediatR (Commands/Queries)                  |
+| Validation      | FluentValidation                            |
+| ORM             | Entity Framework Core                       |
+| Naming          | PascalCase C# → snake_case DB               |
+| Tests           | xUnit + NSubstitute + FluentAssertions      |
+| Integration     | WebApplicationFactory + TestContainers      |
+
 ## Adding a New Technology
 
 1. Create folder: `mkdir -p [tech]/.claude/rules`
@@ -191,6 +215,6 @@ cp nestjs/.claude/rules/database/typeorm.md /your/project/.claude/rules/
 
 - [x] Angular (Angular 21 + Nx + NgRx)
 - [x] Next.js (App Router, Server Components, Zustand/Redux)
-- [ ] Vue 3 (Composition API, Pinia)
 - [x] NestJS (Modular Monolith, Prisma/TypeORM, Passport)
-- [ ] React (Vite, Zustand/Jotai)
+- [x] .NET (Clean Architecture, EF Core, MediatR)
+- [ ] Python (FastAPI, Django)
