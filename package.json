@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src bin",
+    "lint:rules": "node scripts/lint-rules.js",
+    "validate": "npm test && npm run lint:rules",
     "prepare": "node -e \"console.log('Ready to publish')\""
   },
   "keywords": [
