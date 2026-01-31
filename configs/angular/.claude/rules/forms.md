@@ -5,9 +5,9 @@ paths:
   - "**/*.html"
 ---
 
-# Angular Signal Forms
+# Angular Signal-Based Forms
 
-Angular 19+ introduces signal-based forms. Use these patterns for new forms.
+Use signals for reactive form state. These patterns leverage `signal()`, `computed()`, and `linkedSignal()` for form management.
 
 ## Basic Signal Form
 
@@ -17,7 +17,6 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
   imports: [FormsModule],
   template: `
     <form (ngSubmit)="onSubmit()">
@@ -344,6 +343,32 @@ export class ContactFormComponent {
 }
 ```
 
+## Form Reset with linkedSignal
+
+Use `linkedSignal` when form values should reset based on external state:
+
+```typescript
+@Component({
+  selector: 'app-user-editor',
+  template: `
+    <input [ngModel]="email()" (ngModelChange)="email.set($event)" />
+    <button (click)="save()">Save</button>
+  `,
+})
+export class UserEditorComponent {
+  // When selectedUser changes, email resets to user's email
+  // But user can still edit it manually
+  public readonly selectedUser = input.required<User>();
+
+  protected readonly email = linkedSignal(() => this.selectedUser().email);
+
+  protected save(): void {
+    // email() contains the current (possibly edited) value
+    console.log('Saving:', this.email());
+  }
+}
+```
+
 ## When to Use Reactive Forms Instead
 
 Use traditional `FormGroup`/`FormControl` when you need:
@@ -355,5 +380,43 @@ Use traditional `FormGroup`/`FormControl` when you need:
 // For complex forms, ReactiveFormsModule is still valid
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
-// But prefer signal forms for new, simpler forms
+// But prefer signal-based forms for new, simpler forms
+```
+
+## Anti-patterns
+
+```typescript
+// BAD: Using BehaviorSubject for form state
+private readonly email$ = new BehaviorSubject('');
+
+// GOOD: Use signals
+protected readonly email = signal('');
+
+
+// BAD: Manual subscription for validation
+ngOnInit() {
+  this.email$.subscribe(value => {
+    this.emailError = this.validateEmail(value);
+  });
+}
+
+// GOOD: Use computed
+protected readonly emailError = computed(() => this.validateEmail(this.email()));
+
+
+// BAD: Forgetting to handle loading state
+public onSubmit(): void {
+  this.service.save(this.form()).subscribe();  // No loading indicator!
+}
+
+// GOOD: Track submission state
+protected readonly isSubmitting = signal(false);
+public async onSubmit(): Promise<void> {
+  this.isSubmitting.set(true);
+  try {
+    await firstValueFrom(this.service.save(this.form()));
+  } finally {
+    this.isSubmitting.set(false);
+  }
+}
 ```

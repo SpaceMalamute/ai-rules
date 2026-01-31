@@ -120,32 +120,102 @@ protected readonly users = this.store.selectSignal(selectAllUsers);
 protected readonly loading = this.store.selectSignal(selectLoading);
 ```
 
-## Signal Forms (Experimental)
+## linkedSignal - Resettable Derived State
+
+`linkedSignal` creates a writable signal that resets when its source changes:
 
 ```typescript
-import { signalForm } from '@angular/forms';
-
-// Create form with signals
-protected readonly form = signalForm({
-  name: '',
-  email: '',
-  age: 0,
+// Pagination that resets when filter changes
+protected readonly searchQuery = signal('');
+protected readonly currentPage = linkedSignal(() => {
+  this.searchQuery();  // Track dependency
+  return 1;            // Reset to page 1 when query changes
 });
 
-// Access values (reactive)
-form.value();              // { name: '', email: '', age: 0 }
-form.controls.name();      // ''
-form.valid();              // boolean signal
-form.dirty();              // boolean signal
+// User can still manually change page
+this.currentPage.set(5);
 
-// Set values
-form.controls.name.set('John');
-form.patchValue({ email: 'john@example.com' });
+// But when searchQuery changes, currentPage resets to 1
+```
 
-// In template
-<input [formControl]="form.controls.name" />
-@if (form.controls.email.invalid()) {
-  <span class="error">Invalid email</span>
+```typescript
+// Form field that resets to server value but can be edited
+protected readonly selectedUser = input.required<User>();
+protected readonly editedEmail = linkedSignal(() => this.selectedUser().email);
+
+// User edits the email
+this.editedEmail.set('new@email.com');
+
+// When selectedUser changes, editedEmail resets to new user's email
+```
+
+```typescript
+// Settings with server defaults that can be overridden
+protected readonly serverSettings = toSignal(this.settingsService.get());
+protected readonly localTheme = linkedSignal(() => this.serverSettings()?.theme ?? 'light');
+
+// User can override locally
+this.localTheme.set('dark');
+
+// When server settings reload, resets to server value
+```
+
+## View Queries as Signals
+
+```typescript
+// viewChild - single element/component reference
+protected readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('nameInput');
+protected readonly inputRef = viewChild.required<ElementRef>('nameInput');  // Required
+
+// viewChildren - multiple references
+protected readonly items = viewChildren(ItemComponent);
+protected readonly listItems = viewChildren<ElementRef>('listItem');
+
+// contentChild - projected content
+protected readonly header = contentChild<TemplateRef<unknown>>('header');
+protected readonly header = contentChild.required(HeaderComponent);
+
+// contentChildren - multiple projected content
+protected readonly tabs = contentChildren(TabComponent);
+```
+
+```typescript
+// Usage example
+@Component({
+  selector: 'app-search',
+  template: `
+    <input #searchInput type="text" />
+    <button (click)="focusInput()">Focus</button>
+  `,
+})
+export class SearchComponent {
+  private readonly searchInput = viewChild.required<ElementRef<HTMLInputElement>>('searchInput');
+
+  public focusInput(): void {
+    this.searchInput().nativeElement.focus();
+  }
+}
+```
+
+```typescript
+// Content projection example
+@Component({
+  selector: 'app-card',
+  template: `
+    <div class="card">
+      <header>
+        <ng-content select="[card-header]" />
+      </header>
+      <div class="body">
+        <ng-content />
+      </div>
+    </div>
+  `,
+})
+export class CardComponent {
+  private readonly headerContent = contentChild<ElementRef>('card-header');
+
+  protected readonly hasHeader = computed(() => !!this.headerContent());
 }
 ```
 
@@ -210,6 +280,7 @@ this.source$.pipe(
 // BAD: Using decorators
 @Input() name: string;        // Use input() instead
 @Output() click = new EventEmitter();  // Use output() instead
+@ViewChild('ref') ref: ElementRef;  // Use viewChild() instead
 
 // BAD: Constructor injection
 constructor(private store: Store) {}  // Use inject() instead
@@ -228,4 +299,22 @@ ngOnInit() {
 @for (item of items(); track item.id) {
   <div>{{ item.name }}</div>
 }
+
+// BAD: Using computed() for resettable state
+protected readonly currentPage = computed(() => 1);  // Read-only, can't be changed!
+
+// GOOD: Use linkedSignal() for resettable writable state
+protected readonly currentPage = linkedSignal(() => {
+  this.filter();  // Reset when filter changes
+  return 1;
+});
+
+// BAD: Setting signals in computed
+protected readonly total = computed(() => {
+  this.loading.set(true);  // WRONG - side effect in computed!
+  return this.items().length;
+});
+
+// GOOD: computed should be pure
+protected readonly total = computed(() => this.items().length);
 ```

@@ -18,8 +18,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'timeAgo',
-  standalone: true,
-})
+  })
 export class TimeAgoPipe implements PipeTransform {
   public transform(value: Date | string | number): string {
     const date = new Date(value);
@@ -44,8 +43,7 @@ export class TimeAgoPipe implements PipeTransform {
 // pipes/truncate.pipe.ts
 @Pipe({
   name: 'truncate',
-  standalone: true,
-})
+  })
 export class TruncatePipe implements PipeTransform {
   public transform(
     value: string,
@@ -68,8 +66,7 @@ export class TruncatePipe implements PipeTransform {
 // pipes/filter.pipe.ts
 @Pipe({
   name: 'filter',
-  standalone: true,
-})
+  })
 export class FilterPipe implements PipeTransform {
   public transform<T>(
     items: T[],
@@ -95,8 +92,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Pipe({
   name: 'safeHtml',
-  standalone: true,
-})
+  })
 export class SafeHtmlPipe implements PipeTransform {
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -119,8 +115,7 @@ import { Directive, ElementRef, HostListener, input, inject } from '@angular/cor
 
 @Directive({
   selector: '[appHighlight]',
-  standalone: true,
-})
+  })
 export class HighlightDirective {
   private readonly el = inject(ElementRef);
 
@@ -156,8 +151,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Directive({
   selector: '[appClickOutside]',
-  standalone: true,
-})
+  })
 export class ClickOutsideDirective {
   private readonly el = inject(ElementRef);
 
@@ -184,8 +178,7 @@ import { Directive, ElementRef, AfterViewInit, input, inject } from '@angular/co
 
 @Directive({
   selector: '[appAutoFocus]',
-  standalone: true,
-})
+  })
 export class AutoFocusDirective implements AfterViewInit {
   private readonly el = inject(ElementRef);
 
@@ -210,8 +203,7 @@ import { AuthService } from '../services/auth.service';
 
 @Directive({
   selector: '[appHasPermission]',
-  standalone: true,
-})
+  })
 export class HasPermissionDirective {
   private readonly templateRef = inject(TemplateRef<unknown>);
   private readonly viewContainer = inject(ViewContainerRef);
@@ -251,8 +243,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Directive({
   selector: 'input[appDebounce]',
-  standalone: true,
-})
+  })
 export class DebounceInputDirective implements OnInit {
   private readonly el = inject(ElementRef<HTMLInputElement>);
   private readonly destroyRef = inject(DestroyRef);
@@ -281,8 +272,7 @@ export class DebounceInputDirective implements OnInit {
 // components/user-list.component.ts
 @Component({
   selector: 'app-user-list',
-  standalone: true,
-  imports: [
+    imports: [
     TimeAgoPipe,
     TruncatePipe,
     FilterPipe,
@@ -312,9 +302,10 @@ export class UserListComponent {
 // BAD: Impure pipe for filtering (causes performance issues)
 @Pipe({ name: 'filter', pure: false })
 
-// GOOD: Use pure pipe + signal for reactivity
-@Pipe({ name: 'filter', standalone: true })
+// GOOD: Use pure pipe (default) + signal for reactivity
+@Pipe({ name: 'filter' })
 // And update source data via signals
+
 
 // BAD: Direct DOM manipulation
 this.el.nativeElement.innerHTML = '<b>text</b>';
@@ -322,9 +313,23 @@ this.el.nativeElement.innerHTML = '<b>text</b>';
 // GOOD: Use Renderer2 or Angular bindings
 @HostBinding('innerHTML') content = '<b>text</b>';
 
-// BAD: Not using standalone
-@Pipe({ name: 'myPipe' })  // Missing standalone: true
 
-// GOOD: Always standalone
+// BAD: Adding standalone: true (it's the default since Angular 19)
 @Pipe({ name: 'myPipe', standalone: true })
+
+// GOOD: Omit standalone (defaults to true)
+@Pipe({ name: 'myPipe' })
+
+
+// BAD: Using @Input() in directives
+@Directive({ selector: '[appHighlight]' })
+export class HighlightDirective {
+  @Input() appHighlight: string;  // Use input() instead
+}
+
+// GOOD: Use signal inputs
+@Directive({ selector: '[appHighlight]' })
+export class HighlightDirective {
+  public readonly appHighlight = input<string>();
+}
 ```
