@@ -39,6 +39,11 @@ Each technology has:
 2. Add rules in `configs/[tech]/.claude/rules/`
 3. Update this file and README.md
 
+## Git
+
+- **No `Co-Authored-By`** in commit messages
+- Follow conventional commits format
+
 ## Language
 
 All files in **English**.
