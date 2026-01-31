@@ -212,7 +212,7 @@ function mergeSettingsJson(targetPath, sourcePath, options = {}) {
 
     fs.writeFileSync(targetPath, JSON.stringify(merged, null, 2) + '\n');
     return { type: 'merge', path: '.claude/settings.json' };
-  } catch (e) {
+  } catch (_e) {
     log.warning('Could not merge settings.json, overwriting');
     fs.copyFileSync(sourcePath, targetPath);
     return { type: 'overwrite', path: '.claude/settings.json' };
@@ -292,14 +292,6 @@ async function multiSelect(message, choices) {
     .filter((i) => i >= 0 && i < choices.length);
 
   return indices.map((i) => choices[i].value);
-}
-
-async function confirm(message, defaultValue = true) {
-  const hint = defaultValue ? '[Y/n]' : '[y/N]';
-  const answer = await prompt(`${message} ${hint} `);
-
-  if (!answer) return defaultValue;
-  return answer.toLowerCase().startsWith('y');
 }
 
 async function interactiveInit() {
@@ -623,7 +615,6 @@ function init(techs, options) {
 async function update(options) {
   const targetDir = path.resolve(options.target || process.cwd());
   const { dryRun, force } = options;
-  const backup = !force;
 
   const manifest = readManifest(targetDir);
 
@@ -744,7 +735,7 @@ async function run(args) {
       try {
         const result = await interactiveInit();
         init(result.techs, { ...options, ...result.options });
-      } catch (e) {
+      } catch (_e) {
         // Handle Ctrl+C gracefully
         console.log('\nAborted.');
         process.exit(0);

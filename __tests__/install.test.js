@@ -90,20 +90,31 @@ describe('ai-rules', () => {
       const skillsDir = path.join(tempDir, '.claude', 'skills');
       expect(fs.existsSync(skillsDir)).toBe(true);
 
-      const skills = fs.readdirSync(skillsDir);
-      expect(skills).toContain('learning');
-      expect(skills).toContain('review');
-      expect(skills).toContain('debug');
+      // Skills are organized in category subfolders
+      const categories = fs.readdirSync(skillsDir);
+      expect(categories).toContain('dev');
+      expect(categories).toContain('git');
+      expect(categories).toContain('analysis');
+
+      // Check skills exist in their categories
+      expect(fs.existsSync(path.join(skillsDir, 'dev', 'learning'))).toBe(true);
+      expect(fs.existsSync(path.join(skillsDir, 'git', 'review'))).toBe(true);
+      expect(fs.existsSync(path.join(skillsDir, 'dev', 'debug'))).toBe(true);
     });
 
     it('should install shared rules when --with-rules is set', () => {
       init(['angular'], { target: tempDir, withRules: true });
 
       const rulesDir = path.join(tempDir, '.claude', 'rules');
-      const files = fs.readdirSync(rulesDir);
+      const entries = fs.readdirSync(rulesDir);
 
-      expect(files).toContain('security.md');
-      expect(files).toContain('performance.md');
+      // Shared rules are organized in category subfolders
+      expect(entries).toContain('security');
+      expect(entries).toContain('quality');
+
+      // Check rules exist in their categories
+      expect(fs.existsSync(path.join(rulesDir, 'security', 'security.md'))).toBe(true);
+      expect(fs.existsSync(path.join(rulesDir, 'performance.md'))).toBe(true);
     });
 
     it('should create manifest file', () => {
