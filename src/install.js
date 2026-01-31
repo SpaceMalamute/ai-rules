@@ -502,6 +502,19 @@ function init(techs, options) {
         log.success(`  rules/`);
       }
     }
+
+    // Copy tech-specific skills (if --with-skills)
+    if (options.withSkills || options.all) {
+      const techSkillsDir = path.join(techDir, '.claude', 'skills');
+      if (fs.existsSync(techSkillsDir)) {
+        const ops = copyDirRecursive(
+          techSkillsDir,
+          path.join(targetDir, '.claude', 'skills'),
+          { dryRun, backup, targetDir }
+        );
+        operations.push(...ops);
+      }
+    }
   }
 
   // Install shared resources
