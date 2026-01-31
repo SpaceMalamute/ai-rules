@@ -3,9 +3,7 @@
   "version": "1.1.0",
   "description": "Claude Code configuration boilerplates for Angular, Next.js, NestJS, .NET, Python and more",
   "main": "src/install.js",
-  "bin": {
-    "ai-rules": "./bin/cli.js"
-  },
+  "bin": "./bin/cli.js",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
@@ -53,5 +51,6 @@
     "eslint": "^9.39.2",
     "husky": "^9.1.7",
     "vitest": "^2.0.0"
-  }
+  },
+  "packageManager": "yarn@4.12.0"
 }
