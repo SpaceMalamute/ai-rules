@@ -237,15 +237,15 @@ export function init(techs, options) {
     if (fs.existsSync(rulesDir)) {
       const ops = copyDirRecursive(
         rulesDir,
-        path.join(targetDir, '.claude', 'rules'),
+        path.join(targetDir, '.claude', 'rules', tech),
         { dryRun, backup, targetDir }
       );
       operations.push(...ops);
 
       if (dryRun) {
-        log.dry(`  rules/ (${ops.length} files)`);
+        log.dry(`  rules/${tech}/ (${ops.length} files)`);
       } else {
-        log.success(`  rules/`);
+        log.success(`  rules/${tech}/`);
       }
     }
 
