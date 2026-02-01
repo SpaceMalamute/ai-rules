@@ -11,6 +11,7 @@ configs/
 ├── nestjs/           # NestJS 11+, Modular Monolith
 ├── dotnet/           # .NET 9, Clean Architecture
 ├── fastapi/          # FastAPI + Pydantic v2
+├── flask/            # Flask 3.0+ + Marshmallow
 └── _shared/          # Cross-tech conventions
 ```
 

@@ -48,6 +48,7 @@ npx @malamute/ai-rules <command>
 | **NestJS** | Prisma/TypeORM + Passport + Vitest | 11+ |
 | **.NET** | Clean Architecture + MediatR + EF Core | 9+ |
 | **FastAPI** | Pydantic v2 + SQLAlchemy 2.0 + pytest | 0.115+ |
+| **Flask** | Marshmallow + SQLAlchemy 2.0 + pytest | 3.0+ |
 
 ## Commands
 
@@ -268,6 +269,19 @@ ai-rules update
 | ORM | SQLAlchemy 2.0 with async support |
 | Tests | pytest + httpx |
 | Migrations | Alembic |
+
+</details>
+
+<details>
+<summary><strong>Flask</strong></summary>
+
+| Aspect | Convention |
+|--------|------------|
+| Framework | Flask 3.0 with Application Factory |
+| Validation | Marshmallow schemas |
+| ORM | SQLAlchemy 2.0 |
+| Tests | pytest |
+| Extensions | Flask-SQLAlchemy, Flask-Migrate, Flask-JWT-Extended |
 
 </details>
 
