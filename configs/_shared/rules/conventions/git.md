@@ -9,6 +9,8 @@ paths:
 
 Format: `type(scope): description`
 
+**No `Co-Authored-By`** - Do not add Co-Authored-By trailers to commits.
+
 ```bash
 # Types
 feat     # New feature
