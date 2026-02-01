@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-const { init, update, status, readManifest, VERSION } = require('../src/index.js');
+import { init, update, readManifest, VERSION } from '../src/index.js';
 
 describe('ai-rules', () => {
   let tempDir;
@@ -221,7 +221,7 @@ describe('ai-rules', () => {
 
       try {
         await update({ target: tempDir });
-      } catch (e) {
+      } catch (_e) {
         // Expected
       }
 

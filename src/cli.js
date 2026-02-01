@@ -1,7 +1,7 @@
-const readline = require('readline');
-const { colors, log } = require('./utils');
-const { VERSION, AVAILABLE_TECHS } = require('./config');
-const { init, update, status, listTechnologies } = require('./installer');
+import readline from 'readline';
+import { colors, log } from './utils.js';
+import { VERSION, AVAILABLE_TECHS } from './config.js';
+import { init, update, status, listTechnologies } from './installer.js';
 
 function printUsage() {
   console.log(`
@@ -123,7 +123,7 @@ async function interactiveInit() {
   return { techs, options };
 }
 
-async function run(args) {
+export async function run(args) {
   if (args.includes('--help') || args.includes('-h')) {
     printUsage();
     return;
@@ -216,5 +216,3 @@ async function run(args) {
   printUsage();
   process.exit(1);
 }
-
-module.exports = { run };

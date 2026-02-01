@@ -1,9 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const { log, backupFile } = require('./utils');
-const { VERSION } = require('./config');
+import fs from 'fs';
+import path from 'path';
+import { log, backupFile } from './utils.js';
+import { VERSION } from './config.js';
 
-function mergeClaudeMd(targetPath, sourcePath, isFirst, options = {}) {
+export function mergeClaudeMd(targetPath, sourcePath, isFirst, options = {}) {
   const { dryRun = false, backup = false, targetDir } = options;
   const content = fs.readFileSync(sourcePath, 'utf8');
   const exists = fs.existsSync(targetPath);
@@ -26,7 +26,7 @@ function mergeClaudeMd(targetPath, sourcePath, isFirst, options = {}) {
   return { type: exists ? 'merge' : 'create', path: 'CLAUDE.md' };
 }
 
-function mergeSettingsJson(targetPath, sourcePath, options = {}) {
+export function mergeSettingsJson(targetPath, sourcePath, options = {}) {
   const { dryRun = false, backup = false, targetDir } = options;
   const exists = fs.existsSync(targetPath);
 
@@ -83,7 +83,7 @@ function getManifestPath(targetDir) {
   return path.join(targetDir, '.claude', '.ai-rules.json');
 }
 
-function readManifest(targetDir) {
+export function readManifest(targetDir) {
   const manifestPath = getManifestPath(targetDir);
   if (!fs.existsSync(manifestPath)) return null;
 
@@ -94,7 +94,7 @@ function readManifest(targetDir) {
   }
 }
 
-function writeManifest(targetDir, data, dryRun = false) {
+export function writeManifest(targetDir, data, dryRun = false) {
   if (dryRun) return;
 
   const manifestPath = getManifestPath(targetDir);
@@ -107,10 +107,3 @@ function writeManifest(targetDir, data, dryRun = false) {
   fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 }
-
-module.exports = {
-  mergeClaudeMd,
-  mergeSettingsJson,
-  readManifest,
-  writeManifest,
-};

@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-const colors = {
+export const colors = {
   red: (text) => `\x1b[31m${text}\x1b[0m`,
   green: (text) => `\x1b[32m${text}\x1b[0m`,
   blue: (text) => `\x1b[34m${text}\x1b[0m`,
@@ -11,7 +11,7 @@ const colors = {
   bold: (text) => `\x1b[1m${text}\x1b[0m`,
 };
 
-const log = {
+export const log = {
   info: (msg) => console.log(`${colors.blue('ℹ')} ${msg}`),
   success: (msg) => console.log(`${colors.green('✓')} ${msg}`),
   warning: (msg) => console.log(`${colors.yellow('⚠')} ${msg}`),
@@ -19,7 +19,7 @@ const log = {
   dry: (msg) => console.log(`${colors.cyan('○')} ${msg}`),
 };
 
-function getFilesRecursive(dir, baseDir = dir) {
+export function getFilesRecursive(dir, baseDir = dir) {
   const files = [];
   if (!fs.existsSync(dir)) return files;
 
@@ -35,7 +35,7 @@ function getFilesRecursive(dir, baseDir = dir) {
   return files;
 }
 
-function copyDirRecursive(src, dest, options = {}) {
+export function copyDirRecursive(src, dest, options = {}) {
   const { dryRun = false, backup = false, targetDir = dest } = options;
   const operations = [];
 
@@ -75,7 +75,7 @@ function copyDirRecursive(src, dest, options = {}) {
   return operations;
 }
 
-function backupFile(filePath, targetDir) {
+export function backupFile(filePath, targetDir) {
   const backupDir = path.join(targetDir, '.claude', 'backups');
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const relativePath = path.relative(targetDir, filePath);
@@ -86,11 +86,3 @@ function backupFile(filePath, targetDir) {
 
   return backupPath;
 }
-
-module.exports = {
-  colors,
-  log,
-  getFilesRecursive,
-  copyDirRecursive,
-  backupFile,
-};

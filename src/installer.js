@@ -1,10 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const { colors, log, getFilesRecursive, copyDirRecursive, backupFile } = require('./utils');
-const { CONFIGS_DIR, AVAILABLE_TECHS, VERSION, TECH_CONFIG, getRuleCategoriesToInclude } = require('./config');
-const { mergeClaudeMd, mergeSettingsJson, readManifest, writeManifest } = require('./merge');
+import fs from 'fs';
+import path from 'path';
+import { colors, log, getFilesRecursive, copyDirRecursive, backupFile } from './utils.js';
+import { CONFIGS_DIR, AVAILABLE_TECHS, VERSION, TECH_CONFIG, getRuleCategoriesToInclude } from './config.js';
+import { mergeClaudeMd, mergeSettingsJson, readManifest, writeManifest } from './merge.js';
 
-function listTechnologies() {
+export function listTechnologies() {
   console.log(`\n${colors.bold('Available technologies:')}\n`);
 
   const techInfo = {
@@ -34,7 +34,7 @@ function listTechnologies() {
   console.log('');
 }
 
-function status(targetDir) {
+export function status(targetDir) {
   const manifest = readManifest(targetDir);
 
   console.log(`\n${colors.bold('AI Rules Status')}\n`);
@@ -84,7 +84,7 @@ function status(targetDir) {
   }
 }
 
-function init(techs, options) {
+export function init(techs, options) {
   const targetDir = path.resolve(options.target || process.cwd());
   const { dryRun, force } = options;
   const backup = !force;
@@ -317,7 +317,7 @@ function init(techs, options) {
   console.log('');
 }
 
-async function update(options) {
+export async function update(options) {
   const targetDir = path.resolve(options.target || process.cwd());
   const { dryRun, force } = options;
 
@@ -352,10 +352,3 @@ async function update(options) {
 
   init(manifest.technologies, initOptions);
 }
-
-module.exports = {
-  init,
-  update,
-  status,
-  listTechnologies,
-};
