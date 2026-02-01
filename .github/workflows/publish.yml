@@ -39,7 +39,8 @@ jobs:
         run: yarn lint:rules
 
       - name: Publish to npm
-        run: npm publish --access public
+        run: |
+          npm pkg delete scripts.prepare
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          HUSKY: 0
