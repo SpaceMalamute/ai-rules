@@ -47,6 +47,9 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "dependencies": {
+    "@inquirer/prompts": "^7.5.3"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",

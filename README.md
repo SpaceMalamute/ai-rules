@@ -24,7 +24,7 @@ AI Rules installs curated configuration boilerplates that teach Claude Code your
 npx @malamute/ai-rules init
 
 # Or specify your stack directly
-npx @malamute/ai-rules init angular nestjs --all
+npx @malamute/ai-rules init angular nestjs
 ```
 
 That's it. Claude Code now understands your stack.
@@ -63,12 +63,12 @@ ai-rules list               # List available technologies
 
 | Option | Description |
 |--------|-------------|
-| `--with-skills` | Add skills: `/learning`, `/review`, `/debug`, etc. |
-| `--with-rules` | Add shared rules: security, performance, accessibility |
-| `--all` | Include both skills and rules |
+| `--minimal` | Skip skills and shared rules (only tech rules + settings) |
 | `--dry-run` | Preview changes without writing files |
 | `--target <dir>` | Install to a specific directory |
 | `--force` | Overwrite without creating backups |
+
+By default, `init` installs everything (skills + shared rules). Use `--minimal` to skip extras.
 
 ## What Gets Installed
 
@@ -162,10 +162,13 @@ Cross-framework rules included with `--with-rules`:
 
 ```bash
 # Angular frontend + NestJS backend
-ai-rules init angular nestjs --all
+ai-rules init angular nestjs
 
 # Next.js frontend + FastAPI backend
-ai-rules init nextjs fastapi --all
+ai-rules init nextjs fastapi
+
+# Minimal install (no skills/shared rules)
+ai-rules init angular --minimal
 ```
 
 ### Preview Before Installing

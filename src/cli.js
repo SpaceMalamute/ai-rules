@@ -1,4 +1,4 @@
-import readline from 'readline';
+import { checkbox, input } from '@inquirer/prompts';
 import { colors, log } from './utils.js';
 import { VERSION, AVAILABLE_TECHS } from './config.js';
 import { init, update, status, listTechnologies } from './installer.js';
@@ -28,7 +28,7 @@ ${colors.bold('Technologies:')}
   flask      Flask + SQLAlchemy + Marshmallow
 
 ${colors.bold('Options:')}
-  --minimal        Only install CLAUDE.md, settings.json, and tech rules (no shared skills/rules)
+  --minimal        Only install settings.json and tech rules (no shared skills/rules)
   --target <dir>   Target directory (default: current directory)
   --dry-run        Preview changes without writing files
   --force          Overwrite files without backup (update command)
@@ -44,71 +44,48 @@ ${colors.bold('Examples:')}
 `);
 }
 
-async function prompt(question) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
-
-async function multiSelect(message, choices) {
-  console.log(`\n${colors.bold(message)}`);
-  console.log(colors.dim('(enter numbers separated by spaces, or "all")'));
-  console.log('');
-
-  choices.forEach((choice, i) => {
-    console.log(`  ${colors.cyan(i + 1)}. ${choice.name} ${colors.dim(`- ${choice.description}`)}`);
-  });
-
-  console.log('');
-  const answer = await prompt('Your selection: ');
-
-  if (answer.toLowerCase() === 'all') {
-    return choices.map((c) => c.value);
-  }
-
-  const indices = answer
-    .split(/[\s,]+/)
-    .map((s) => parseInt(s, 10) - 1)
-    .filter((i) => i >= 0 && i < choices.length);
-
-  return indices.map((i) => choices[i].value);
-}
-
 async function interactiveInit() {
   console.log(`\n${colors.bold('AI Rules')} - Interactive Setup\n`);
 
-  const techChoices = [
-    { name: 'Angular', value: 'angular', description: 'Angular 21 + Nx + NgRx + Signals' },
-    { name: 'Next.js', value: 'nextjs', description: 'Next.js 15 + React 19 + App Router' },
-    { name: 'NestJS', value: 'nestjs', description: 'NestJS 11 + Prisma/TypeORM + Passport' },
-    { name: '.NET', value: 'dotnet', description: '.NET 9 + ASP.NET Core + EF Core' },
-    { name: 'FastAPI', value: 'fastapi', description: 'FastAPI + SQLAlchemy 2.0 + Pydantic v2' },
-    { name: 'Flask', value: 'flask', description: 'Flask + SQLAlchemy 2.0 + Marshmallow' },
-  ];
-
-  const techs = await multiSelect('Select technologies:', techChoices);
+  const techs = await checkbox({
+    message: 'Select technologies:',
+    instructions: '(Space to select, Enter to confirm)',
+    choices: [
+      { name: 'Angular - Angular 21 + Nx + NgRx + Signals', value: 'angular' },
+      { name: 'Next.js - Next.js 15 + React 19 + App Router', value: 'nextjs' },
+      { name: 'NestJS - NestJS 11 + Prisma/TypeORM + Passport', value: 'nestjs' },
+      { name: '.NET - .NET 9 + ASP.NET Core + EF Core', value: 'dotnet' },
+      { name: 'FastAPI - FastAPI + SQLAlchemy 2.0 + Pydantic v2', value: 'fastapi' },
+      { name: 'Flask - Flask + SQLAlchemy 2.0 + Marshmallow', value: 'flask' },
+    ],
+  });
 
   if (techs.length === 0) {
     log.error('No technology selected');
     process.exit(1);
   }
 
-  const extraChoices = [
-    { name: 'Skills', value: 'skills', description: '/learning, /review, /spec, /debug, etc.' },
-    { name: 'Shared Rules', value: 'rules', description: 'security, performance, accessibility' },
-  ];
+  const extras = await checkbox({
+    message: 'Include extras:',
+    instructions: '(Space to toggle, Enter to confirm)',
+    choices: [
+      {
+        name: 'Skills - /learning, /review, /spec, /debug, etc.',
+        value: 'skills',
+        checked: true,
+      },
+      {
+        name: 'Shared Rules - security, performance, accessibility',
+        value: 'rules',
+        checked: true,
+      },
+    ],
+  });
 
-  const extras = await multiSelect('Include extras:', extraChoices);
-
-  const targetDir = await prompt(`Target directory ${colors.dim('(. for current)')}: `) || '.';
+  const targetDir = await input({
+    message: 'Target directory:',
+    default: '.',
+  });
 
   const options = {
     target: targetDir === '.' ? null : targetDir,
