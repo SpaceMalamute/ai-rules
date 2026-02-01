@@ -1,18 +1,5 @@
 # Shared Conventions
 
-## TypeScript
-
-### Strict Mode Required
-
-Enable `strict`, `noImplicitAny`, `strictNullChecks` in tsconfig.json.
-
-### Type Guidelines
-
-- NO `any` - use `unknown` or proper types
-- Explicit return types on public functions
-- Prefer `const` over `let`
-- Interfaces for objects, types for unions
-
 ## Code Quality
 
 ### Naming - Be Explicit
