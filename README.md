@@ -54,6 +54,7 @@ npx @malamute/ai-rules <command>
 
 ```bash
 ai-rules init [tech...]     # Install configs (interactive if no tech)
+ai-rules add <tech>         # Add technology to existing installation
 ai-rules update             # Update to latest rules
 ai-rules status             # Show installation info
 ai-rules list               # List available technologies
@@ -168,6 +169,9 @@ ai-rules init angular nestjs
 
 # Next.js frontend + FastAPI backend
 ai-rules init nextjs fastapi
+
+# Add a technology to existing installation
+ai-rules add nestjs
 
 # Minimal install (no skills/shared rules)
 ai-rules init angular --minimal

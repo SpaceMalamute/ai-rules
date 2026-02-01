@@ -2,6 +2,7 @@ import { checkbox, input } from '@inquirer/prompts';
 import { colors, log } from './utils.js';
 import { VERSION, AVAILABLE_TECHS } from './config.js';
 import { init, update, status, listTechnologies } from './installer.js';
+import { readManifest } from './merge.js';
 
 function printUsage() {
   console.log(`
@@ -9,12 +10,14 @@ ${colors.bold('AI Rules')} v${VERSION} - Claude Code configuration boilerplates
 
 ${colors.bold('Usage:')}
   ai-rules init [tech] [tech2] [options]
+  ai-rules add <tech> [options]
   ai-rules update [options]
   ai-rules status
   ai-rules list
 
 ${colors.bold('Commands:')}
   init      Install configuration (interactive if no tech specified)
+  add       Add a technology to existing installation
   update    Update installed configs to latest version
   status    Show current installation status
   list      List available technologies
@@ -37,9 +40,8 @@ ${colors.bold('Examples:')}
   ai-rules init                          # Interactive mode
   ai-rules init angular                  # Full install (skills + rules)
   ai-rules init angular --minimal        # Minimal install
-  ai-rules init nextjs --dry-run
+  ai-rules add nestjs                    # Add NestJS to existing install
   ai-rules update
-  ai-rules update --force
   ai-rules status
 `);
 }
@@ -138,6 +140,61 @@ export async function run(args) {
     }
 
     await update(options);
+    return;
+  }
+
+  if (command === 'add') {
+    const targetIndex = args.indexOf('--target');
+    const targetDir = targetIndex !== -1 ? args[targetIndex + 1] : process.cwd();
+
+    const manifest = readManifest(targetDir);
+    if (!manifest) {
+      log.error('No ai-rules installation found.');
+      console.log(`Run ${colors.cyan('ai-rules init')} first.`);
+      process.exit(1);
+    }
+
+    const newTechs = [];
+    for (let i = 1; i < args.length; i++) {
+      const arg = args[i];
+      if (arg === '--target') {
+        i++; // Skip next arg
+      } else if (arg === '--dry-run' || arg === '--force') {
+        // Handled below
+      } else if (!arg.startsWith('-')) {
+        if (AVAILABLE_TECHS.includes(arg)) {
+          if (manifest.technologies.includes(arg)) {
+            log.warning(`${arg} is already installed, skipping`);
+          } else {
+            newTechs.push(arg);
+          }
+        } else {
+          log.error(`Unknown technology: ${arg}`);
+          console.log(`Available: ${AVAILABLE_TECHS.join(', ')}`);
+          process.exit(1);
+        }
+      }
+    }
+
+    if (newTechs.length === 0) {
+      log.error('No new technology to add');
+      process.exit(1);
+    }
+
+    const allTechs = [...manifest.technologies, ...newTechs];
+
+    const options = {
+      target: targetDir === process.cwd() ? null : targetDir,
+      withSkills: manifest.options?.withSkills ?? true,
+      withRules: manifest.options?.withRules ?? true,
+      dryRun: args.includes('--dry-run'),
+      force: args.includes('--force'),
+    };
+
+    console.log('');
+    log.info(`Adding ${newTechs.join(', ')} to existing installation`);
+
+    init(allTechs, options);
     return;
   }
 
