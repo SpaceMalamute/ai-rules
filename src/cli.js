@@ -26,6 +26,7 @@ ${colors.bold('Technologies:')}
   angular    Angular 21 + Nx + NgRx
   nextjs     Next.js 15 + React 19
   nestjs     NestJS + Prisma/TypeORM
+  adonisjs   AdonisJS 6 + Lucid + VineJS
   dotnet     .NET 9 + EF Core
   fastapi    FastAPI + SQLAlchemy + Pydantic
   flask      Flask + SQLAlchemy + Marshmallow
@@ -56,6 +57,7 @@ async function interactiveInit() {
       { name: 'Angular - Angular 21 + Nx + NgRx + Signals', value: 'angular' },
       { name: 'Next.js - Next.js 15 + React 19 + App Router', value: 'nextjs' },
       { name: 'NestJS - NestJS 11 + Prisma/TypeORM + Passport', value: 'nestjs' },
+      { name: 'AdonisJS - AdonisJS 6 + Lucid ORM + VineJS', value: 'adonisjs' },
       { name: '.NET - .NET 9 + ASP.NET Core + EF Core', value: 'dotnet' },
       { name: 'FastAPI - FastAPI + SQLAlchemy 2.0 + Pydantic v2', value: 'fastapi' },
       { name: 'Flask - Flask + SQLAlchemy 2.0 + Marshmallow', value: 'flask' },

@@ -91,13 +91,19 @@ paths:
 ---
 ```
 
-### 6. Update documentation
+### 6. Update CLI
+
+Update `src/cli.js`:
+- Help text in `printUsage()` (Technologies section)
+- Interactive choices in `interactiveInit()` (choices array)
+
+### 7. Update documentation
 
 Update these files:
 - `README.md` - Add to supported technologies list
 - `CLAUDE.md` - Add to structure section
 
-### 7. Test installation
+### 8. Test installation
 
 ```bash
 # Build and test locally
