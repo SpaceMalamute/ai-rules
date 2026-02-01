@@ -6,7 +6,6 @@ paths:
   - "**/endpoints/**/*.py"
   - "**/main.py"
   - "**/app.py"
-  - "**/*.py"
 ---
 
 # FastAPI Rules
@@ -17,134 +16,175 @@ paths:
 from fastapi import APIRouter, Depends, status
 from typing import Annotated
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter()
 
-@router.get("/", response_model=list[UserResponse])
-async def list_users(db: DbSession) -> list[User]:
-    return await db.scalars(select(User).where(User.is_active))
+@router.get(
+    "/",
+    response_model=list[UserResponse],
+    summary="List all users",
+    description="Get a paginated list of users",
+)
+async def list_users(
+    service: UserServiceDep,
+    skip: int = 0,
+    limit: int = 100,
+) -> list[UserResponse]:
+    return await service.get_all(skip=skip, limit=limit)
 
-@router.get("/{user_id}", responses={404: {"description": "Not found"}})
-async def get_user(user_id: int, db: DbSession) -> UserResponse:
-    user = await db.get(User, user_id)
-    if not user:
-        raise HTTPException(404, "User not found")
-    return user
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_user(data: UserCreate, db: DbSession) -> UserResponse:
-    user = User(**data.model_dump())
-    db.add(user)
-    await db.commit()
-    return user
+@router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    responses={404: {"description": "User not found"}},
+)
+async def get_user(
+    user_id: int,
+    service: UserServiceDep,
+) -> UserResponse:
+    return await service.get_by_id(user_id)
+
+
+@router.post(
+    "/",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_user(
+    user_data: UserCreate,
+    service: UserServiceDep,
+) -> UserResponse:
+    return await service.create(user_data)
+
+
+@router.put("/{user_id}", response_model=UserResponse)
+async def update_user(
+    user_id: int,
+    user_data: UserUpdate,
+    service: UserServiceDep,
+) -> UserResponse:
+    return await service.update(user_id, user_data)
+
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: int, db: DbSession) -> None:
-    await db.delete(await db.get(User, user_id))
-    await db.commit()
+async def delete_user(
+    user_id: int,
+    service: UserServiceDep,
+) -> None:
+    await service.delete(user_id)
 ```
 
-## Router Registration
+## Pydantic Schemas (v2)
 
 ```python
-from fastapi import FastAPI
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from datetime import datetime
 
-app = FastAPI(title="My API", version="1.0.0")
+# Base schema with common config
+class BaseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-api_v1 = APIRouter(prefix="/api/v1")
-api_v1.include_router(users_router)
-api_v1.include_router(auth_router)
+# Request schemas
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8)
+    name: str = Field(min_length=1, max_length=100)
 
-app.include_router(api_v1)
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    name: str | None = Field(default=None, max_length=100)
+
+# Response schemas
+class UserResponse(BaseSchema):
+    id: int
+    email: EmailStr
+    name: str
+    created_at: datetime
+
+# Nested schemas
+class UserWithPostsResponse(UserResponse):
+    posts: list["PostResponse"] = []
+
+# Pagination
+class PaginatedResponse[T](BaseModel):
+    items: list[T]
+    total: int
+    page: int
+    size: int
+    pages: int
 ```
 
 ## Dependencies
 
+### Validation with Dependencies
+
 ```python
-# Database session
-async def get_db():
-    async with async_session() as session:
-        yield session
+from fastapi import Depends, HTTPException, status, Path
 
-DbSession = Annotated[AsyncSession, Depends(get_db)]
+async def valid_user_id(
+    user_id: Annotated[int, Path(gt=0)],
+    db: DbSession,
+) -> User:
+    """Validate user exists and return it."""
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User {user_id} not found",
+        )
+    return user
 
-# Authentication
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+ValidUser = Annotated[User, Depends(valid_user_id)]
+
+# Usage - user is already validated
+@router.get("/{user_id}")
+async def get_user(user: ValidUser) -> UserResponse:
+    return user
+```
+
+### Authentication Dependency
+
+```python
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: DbSession,
 ) -> User:
-    payload = verify_token(token)
-    if not payload:
-        raise HTTPException(401, "Invalid token")
-    user = await db.get(User, payload["sub"])
-    if not user:
-        raise HTTPException(401, "User not found")
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        user_id: int = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = await db.get(User, user_id)
+    if user is None:
+        raise credentials_exception
     return user
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
-# Role-based
-def require_role(role: str):
+# Role-based dependency
+def require_role(required_role: str):
     async def check_role(user: CurrentUser) -> User:
-        if user.role != role:
-            raise HTTPException(403, "Insufficient permissions")
+        if user.role != required_role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
         return user
     return check_role
 
 AdminUser = Annotated[User, Depends(require_role("admin"))]
-
-# Validation dependency
-async def valid_user_id(user_id: int, db: DbSession) -> User:
-    user = await db.get(User, user_id)
-    if not user:
-        raise HTTPException(404, f"User {user_id} not found")
-    return user
-
-ValidUser = Annotated[User, Depends(valid_user_id)]
-```
-
-## Lifespan
-
-```python
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    app.state.db = await create_database_pool()
-    app.state.redis = await create_redis_pool()
-    yield
-    # Shutdown
-    await app.state.db.close()
-    await app.state.redis.close()
-
-app = FastAPI(lifespan=lifespan)
-```
-
-## Middleware
-
-```python
-from starlette.middleware.base import BaseHTTPMiddleware
-
-class TimingMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        start = time.perf_counter()
-        response = await call_next(request)
-        response.headers["X-Process-Time"] = f"{time.perf_counter() - start:.4f}"
-        return response
-
-app.add_middleware(TimingMiddleware)
-
-# CORS
-from fastapi.middleware.cors import CORSMiddleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 ```
 
 ## Background Tasks
@@ -152,132 +192,141 @@ app.add_middleware(
 ```python
 from fastapi import BackgroundTasks
 
+async def send_welcome_email(email: str, name: str) -> None:
+    # Async email sending
+    ...
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(
-    data: UserCreate,
+    user_data: UserCreate,
     background_tasks: BackgroundTasks,
-    db: DbSession,
+    service: UserServiceDep,
 ) -> UserResponse:
-    user = await create_user_in_db(db, data)
-    background_tasks.add_task(send_welcome_email, user.email)
+    user = await service.create(user_data)
+    background_tasks.add_task(send_welcome_email, user.email, user.name)
     return user
-
-# For long-running tasks, use Celery or ARQ
 ```
 
-## WebSockets
+## Middleware
 
 ```python
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request
+from starlette.middleware.cors import CORSMiddleware
+import time
 
-class ConnectionManager:
-    def __init__(self):
-        self.connections: list[WebSocket] = []
+app = FastAPI()
 
-    async def connect(self, ws: WebSocket):
-        await ws.accept()
-        self.connections.append(ws)
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    def disconnect(self, ws: WebSocket):
-        self.connections.remove(ws)
-
-    async def broadcast(self, message: str):
-        for conn in self.connections:
-            await conn.send_text(message)
-
-manager = ConnectionManager()
-
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
-    await manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            await manager.broadcast(f"{client_id}: {data}")
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
+# Custom middleware
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    process_time = time.perf_counter() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
 ```
 
-## Responses
+## Lifespan Events
 
 ```python
-from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
 
-# Custom response
-@router.post("/users")
-async def create_user(data: UserCreate) -> JSONResponse:
-    user = await user_service.create(data)
-    return JSONResponse(
-        content={"id": user.id},
-        status_code=201,
-        headers={"X-Custom": "value"},
-    )
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await init_db()
+    print("Application started")
 
-# Streaming
-@router.get("/stream")
-async def stream():
-    async def generate():
-        for i in range(100):
-            yield f"data: {i}\n\n"
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    yield
 
-# File download
-@router.get("/download/{filename}")
-async def download(filename: str):
-    return FileResponse(f"files/{filename}", filename=filename)
+    # Shutdown
+    await close_db()
+    print("Application stopped")
+
+app = FastAPI(lifespan=lifespan)
 ```
 
-## Exception Handling
+## OpenAPI Documentation
 
 ```python
+app = FastAPI(
+    title="My API",
+    description="API description with **markdown** support",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {"name": "users", "description": "User operations"},
+        {"name": "auth", "description": "Authentication"},
+    ],
+)
+
+# Disable docs in production
+if settings.environment == "production":
+    app = FastAPI(docs_url=None, redoc_url=None)
+```
+
+## Type Hints
+
+Always use modern syntax (Python 3.10+):
+
+```python
+# Modern type hints
+async def get_user(user_id: int) -> User | None:
+    ...
+
+def process_items(items: list[str]) -> dict[str, int]:
+    ...
+
+# Annotated for dependency injection
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
+
+@router.get("/{user_id}")
+async def get_user(
+    user_id: int,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> UserResponse:
+    ...
+```
+
+## Custom Exception Handling
+
+```python
+# Custom exceptions
 class NotFoundError(Exception):
     def __init__(self, resource: str, id: int):
         self.resource = resource
         self.id = id
 
+class BusinessError(Exception):
+    def __init__(self, message: str, code: str):
+        self.message = message
+        self.code = code
+
+# FastAPI exception handlers
 @app.exception_handler(NotFoundError)
-async def not_found_handler(request, exc: NotFoundError):
+async def not_found_handler(request: Request, exc: NotFoundError):
     return JSONResponse(
         status_code=404,
         content={"detail": f"{exc.resource} {exc.id} not found"}
     )
 
-# Usage in service
-def get_user(user_id: int) -> User:
-    user = db.get(User, user_id)
-    if not user:
-        raise NotFoundError("User", user_id)
-    return user
-```
-
-## Query & Path Parameters
-
-```python
-from fastapi import Query, Path
-
-@router.get("/")
-async def list_items(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
-    search: str | None = Query(None, min_length=1),
-    sort_by: Literal["name", "created_at"] = "created_at",
-) -> Page[Item]:
-    ...
-
-@router.get("/{item_id}")
-async def get_item(
-    item_id: Annotated[int, Path(ge=1, description="Item ID")],
-) -> Item:
-    ...
-```
-
-## File Uploads
-
-```python
-from fastapi import File, UploadFile
-
-@router.post("/upload")
-async def upload(file: UploadFile = File(...)) -> dict:
-    contents = await file.read()
-    return {"filename": file.filename, "size": len(contents)}
+@app.exception_handler(BusinessError)
+async def business_error_handler(request: Request, exc: BusinessError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.message, "code": exc.code}
+    )
 ```
