@@ -151,19 +151,75 @@ GET /api/v1/users?sort=lastName:asc,firstName:asc
 GET /api/v1/users?fields=id,name,email
 ```
 
-## Versioning
+## API Versioning
 
-### URL Path (recommended)
+### When to Version (Breaking Changes)
+
+- Removing or renaming a field
+- Changing field type (string → number)
+- Removing an endpoint
+- Changing authentication method
+- Modifying error response structure
+
+### NOT Breaking (no version bump)
+
+- Adding new optional fields
+- Adding new endpoints
+- Adding new query parameters
+- Performance improvements
+
+### Strategy: URL Path (recommended)
 
 ```
 /api/v1/users
 /api/v2/users
 ```
 
+- Simple, explicit, cacheable
+- Easy to route at load balancer level
+- Version visible in logs
+
 ### Header-based (alternative)
 
 ```
 Accept: application/vnd.api+json; version=1
+```
+
+### Deprecation Policy
+
+1. Announce deprecation (minimum 6 months before sunset)
+2. Add `Deprecation` header to responses
+3. Document migration path
+4. Monitor usage, notify active consumers
+5. Sunset old version
+
+```
+Deprecation: true
+Sunset: Sat, 01 Jun 2025 00:00:00 GMT
+Link: <https://api.example.com/docs/migration-v2>; rel="deprecation"
+```
+
+### Version Lifecycle
+
+| Status | Description |
+|--------|-------------|
+| **Current** | Latest stable, recommended |
+| **Supported** | Still maintained, receives security fixes |
+| **Deprecated** | Works but scheduled for removal |
+| **Sunset** | No longer available |
+
+### Code Organization
+
+```
+project/
+├── src/
+│   ├── v1/
+│   │   ├── controllers/
+│   │   └── dto/
+│   ├── v2/
+│   │   ├── controllers/
+│   │   └── dto/
+│   └── shared/          # Version-agnostic (services, repositories)
 ```
 
 ## Rate Limiting
