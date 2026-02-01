@@ -18,36 +18,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
+
+      - name: Lint
+        run: yarn lint
 
       - name: Run tests
-        run: npm test
+        run: yarn test
 
-      - name: Lint rules
-        run: npm run lint:rules
+      - name: Validate rule frontmatter
+        run: yarn lint:rules
 
-  lint-rules:
+  check-commits:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          fetch-depth: 0
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Validate rule frontmatter
-        run: npm run lint:rules
+      - name: Check for Co-Authored-By
+        run: |
+          if git log origin/${{ github.base_ref }}..HEAD --format="%B" | grep -qiE "^Co-Authored-By:"; then
+            echo "Error: Co-Authored-By is not allowed in commit messages"
+            exit 1
+          fi
+          echo "No Co-Authored-By found"
