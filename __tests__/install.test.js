@@ -111,11 +111,11 @@ describe('ai-rules', () => {
       // Shared rules are organized in category subfolders
       expect(entries).toContain('security');
       expect(entries).toContain('quality');
-      expect(entries).toContain('core');
+      expect(entries).toContain('conventions');
 
       // Check rules exist in their categories
       expect(fs.existsSync(path.join(rulesDir, 'security', 'security.md'))).toBe(true);
-      expect(fs.existsSync(path.join(rulesDir, 'core', 'performance.md'))).toBe(true);
+      expect(fs.existsSync(path.join(rulesDir, 'conventions', 'performance.md'))).toBe(true);
     });
 
     it('should create manifest file', () => {

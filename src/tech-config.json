@@ -1,29 +1,29 @@
 {
   "technologies": {
     "angular": {
-      "includeRules": ["typescript", "frontend"]
+      "includeRules": ["lang/typescript", "domain/frontend"]
     },
     "nextjs": {
-      "includeRules": ["typescript", "frontend"]
+      "includeRules": ["lang/typescript", "domain/frontend"]
     },
     "nestjs": {
-      "includeRules": ["typescript", "backend"]
+      "includeRules": ["lang/typescript", "domain/backend"]
     },
     "dotnet": {
-      "includeRules": ["csharp", "backend"]
+      "includeRules": ["lang/csharp", "domain/backend"]
     },
     "fastapi": {
-      "includeRules": ["python", "backend"]
+      "includeRules": ["lang/python", "domain/backend"]
     },
     "flask": {
-      "includeRules": ["python", "backend"]
+      "includeRules": ["lang/python", "domain/backend"]
     }
   },
   "ruleCategories": {
-    "typescript": "TypeScript best practices",
-    "python": "Python best practices",
-    "csharp": "C# language best practices",
-    "frontend": "Accessibility, UI patterns",
-    "backend": "API design, server patterns"
+    "lang/typescript": "TypeScript best practices",
+    "lang/python": "Python best practices",
+    "lang/csharp": "C# language best practices",
+    "domain/frontend": "Accessibility, UI patterns",
+    "domain/backend": "API design, server patterns"
   }
 }
