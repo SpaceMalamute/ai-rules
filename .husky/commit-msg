@@ -1,0 +1,5 @@
+# Block Co-Authored-By trailer (line starting with "Co-Authored-By:")
+if grep -qiE "^Co-Authored-By:" "$1"; then
+  echo "Error: Co-Authored-By trailer is not allowed in commit messages"
+  exit 1
+fi
