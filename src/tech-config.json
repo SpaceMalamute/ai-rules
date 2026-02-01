@@ -10,7 +10,7 @@
       "includeRules": ["typescript", "backend"]
     },
     "dotnet": {
-      "includeRules": ["dotnet", "backend"]
+      "includeRules": ["csharp", "backend"]
     },
     "fastapi": {
       "includeRules": ["python", "backend"]
@@ -22,7 +22,7 @@
   "ruleCategories": {
     "typescript": "TypeScript best practices",
     "python": "Python best practices",
-    "dotnet": "C#/.NET best practices",
+    "csharp": "C# language best practices",
     "frontend": "Accessibility, UI patterns",
     "backend": "API design, server patterns"
   }
