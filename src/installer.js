@@ -261,7 +261,7 @@ function init(techs, options) {
       const sharedClaudeMd = path.join(sharedDir, 'CLAUDE.md');
       if (fs.existsSync(sharedClaudeMd)) {
         const sharedContent = fs.readFileSync(sharedClaudeMd, 'utf8');
-        content = content.replace(/@..\/shared\/CLAUDE\.md/g, '');
+        content = content.replace(/@..\/_shared\/CLAUDE\.md/g, '');
         content = sharedContent + '\n\n' + content;
         fs.writeFileSync(targetClaudeMd, content);
         log.success('Merged shared conventions into CLAUDE.md');
