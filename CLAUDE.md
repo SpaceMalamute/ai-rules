@@ -11,11 +11,11 @@ configs/
 ├── nestjs/           # NestJS 11+, Modular Monolith
 ├── dotnet/           # .NET 9, Clean Architecture
 ├── python/           # Python 3.12+, FastAPI
-└── _shared/          # Cross-tech conventions
+└── shared/           # Cross-tech conventions
 ```
 
 Each technology has:
-- `CLAUDE.md` → imports `_shared` + framework-specific concepts
+- `CLAUDE.md` → imports `shared` + framework-specific concepts
 - `.claude/rules/` → code patterns with path-based activation
 - `.claude/settings.json` → permissions
 
@@ -35,7 +35,7 @@ Each technology has:
 
 ## Adding a Technology
 
-1. Create `configs/[tech]/CLAUDE.md` starting with `@../_shared/CLAUDE.md`
+1. Create `configs/[tech]/CLAUDE.md` starting with `@../shared/CLAUDE.md`
 2. Add rules in `configs/[tech]/.claude/rules/`
 3. Update this file and README.md
 

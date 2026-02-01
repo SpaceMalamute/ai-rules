@@ -83,7 +83,7 @@ function validateRule(filePath) {
   // Rules should have frontmatter with paths
   if (!frontmatter) {
     // Some shared rules apply globally, that's OK
-    if (filePath.includes('_shared/.claude/rules/')) {
+    if (filePath.includes('shared/.claude/rules/')) {
       // Check if it has paths anyway (some do, some don't)
       filesChecked++;
       return;

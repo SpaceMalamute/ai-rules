@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-const { init, update, status, readManifest, VERSION } = require('../src/install.js');
+const { init, update, status, readManifest, VERSION } = require('../src/index.js');
 
 describe('ai-rules', () => {
   let tempDir;
@@ -111,10 +111,11 @@ describe('ai-rules', () => {
       // Shared rules are organized in category subfolders
       expect(entries).toContain('security');
       expect(entries).toContain('quality');
+      expect(entries).toContain('core');
 
       // Check rules exist in their categories
       expect(fs.existsSync(path.join(rulesDir, 'security', 'security.md'))).toBe(true);
-      expect(fs.existsSync(path.join(rulesDir, 'performance.md'))).toBe(true);
+      expect(fs.existsSync(path.join(rulesDir, 'core', 'performance.md'))).toBe(true);
     });
 
     it('should create manifest file', () => {
@@ -129,14 +130,14 @@ describe('ai-rules', () => {
       expect(manifest.installedAt).toBeDefined();
     });
 
-    it('should resolve @../_shared/CLAUDE.md imports', () => {
+    it('should resolve @../shared/CLAUDE.md imports', () => {
       init(['angular'], { target: tempDir });
 
       const claudeMdPath = path.join(tempDir, 'CLAUDE.md');
       const content = fs.readFileSync(claudeMdPath, 'utf8');
 
       // Should not contain the import directive
-      expect(content).not.toContain('@../_shared/CLAUDE.md');
+      expect(content).not.toContain('@../shared/CLAUDE.md');
       // Should contain shared content
       expect(content).toContain('TypeScript');
     });

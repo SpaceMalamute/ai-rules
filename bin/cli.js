@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { run } = require('../src/install.js');
+const { run } = require('../src/cli.js');
 
 run(process.argv.slice(2)).catch((err) => {
   console.error(err);
