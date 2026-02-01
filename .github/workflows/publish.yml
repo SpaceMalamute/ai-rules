@@ -39,6 +39,6 @@ jobs:
         run: yarn lint:rules
 
       - name: Publish to npm
-        run: yarn npm publish --access public
+        run: npm publish --access public --ignore-scripts
         env:
-          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
