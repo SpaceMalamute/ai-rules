@@ -23,6 +23,10 @@
     "flask": {
       "type": "backend",
       "language": "python"
+    },
+    "adonisjs": {
+      "type": "backend",
+      "language": "typescript"
     }
   },
   "ruleMapping": {

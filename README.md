@@ -41,14 +41,15 @@ npx @malamute/ai-rules <command>
 
 ## Supported Technologies
 
-| Technology  | Stack                                     | Version |
-| ----------- | ----------------------------------------- | ------- |
-| **Angular** | Nx + NgRx + Signals + Vitest              | 21+     |
-| **Next.js** | App Router + React 19 + Server Components | 15+     |
-| **NestJS**  | Prisma/TypeORM + Passport + Vitest        | 11+     |
-| **.NET**    | Clean Architecture + MediatR + EF Core    | 9+      |
-| **FastAPI** | Pydantic v2 + SQLAlchemy 2.0 + pytest     | 0.115+  |
-| **Flask**   | Marshmallow + SQLAlchemy 2.0 + pytest     | 3.0+    |
+| Technology   | Stack                                     | Version |
+| ------------ | ----------------------------------------- | ------- |
+| **Angular**  | Nx + NgRx + Signals + Vitest              | 21+     |
+| **Next.js**  | App Router + React 19 + Server Components | 15+     |
+| **NestJS**   | Prisma/TypeORM + Passport + Vitest        | 11+     |
+| **AdonisJS** | Lucid ORM + VineJS + Japa                 | 6+      |
+| **.NET**     | Clean Architecture + MediatR + EF Core    | 9+      |
+| **FastAPI**  | Pydantic v2 + SQLAlchemy 2.0 + pytest     | 0.115+  |
+| **Flask**    | Marshmallow + SQLAlchemy 2.0 + pytest     | 3.0+    |
 
 ## Commands
 
@@ -252,6 +253,19 @@ ai-rules update
 | Database     | Prisma (modern) / TypeORM (decorators) |
 | Auth         | Passport + JWT                         |
 | Tests        | Vitest + Supertest                     |
+
+</details>
+
+<details>
+<summary><strong>AdonisJS</strong></summary>
+
+| Aspect       | Convention                          |
+| ------------ | ----------------------------------- |
+| Architecture | MVC with Services layer             |
+| Validation   | VineJS                              |
+| ORM          | Lucid (Active Record)               |
+| Auth         | Access Tokens / Session-based       |
+| Tests        | Japa                                |
 
 </details>
 

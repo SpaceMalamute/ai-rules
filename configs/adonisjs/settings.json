@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node ace serve --watch)",
+      "Bash(node ace build)",
+      "Bash(node ace test*)",
+      "Bash(node ace make:*)",
+      "Bash(node ace migration:*)",
+      "Bash(node ace db:*)",
+      "Bash(node ace generate:*)",
+      "Bash(node ace list)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run test*)",
+      "Bash(npm run lint*)",
+      "Bash(npm install *)",
+      "Bash(npm ci)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Bash(git push)",
+      "Bash(rm -rf *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)"
+    ]
+  },
+  "env": {
+    "NODE_ENV": "development"
+  }
+}
