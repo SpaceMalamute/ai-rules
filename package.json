@@ -1,6 +1,6 @@
 {
   "name": "@malamute/ai-rules",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Claude Code configuration boilerplates for Angular, Next.js, NestJS, .NET, Python and more",
   "type": "module",
   "main": "src/index.js",
