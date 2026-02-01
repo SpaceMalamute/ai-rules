@@ -24,7 +24,8 @@ ${colors.bold('Technologies:')}
   nextjs     Next.js 15 + React 19
   nestjs     NestJS + Prisma/TypeORM
   dotnet     .NET 9 + EF Core
-  python     FastAPI/Flask + SQLAlchemy
+  fastapi    FastAPI + SQLAlchemy + Pydantic
+  flask      Flask + SQLAlchemy + Marshmallow
 
 ${colors.bold('Options:')}
   --minimal        Only install CLAUDE.md, settings.json, and tech rules (no shared skills/rules)
@@ -89,7 +90,8 @@ async function interactiveInit() {
     { name: 'Next.js', value: 'nextjs', description: 'Next.js 15 + React 19 + App Router' },
     { name: 'NestJS', value: 'nestjs', description: 'NestJS 11 + Prisma/TypeORM + Passport' },
     { name: '.NET', value: 'dotnet', description: '.NET 9 + ASP.NET Core + EF Core' },
-    { name: 'Python', value: 'python', description: 'FastAPI/Flask + SQLAlchemy 2.0' },
+    { name: 'FastAPI', value: 'fastapi', description: 'FastAPI + SQLAlchemy 2.0 + Pydantic v2' },
+    { name: 'Flask', value: 'flask', description: 'Flask + SQLAlchemy 2.0 + Marshmallow' },
   ];
 
   const techs = await multiSelect('Select technologies:', techChoices);

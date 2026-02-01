@@ -47,7 +47,7 @@ npx @malamute/ai-rules <command>
 | **Next.js** | App Router + React 19 + Server Components | 15+ |
 | **NestJS** | Prisma/TypeORM + Passport + Vitest | 11+ |
 | **.NET** | Clean Architecture + MediatR + EF Core | 9+ |
-| **Python** | FastAPI/Flask + SQLAlchemy 2.0 + pytest | 3.12+ |
+| **FastAPI** | Pydantic v2 + SQLAlchemy 2.0 + pytest | 0.115+ |
 
 ## Commands
 
@@ -165,8 +165,8 @@ Cross-framework rules included with `--with-rules`:
 # Angular frontend + NestJS backend
 ai-rules init angular nestjs --all
 
-# Next.js frontend + Python backend
-ai-rules init nextjs python --all
+# Next.js frontend + FastAPI backend
+ai-rules init nextjs fastapi --all
 ```
 
 ### Preview Before Installing
@@ -259,12 +259,12 @@ ai-rules update
 </details>
 
 <details>
-<summary><strong>Python</strong></summary>
+<summary><strong>FastAPI</strong></summary>
 
 | Aspect | Convention |
 |--------|------------|
-| Framework | FastAPI (async) / Flask (traditional) |
-| Validation | Pydantic v2 / Marshmallow |
+| Framework | FastAPI with async/await |
+| Validation | Pydantic v2 |
 | ORM | SQLAlchemy 2.0 with async support |
 | Tests | pytest + httpx |
 | Migrations | Alembic |
@@ -298,7 +298,7 @@ mkdir configs/your-tech
 
 ### Adding a Technology
 
-1. Create `configs/[tech]/CLAUDE.md` — start with `@../shared/CLAUDE.md`
+1. Create `configs/[tech]/CLAUDE.md` — start with `@../_shared/CLAUDE.md`
 2. Add rules in `configs/[tech]/.claude/rules/`
 3. Add `configs/[tech]/.claude/settings.json` for permissions
 4. Add tests

@@ -25,7 +25,7 @@ tests/
 
 ## Fixtures (conftest.py)
 
-### FastAPI Fixtures
+### Fixtures
 
 ```python
 import pytest
@@ -105,45 +105,6 @@ async def authenticated_client(client, db_session):
     return client
 ```
 
-### Flask Fixtures
-
-```python
-import pytest
-from app import create_app, db as _db
-
-@pytest.fixture(scope="session")
-def app():
-    """Create application for testing."""
-    app = create_app("testing")
-    return app
-
-@pytest.fixture
-def client(app):
-    """Create test client."""
-    return app.test_client()
-
-@pytest.fixture
-def db(app):
-    """Create database for testing."""
-    with app.app_context():
-        _db.create_all()
-        yield _db
-        _db.drop_all()
-
-@pytest.fixture
-def session(db):
-    """Create database session."""
-    connection = db.engine.connect()
-    transaction = connection.begin()
-
-    session = db.session
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
-```
-
 ## Unit Tests
 
 ```python
@@ -199,7 +160,7 @@ class TestUserService:
 
 ## Integration Tests (API)
 
-### FastAPI Tests
+### API Tests
 
 ```python
 import pytest
@@ -268,34 +229,6 @@ class TestUsersAPI:
         response = await authenticated_client.get("/api/v1/users/me")
         assert response.status_code == 200
         assert "email" in response.json()
-```
-
-### Flask Tests
-
-```python
-import pytest
-
-class TestUsersAPI:
-    def test_create_user(self, client):
-        response = client.post("/api/v1/users", json={
-            "email": "new@example.com",
-            "password": "password123",
-            "name": "New User",
-        })
-
-        assert response.status_code == 201
-        assert response.json["email"] == "new@example.com"
-
-    def test_get_user(self, client, session):
-        # Create user
-        user = User(email="test@example.com", name="Test")
-        session.add(user)
-        session.commit()
-
-        response = client.get(f"/api/v1/users/{user.id}")
-
-        assert response.status_code == 200
-        assert response.json["id"] == user.id
 ```
 
 ## Parametrized Tests

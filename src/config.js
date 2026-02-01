@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const CONFIGS_DIR = path.join(__dirname, '..', 'configs');
-const AVAILABLE_TECHS = ['angular', 'nextjs', 'nestjs', 'dotnet', 'python'];
+const AVAILABLE_TECHS = ['angular', 'nextjs', 'nestjs', 'dotnet', 'fastapi', 'flask'];
 const VERSION = require('../package.json').version;
 
 const TECH_CONFIG = JSON.parse(

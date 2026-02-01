@@ -12,12 +12,16 @@
     "dotnet": {
       "includeRules": ["backend"]
     },
-    "python": {
-      "includeRules": ["backend"]
+    "fastapi": {
+      "includeRules": ["python", "backend"]
+    },
+    "flask": {
+      "includeRules": ["python", "backend"]
     }
   },
   "ruleCategories": {
     "typescript": "TypeScript best practices",
+    "python": "Python best practices",
     "frontend": "Accessibility, UI patterns",
     "backend": "API design, server patterns"
   }

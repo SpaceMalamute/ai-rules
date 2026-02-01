@@ -3,10 +3,8 @@
     "allow": [
       "Bash(python *)",
       "Bash(python3 *)",
-      "Bash(uvicorn *)",
-      "Bash(gunicorn *)",
-      "Bash(fastapi *)",
       "Bash(flask *)",
+      "Bash(gunicorn *)",
       "Bash(pytest *)",
       "Bash(ruff *)",
       "Bash(mypy *)",
@@ -28,6 +26,7 @@
     ]
   },
   "env": {
+    "FLASK_DEBUG": "1",
     "PYTHONDONTWRITEBYTECODE": "1",
     "PYTHONUNBUFFERED": "1"
   }

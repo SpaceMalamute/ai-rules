@@ -12,7 +12,8 @@ function listTechnologies() {
     nextjs: 'Next.js 15 + React 19 + App Router',
     nestjs: 'NestJS 11 + Prisma/TypeORM + Passport',
     dotnet: '.NET 9 + ASP.NET Core + EF Core',
-    python: 'FastAPI/Flask + SQLAlchemy 2.0',
+    fastapi: 'FastAPI + SQLAlchemy 2.0 + Pydantic v2',
+    flask: 'Flask + SQLAlchemy 2.0 + Marshmallow',
   };
 
   for (const tech of AVAILABLE_TECHS) {
