@@ -1,8 +1,93 @@
 import fs from 'fs';
 import path from 'path';
 import { colors, log, getFilesRecursive, copyDirRecursive, backupFile } from './utils.js';
-import { CONFIGS_DIR, AVAILABLE_TECHS, VERSION, TECH_CONFIG, getRuleCategoriesToInclude } from './config.js';
+import { CONFIGS_DIR, AVAILABLE_TECHS, VERSION, getRulePathsToInclude, shouldIncludeRule } from './config.js';
 import { mergeClaudeMd, mergeSettingsJson, readManifest, writeManifest } from './merge.js';
+
+/**
+ * Copy skills to target directory with flat structure.
+ * Source: skills/<category>/<skill-name>/SKILL.md
+ * Target: .claude/skills/<skill-name>/SKILL.md
+ */
+function copySkillsToTarget(srcDir, destDir, options = {}) {
+  const { dryRun, backup, targetDir } = options;
+  const operations = [];
+
+  // getFilesRecursive returns paths relative to srcDir
+  const relativeFiles = getFilesRecursive(srcDir).filter((f) => f.endsWith('SKILL.md'));
+
+  for (const relativePath of relativeFiles) {
+    const srcFile = path.join(srcDir, relativePath);
+    const parts = relativePath.split(path.sep);
+
+    // Extract skill name from parent directory
+    // e.g., dev/debug/SKILL.md → debug
+    const skillName = parts[parts.length - 2];
+
+    // Create .claude/skills/<skill-name>/SKILL.md
+    const destSkillDir = path.join(destDir, skillName);
+    const destFile = path.join(destSkillDir, 'SKILL.md');
+    const exists = fs.existsSync(destFile);
+    const relativeDestPath = path.relative(targetDir, destFile);
+
+    if (dryRun) {
+      operations.push({ type: exists ? 'overwrite' : 'create', path: relativeDestPath });
+    } else {
+      if (exists && backup) {
+        backupFile(destFile, targetDir);
+      }
+      fs.mkdirSync(destSkillDir, { recursive: true });
+      fs.copyFileSync(srcFile, destFile);
+      operations.push({ type: exists ? 'overwrite' : 'create', path: relativeDestPath });
+    }
+  }
+
+  return operations;
+}
+
+/**
+ * Copy rules selectively based on technology configuration.
+ * Only copies rules that match the included paths.
+ */
+function copyRulesSelectively(srcDir, destDir, includedPaths, skippedPaths, options = {}) {
+  const { dryRun, backup, targetDir } = options;
+  const operations = [];
+
+  // getFilesRecursive returns paths relative to srcDir
+  const relativeFiles = getFilesRecursive(srcDir);
+
+  for (const relativePath of relativeFiles) {
+    const relativeDir = path.dirname(relativePath);
+
+    // Check if this file should be included
+    if (!shouldIncludeRule(relativeDir, includedPaths)) {
+      // Track skipped top-level directories for logging
+      const topLevel = relativePath.split(path.sep).slice(0, 2).join('/');
+      if (!skippedPaths.includes(topLevel)) {
+        skippedPaths.push(topLevel);
+      }
+      continue;
+    }
+
+    const srcFile = path.join(srcDir, relativePath);
+    const destFile = path.join(destDir, relativePath);
+    const exists = fs.existsSync(destFile);
+    const relativeDestPath = path.relative(targetDir, destFile);
+
+    if (dryRun) {
+      operations.push({ type: exists ? 'overwrite' : 'create', path: relativeDestPath });
+    } else {
+      if (exists && backup) {
+        backupFile(destFile, targetDir);
+      }
+      fs.mkdirSync(path.dirname(destFile), { recursive: true });
+      fs.copyFileSync(srcFile, destFile);
+      operations.push({ type: exists ? 'overwrite' : 'create', path: relativeDestPath });
+    }
+  }
+
+  return operations;
+}
 
 export function listTechnologies() {
   console.log(`\n${colors.bold('Available technologies:')}\n`);
@@ -26,8 +111,8 @@ export function listTechnologies() {
   console.log(`\n${colors.bold('Shared resources:')}\n`);
 
   const sharedPath = path.join(CONFIGS_DIR, '_shared');
-  const skills = fs.existsSync(path.join(sharedPath, '.claude', 'skills'));
-  const rules = fs.existsSync(path.join(sharedPath, '.claude', 'rules'));
+  const skills = fs.existsSync(path.join(sharedPath, 'skills'));
+  const rules = fs.existsSync(path.join(sharedPath, 'rules'));
 
   console.log(`  ${skills ? colors.green('✓') : colors.red('✗')} skills     /learning, /review, /spec, /debug, and more`);
   console.log(`  ${rules ? colors.green('✓') : colors.red('✗')} rules      security, performance, accessibility`);
@@ -132,7 +217,7 @@ export function init(techs, options) {
       }
     }
 
-    const settingsPath = path.join(techDir, '.claude', 'settings.json');
+    const settingsPath = path.join(techDir, 'settings.json');
     if (fs.existsSync(settingsPath)) {
       const op = mergeSettingsJson(
         path.join(targetDir, '.claude', 'settings.json'),
@@ -148,7 +233,7 @@ export function init(techs, options) {
       }
     }
 
-    const rulesDir = path.join(techDir, '.claude', 'rules');
+    const rulesDir = path.join(techDir, 'rules');
     if (fs.existsSync(rulesDir)) {
       const ops = copyDirRecursive(
         rulesDir,
@@ -165,9 +250,9 @@ export function init(techs, options) {
     }
 
     if (options.withSkills) {
-      const techSkillsDir = path.join(techDir, '.claude', 'skills');
+      const techSkillsDir = path.join(techDir, 'skills');
       if (fs.existsSync(techSkillsDir)) {
-        const ops = copyDirRecursive(
+        const ops = copySkillsToTarget(
           techSkillsDir,
           path.join(targetDir, '.claude', 'skills'),
           { dryRun, backup, targetDir }
@@ -181,9 +266,9 @@ export function init(techs, options) {
 
   if (options.withSkills) {
     log.info(`${dryRun ? 'Would install' : 'Installing'} skills...`);
-    const skillsDir = path.join(sharedDir, '.claude', 'skills');
+    const skillsDir = path.join(sharedDir, 'skills');
     if (fs.existsSync(skillsDir)) {
-      const ops = copyDirRecursive(
+      const ops = copySkillsToTarget(
         skillsDir,
         path.join(targetDir, '.claude', 'skills'),
         { dryRun, backup, targetDir }
@@ -200,54 +285,29 @@ export function init(techs, options) {
 
   if (options.withRules) {
     log.info(`${dryRun ? 'Would install' : 'Installing'} shared rules...`);
-    const rulesDir = path.join(sharedDir, '.claude', 'rules');
+    const rulesDir = path.join(sharedDir, 'rules');
     if (fs.existsSync(rulesDir)) {
-      const categoriesToInclude = getRuleCategoriesToInclude(techs);
-      const selectiveCategories = Object.keys(TECH_CONFIG.ruleCategories);
-      const skippedCategories = [];
+      const includedPaths = getRulePathsToInclude(techs);
+      const skippedPaths = [];
 
-      const entries = fs.readdirSync(rulesDir, { withFileTypes: true });
-      let totalOps = 0;
-
-      for (const entry of entries) {
-        if (selectiveCategories.includes(entry.name) && !categoriesToInclude.has(entry.name)) {
-          skippedCategories.push(entry.name);
-          continue;
-        }
-
-        const srcPath = path.join(rulesDir, entry.name);
-        const destPath = path.join(targetDir, '.claude', 'rules', entry.name);
-
-        if (entry.isDirectory()) {
-          const ops = copyDirRecursive(srcPath, destPath, { dryRun, backup, targetDir });
-          operations.push(...ops);
-          totalOps += ops.length;
-        } else {
-          const exists = fs.existsSync(destPath);
-          const relativePath = path.relative(targetDir, destPath);
-
-          if (dryRun) {
-            operations.push({ type: exists ? 'overwrite' : 'create', path: relativePath });
-          } else {
-            if (exists && backup) {
-              backupFile(destPath, targetDir);
-            }
-            fs.mkdirSync(path.dirname(destPath), { recursive: true });
-            fs.copyFileSync(srcPath, destPath);
-            operations.push({ type: exists ? 'overwrite' : 'create', path: relativePath });
-          }
-          totalOps++;
-        }
-      }
+      const ops = copyRulesSelectively(
+        rulesDir,
+        path.join(targetDir, '.claude', 'rules'),
+        includedPaths,
+        skippedPaths,
+        { dryRun, backup, targetDir }
+      );
+      operations.push(...ops);
 
       if (dryRun) {
-        log.dry(`  shared rules/ (${totalOps} files)`);
+        log.dry(`  shared rules/ (${ops.length} files)`);
       } else {
         log.success(`  shared rules/`);
       }
 
-      if (skippedCategories.length > 0) {
-        log.info(`  (skipped: ${skippedCategories.join(', ')} - not applicable)`);
+      if (skippedPaths.length > 0) {
+        const uniqueSkipped = [...new Set(skippedPaths)];
+        log.info(`  (skipped: ${uniqueSkipped.join(', ')} - not applicable)`);
       }
     }
   }

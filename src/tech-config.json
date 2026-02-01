@@ -1,29 +1,45 @@
 {
   "technologies": {
     "angular": {
-      "includeRules": ["lang/typescript", "domain/frontend"]
+      "type": "frontend",
+      "language": "typescript"
     },
     "nextjs": {
-      "includeRules": ["lang/typescript", "domain/frontend"]
+      "type": "frontend",
+      "language": "typescript"
     },
     "nestjs": {
-      "includeRules": ["lang/typescript", "domain/backend"]
+      "type": "backend",
+      "language": "typescript"
     },
     "dotnet": {
-      "includeRules": ["lang/csharp", "domain/backend"]
+      "type": "backend",
+      "language": "csharp"
     },
     "fastapi": {
-      "includeRules": ["lang/python", "domain/backend"]
+      "type": "backend",
+      "language": "python"
     },
     "flask": {
-      "includeRules": ["lang/python", "domain/backend"]
+      "type": "backend",
+      "language": "python"
     }
   },
-  "ruleCategories": {
-    "lang/typescript": "TypeScript best practices",
-    "lang/python": "Python best practices",
-    "lang/csharp": "C# language best practices",
-    "domain/frontend": "Accessibility, UI patterns",
-    "domain/backend": "API design, server patterns"
-  }
+  "ruleMapping": {
+    "language": {
+      "typescript": "lang/typescript",
+      "python": "lang/python",
+      "csharp": "lang/csharp"
+    },
+    "type": {
+      "frontend": "domain/frontend",
+      "backend": "domain/backend"
+    }
+  },
+  "alwaysInclude": [
+    "conventions",
+    "quality",
+    "security",
+    "devops"
+  ]
 }

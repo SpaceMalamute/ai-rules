@@ -17,8 +17,8 @@ configs/
 
 Each technology has:
 - `CLAUDE.md` → imports `_shared` + framework-specific concepts
-- `.claude/rules/` → code patterns with path-based activation
-- `.claude/settings.json` → permissions
+- `rules/` → code patterns with path-based activation
+- `settings.json` → permissions
 
 ## Principles
 
@@ -37,8 +37,10 @@ Each technology has:
 ## Adding a Technology
 
 1. Create `configs/[tech]/CLAUDE.md` starting with `@../_shared/CLAUDE.md`
-2. Add rules in `configs/[tech]/.claude/rules/`
-3. Update this file and README.md
+2. Add rules in `configs/[tech]/rules/`
+3. Add `configs/[tech]/settings.json`
+4. Update `src/tech-config.json` with `type` and `language`
+5. Update this file and README.md
 
 ## Git
 

@@ -49,12 +49,38 @@ ai-rules/
 ## Adding a New Technology
 
 1. Create `configs/[tech]/CLAUDE.md` starting with `@../_shared/CLAUDE.md`
-2. Add rules in `configs/[tech]/.claude/rules/`
-3. Add `configs/[tech]/.claude/settings.json` for permissions
+2. Add rules in `configs/[tech]/rules/`
+3. Add `configs/[tech]/settings.json` for permissions
 4. Update `src/config.js` to include the new tech in `AVAILABLE_TECHS`
-5. Update `src/tech-config.json` if needed
+5. Update `src/tech-config.json` with `type` (frontend/backend) and `language`
 6. Add tests
 7. Update README.md
+
+## Skills Structure
+
+Skills are stored in `configs/_shared/skills/` with category subfolders:
+
+```
+configs/_shared/skills/
+├── dev/
+│   ├── debug/SKILL.md
+│   └── learning/SKILL.md
+├── git/
+│   └── review/SKILL.md
+└── ...
+```
+
+**Important:** Claude Code requires a flat structure for skills discovery ([issue #10238](https://github.com/anthropics/claude-code/issues/10238)). The installer flattens the structure when copying to the target:
+
+```
+# Source (this repo)
+configs/_shared/skills/dev/debug/SKILL.md
+
+# Target (user project)
+.claude/skills/debug/SKILL.md
+```
+
+Category folders (`dev/`, `git/`, etc.) are for organization in this repo only.
 
 ## Release Process
 

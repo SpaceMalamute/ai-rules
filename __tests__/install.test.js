@@ -87,19 +87,19 @@ describe('ai-rules', () => {
     it('should install skills when --with-skills is set', () => {
       init(['angular'], { target: tempDir, withSkills: true });
 
+      // Skills are installed as .claude/skills/<name>/SKILL.md
       const skillsDir = path.join(tempDir, '.claude', 'skills');
       expect(fs.existsSync(skillsDir)).toBe(true);
 
-      // Skills are organized in category subfolders
-      const categories = fs.readdirSync(skillsDir);
-      expect(categories).toContain('dev');
-      expect(categories).toContain('git');
-      expect(categories).toContain('analysis');
+      const skills = fs.readdirSync(skillsDir);
+      expect(skills).toContain('learning');
+      expect(skills).toContain('review');
+      expect(skills).toContain('debug');
+      expect(skills).toContain('explore');
 
-      // Check skills exist in their categories
-      expect(fs.existsSync(path.join(skillsDir, 'dev', 'learning'))).toBe(true);
-      expect(fs.existsSync(path.join(skillsDir, 'git', 'review'))).toBe(true);
-      expect(fs.existsSync(path.join(skillsDir, 'dev', 'debug'))).toBe(true);
+      // Each skill should have a SKILL.md file
+      expect(fs.existsSync(path.join(skillsDir, 'debug', 'SKILL.md'))).toBe(true);
+      expect(fs.existsSync(path.join(skillsDir, 'learning', 'SKILL.md'))).toBe(true);
     });
 
     it('should install shared rules when --with-rules is set', () => {

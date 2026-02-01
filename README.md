@@ -313,10 +313,12 @@ mkdir configs/your-tech
 ### Adding a Technology
 
 1. Create `configs/[tech]/CLAUDE.md` — start with `@../_shared/CLAUDE.md`
-2. Add rules in `configs/[tech]/.claude/rules/`
-3. Add `configs/[tech]/.claude/settings.json` for permissions
+2. Add rules in `configs/[tech]/rules/`
+3. Add `configs/[tech]/settings.json` for permissions
 4. Add tests
 5. Submit a PR
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on skills structure.
 
 ## License
 
