@@ -4,6 +4,7 @@ const readline = require('readline');
 
 const CONFIGS_DIR = path.join(__dirname, '..', 'configs');
 const AVAILABLE_TECHS = ['angular', 'nextjs', 'nestjs', 'dotnet', 'python'];
+const TYPESCRIPT_TECHS = ['angular', 'nextjs', 'nestjs'];
 const VERSION = require('../package.json').version;
 
 const colors = {
@@ -541,17 +542,52 @@ function init(techs, options) {
     log.info(`${dryRun ? 'Would install' : 'Installing'} shared rules...`);
     const rulesDir = path.join(sharedDir, '.claude', 'rules');
     if (fs.existsSync(rulesDir)) {
-      const ops = copyDirRecursive(
-        rulesDir,
-        path.join(targetDir, '.claude', 'rules'),
-        { dryRun, backup, targetDir }
-      );
-      operations.push(...ops);
+      // Check if any tech uses TypeScript
+      const usesTypeScript = techs.some((tech) => TYPESCRIPT_TECHS.includes(tech));
+
+      // Copy shared rules, excluding typescript folder if not needed
+      const entries = fs.readdirSync(rulesDir, { withFileTypes: true });
+      let totalOps = 0;
+
+      for (const entry of entries) {
+        // Skip typescript folder for non-TypeScript technologies
+        if (entry.name === 'typescript' && !usesTypeScript) {
+          continue;
+        }
+
+        const srcPath = path.join(rulesDir, entry.name);
+        const destPath = path.join(targetDir, '.claude', 'rules', entry.name);
+
+        if (entry.isDirectory()) {
+          const ops = copyDirRecursive(srcPath, destPath, { dryRun, backup, targetDir });
+          operations.push(...ops);
+          totalOps += ops.length;
+        } else {
+          const exists = fs.existsSync(destPath);
+          const relativePath = path.relative(targetDir, destPath);
+
+          if (dryRun) {
+            operations.push({ type: exists ? 'overwrite' : 'create', path: relativePath });
+          } else {
+            if (exists && backup) {
+              backupFile(destPath, targetDir);
+            }
+            fs.mkdirSync(path.dirname(destPath), { recursive: true });
+            fs.copyFileSync(srcPath, destPath);
+            operations.push({ type: exists ? 'overwrite' : 'create', path: relativePath });
+          }
+          totalOps++;
+        }
+      }
 
       if (dryRun) {
-        log.dry(`  shared rules/ (${ops.length} files)`);
+        log.dry(`  shared rules/ (${totalOps} files)`);
       } else {
         log.success(`  shared rules/`);
+      }
+
+      if (!usesTypeScript) {
+        log.info('  (skipped TypeScript rules - not applicable)');
       }
     }
   }
