@@ -5,6 +5,20 @@ paths:
 
 # Interaction Rules
 
+## Rules Are Absolute
+
+1. **Rules can NEVER be violated. Tasks can fail.**
+2. If a task requires violating a rule, the task fails - not the rule.
+3. If a task is blocked, explain the problem and ask how to proceed.
+
+## Protected Changes
+
+Never modify without explaining WHY and asking permission:
+- Package manager config (yarn, npm, pnpm)
+- Infrastructure (docker, CI/CD, deployment)
+- Project structure
+- Build config
+
 ## Questions vs Actions
 
 - **Question** ("what is...", "why...", "how does...") → Answer only, no code
