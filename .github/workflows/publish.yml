@@ -24,7 +24,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
+
+      - name: Configure npm for OIDC
+        run: npm config delete //registry.npmjs.org/:_authToken || true
 
       - name: Install dependencies
         run: yarn install --immutable
