@@ -1,0 +1,24 @@
+{
+  "technologies": {
+    "angular": {
+      "includeRules": ["typescript", "frontend"]
+    },
+    "nextjs": {
+      "includeRules": ["typescript", "frontend"]
+    },
+    "nestjs": {
+      "includeRules": ["typescript", "backend"]
+    },
+    "dotnet": {
+      "includeRules": ["backend"]
+    },
+    "python": {
+      "includeRules": ["backend"]
+    }
+  },
+  "ruleCategories": {
+    "typescript": "TypeScript best practices",
+    "frontend": "Accessibility, UI patterns",
+    "backend": "API design, server patterns"
+  }
+}

@@ -4,8 +4,23 @@ const readline = require('readline');
 
 const CONFIGS_DIR = path.join(__dirname, '..', 'configs');
 const AVAILABLE_TECHS = ['angular', 'nextjs', 'nestjs', 'dotnet', 'python'];
-const TYPESCRIPT_TECHS = ['angular', 'nextjs', 'nestjs'];
 const VERSION = require('../package.json').version;
+
+// Load tech config for selective rule inclusion
+const TECH_CONFIG = JSON.parse(
+  fs.readFileSync(path.join(CONFIGS_DIR, '_shared', 'tech-config.json'), 'utf8')
+);
+
+function getRuleCategoriesToInclude(techs) {
+  const categories = new Set();
+  for (const tech of techs) {
+    const config = TECH_CONFIG.technologies[tech];
+    if (config?.includeRules) {
+      config.includeRules.forEach((cat) => categories.add(cat));
+    }
+  }
+  return categories;
+}
 
 const colors = {
   red: (text) => `\x1b[31m${text}\x1b[0m`,
@@ -542,16 +557,19 @@ function init(techs, options) {
     log.info(`${dryRun ? 'Would install' : 'Installing'} shared rules...`);
     const rulesDir = path.join(sharedDir, '.claude', 'rules');
     if (fs.existsSync(rulesDir)) {
-      // Check if any tech uses TypeScript
-      const usesTypeScript = techs.some((tech) => TYPESCRIPT_TECHS.includes(tech));
+      // Get rule categories to include based on selected technologies
+      const categoriesToInclude = getRuleCategoriesToInclude(techs);
+      const selectiveCategories = Object.keys(TECH_CONFIG.ruleCategories);
+      const skippedCategories = [];
 
-      // Copy shared rules, excluding typescript folder if not needed
+      // Copy shared rules, selectively including category folders
       const entries = fs.readdirSync(rulesDir, { withFileTypes: true });
       let totalOps = 0;
 
       for (const entry of entries) {
-        // Skip typescript folder for non-TypeScript technologies
-        if (entry.name === 'typescript' && !usesTypeScript) {
+        // Skip selective category folders not needed for these techs
+        if (selectiveCategories.includes(entry.name) && !categoriesToInclude.has(entry.name)) {
+          skippedCategories.push(entry.name);
           continue;
         }
 
@@ -586,8 +604,8 @@ function init(techs, options) {
         log.success(`  shared rules/`);
       }
 
-      if (!usesTypeScript) {
-        log.info('  (skipped TypeScript rules - not applicable)');
+      if (skippedCategories.length > 0) {
+        log.info(`  (skipped: ${skippedCategories.join(', ')} - not applicable)`);
       }
     }
   }
