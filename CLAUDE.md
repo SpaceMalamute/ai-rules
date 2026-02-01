@@ -47,3 +47,67 @@ Each technology has:
 ## Language
 
 All files in **English**.
+
+## TODO
+
+### Réorganiser _shared/rules/
+
+```
+_shared/rules/
+├── lang/                    # Langages (sélectif par tech)
+│   ├── typescript/
+│   │   ├── typescript.md
+│   │   ├── generics.md      # NEW
+│   │   └── async.md         # NEW
+│   ├── python/              # Inclut SQLAlchemy
+│   │   ├── python.md
+│   │   ├── async.md
+│   │   └── sqlalchemy/
+│   └── csharp/
+│       ├── csharp.md
+│       ├── async.md
+│       └── linq.md
+│
+├── domain/
+│   ├── frontend/
+│   └── backend/
+│
+├── conventions/             # ex "core"
+│   ├── principles.md
+│   ├── git.md
+│   └── documentation.md
+│
+├── quality/                 # Inchangé
+├── security/                # Inchangé
+│
+└── devops/                  # ex "infra"
+    ├── docker.md
+    ├── ci-cd.md
+    └── nx.md
+```
+
+### Enrichir TypeScript
+
+Ajouter `lang/typescript/generics.md`:
+- Generics patterns (`<T extends ...>`, constraints)
+- Utility types (`Pick`, `Omit`, `Partial`, `Required`, `Record`)
+- Discriminated unions
+- Type guards (`is`, `asserts`)
+- `as const` / const assertions
+- Conditional types
+
+Ajouter `lang/typescript/async.md`:
+- Promise patterns
+- Async error handling
+- Parallel vs sequential execution
+- AbortController / cancellation
+
+### Mettre à jour tech-config.json
+
+```json
+{
+  "angular": { "includeRules": ["lang/typescript", "domain/frontend"] },
+  "dotnet": { "includeRules": ["lang/csharp", "domain/backend"] },
+  "fastapi": { "includeRules": ["lang/python", "domain/backend"] }
+}
+```
