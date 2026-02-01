@@ -74,26 +74,24 @@ ai-rules list               # List available technologies
 
 ```
 your-project/
-├── CLAUDE.md                    # Architecture & conventions
+├── CLAUDE.md                    # Your project-specific info (not touched)
 └── .claude/
     ├── settings.json            # Allowed/denied commands
     ├── rules/                   # Framework-specific patterns
-    │   ├── components.md
-    │   ├── state.md
-    │   └── testing.md
+    │   ├── nextjs/
+    │   │   ├── core.md          # Stack, architecture, conventions
+    │   │   ├── components.md
+    │   │   └── ...
+    │   ├── conventions/         # Shared conventions
+    │   │   └── core.md
+    │   └── security/
     └── skills/                  # Optional workflows
         ├── learning/
         ├── review/
         └── debug/
 ```
 
-### CLAUDE.md
-
-The main instruction file. Contains:
-- Project architecture overview
-- Technology stack and versions
-- Coding conventions (naming, structure, patterns)
-- Commands to run (build, test, lint)
+> **Note:** Your project's `CLAUDE.md` is never modified. Use it for project-specific context (business domain, team conventions, etc.).
 
 ### Rules
 
@@ -183,9 +181,8 @@ DRY RUN - No files will be modified
 ℹ Would install to: /your/project
 
 ℹ Would install angular...
-○   CLAUDE.md (create)
 ○   settings.json (create)
-○   rules/ (8 files)
+○   rules/angular/ (9 files)
 
 Summary:
   10 file(s) would be created
@@ -287,12 +284,12 @@ ai-rules update
 
 ## How It Works
 
-1. **CLAUDE.md** is read by Claude Code at session start
-2. **Rules** activate based on file paths you're editing
+1. **Rules** are loaded by Claude Code based on file paths you're editing
+2. **`rules/core.md`** with `alwaysApply: true` provides framework conventions
 3. **Skills** are invoked on-demand with `/skill-name`
 4. **Settings** define what commands Claude can run
 
-Claude Code sees your conventions as first-class instructions, not just suggestions in the chat.
+Your project's `CLAUDE.md` stays clean for project-specific context, while framework conventions live in rules.
 
 ## Contributing
 
@@ -306,13 +303,13 @@ npm install
 npm test
 
 # Add a new technology
-mkdir configs/your-tech
-# Add CLAUDE.md and .claude/rules/
+mkdir -p configs/your-tech/rules
+# Add rules/core.md and other rules
 ```
 
 ### Adding a Technology
 
-1. Create `configs/[tech]/CLAUDE.md` — start with `@../_shared/CLAUDE.md`
+1. Create `configs/[tech]/rules/core.md` with framework conventions
 2. Add rules in `configs/[tech]/rules/`
 3. Add `configs/[tech]/settings.json` for permissions
 4. Add tests

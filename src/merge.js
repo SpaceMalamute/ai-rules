@@ -3,29 +3,6 @@ import path from 'path';
 import { log, backupFile } from './utils.js';
 import { VERSION } from './config.js';
 
-export function mergeClaudeMd(targetPath, sourcePath, isFirst, options = {}) {
-  const { dryRun = false, backup = false, targetDir } = options;
-  const content = fs.readFileSync(sourcePath, 'utf8');
-  const exists = fs.existsSync(targetPath);
-
-  if (dryRun) {
-    return { type: exists ? 'merge' : 'create', path: 'CLAUDE.md' };
-  }
-
-  if (exists && backup && isFirst) {
-    backupFile(targetPath, targetDir);
-  }
-
-  if (isFirst) {
-    fs.writeFileSync(targetPath, content);
-  } else {
-    const existing = fs.readFileSync(targetPath, 'utf8');
-    fs.writeFileSync(targetPath, `${existing}\n\n---\n\n${content}`);
-  }
-
-  return { type: exists ? 'merge' : 'create', path: 'CLAUDE.md' };
-}
-
 export function mergeSettingsJson(targetPath, sourcePath, options = {}) {
   const { dryRun = false, backup = false, targetDir } = options;
   const exists = fs.existsSync(targetPath);

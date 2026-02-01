@@ -1,6 +1,9 @@
-# FastAPI Project Guidelines
+---
+description: "FastAPI project conventions and architecture"
+alwaysApply: true
+---
 
-@../_shared/CLAUDE.md
+# FastAPI Project Guidelines
 
 ## Stack
 

@@ -1,6 +1,9 @@
-# Angular Project Guidelines
+---
+description: "Angular 21+ project conventions and architecture"
+alwaysApply: true
+---
 
-@../_shared/CLAUDE.md
+# Angular Project Guidelines
 
 ## Stack
 

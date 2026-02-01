@@ -1,3 +1,8 @@
+---
+description: "Shared coding conventions across all technologies"
+alwaysApply: true
+---
+
 # Shared Conventions
 
 ## Code Quality

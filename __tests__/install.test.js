@@ -17,13 +17,13 @@ describe('ai-rules', () => {
   });
 
   describe('init', () => {
-    it('should create CLAUDE.md for single technology', () => {
+    it('should create rules/core.md for single technology', () => {
       init(['angular'], { target: tempDir });
 
-      const claudeMdPath = path.join(tempDir, 'CLAUDE.md');
-      expect(fs.existsSync(claudeMdPath)).toBe(true);
+      const coreMdPath = path.join(tempDir, '.claude', 'rules', 'angular', 'core.md');
+      expect(fs.existsSync(coreMdPath)).toBe(true);
 
-      const content = fs.readFileSync(claudeMdPath, 'utf8');
+      const content = fs.readFileSync(coreMdPath, 'utf8');
       expect(content).toContain('Angular');
     });
 
@@ -48,15 +48,20 @@ describe('ai-rules', () => {
       expect(files.length).toBeGreaterThan(0);
     });
 
-    it('should merge CLAUDE.md for multiple technologies', () => {
+    it('should create separate rules/core.md for multiple technologies', () => {
       init(['angular', 'nestjs'], { target: tempDir });
 
-      const claudeMdPath = path.join(tempDir, 'CLAUDE.md');
-      const content = fs.readFileSync(claudeMdPath, 'utf8');
+      const angularCorePath = path.join(tempDir, '.claude', 'rules', 'angular', 'core.md');
+      const nestjsCorePath = path.join(tempDir, '.claude', 'rules', 'nestjs', 'core.md');
 
-      expect(content).toContain('Angular');
-      expect(content).toContain('NestJS');
-      expect(content).toContain('---'); // Separator between techs
+      expect(fs.existsSync(angularCorePath)).toBe(true);
+      expect(fs.existsSync(nestjsCorePath)).toBe(true);
+
+      const angularContent = fs.readFileSync(angularCorePath, 'utf8');
+      const nestjsContent = fs.readFileSync(nestjsCorePath, 'utf8');
+
+      expect(angularContent).toContain('Angular');
+      expect(nestjsContent).toContain('NestJS');
     });
 
     it('should merge settings.json preserving deny rules', () => {
@@ -130,16 +135,11 @@ describe('ai-rules', () => {
       expect(manifest.installedAt).toBeDefined();
     });
 
-    it('should resolve @../shared/CLAUDE.md imports', () => {
+    it('should not create CLAUDE.md in target directory', () => {
       init(['angular'], { target: tempDir });
 
       const claudeMdPath = path.join(tempDir, 'CLAUDE.md');
-      const content = fs.readFileSync(claudeMdPath, 'utf8');
-
-      // Should not contain the import directive
-      expect(content).not.toContain('@../shared/CLAUDE.md');
-      // Should contain shared content
-      expect(content).toContain('TypeScript');
+      expect(fs.existsSync(claudeMdPath)).toBe(false);
     });
   });
 
@@ -160,22 +160,15 @@ describe('ai-rules', () => {
   });
 
   describe('backup', () => {
-    it('should backup existing files when not using --force', () => {
+    it('should create backups directory when reinstalling without --force', () => {
       // First install
       init(['angular'], { target: tempDir });
 
-      // Modify CLAUDE.md
-      const claudeMdPath = path.join(tempDir, 'CLAUDE.md');
-      fs.writeFileSync(claudeMdPath, 'Custom content');
-
-      // Second install (should backup)
-      init(['nestjs'], { target: tempDir });
+      // Second install (should create backups)
+      init(['angular'], { target: tempDir });
 
       const backupDir = path.join(tempDir, '.claude', 'backups');
       expect(fs.existsSync(backupDir)).toBe(true);
-
-      const backups = fs.readdirSync(backupDir);
-      expect(backups.some((f) => f.startsWith('CLAUDE.md'))).toBe(true);
     });
 
     it('should not backup when using --force', () => {
@@ -183,7 +176,7 @@ describe('ai-rules', () => {
       init(['angular'], { target: tempDir });
 
       // Second install with --force
-      init(['nestjs'], { target: tempDir, force: true });
+      init(['angular'], { target: tempDir, force: true });
 
       const backupDir = path.join(tempDir, '.claude', 'backups');
       // Backup dir might not exist or be empty

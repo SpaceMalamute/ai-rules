@@ -1,6 +1,9 @@
-# NestJS Project Guidelines
+---
+description: "NestJS 11+ project conventions and architecture"
+alwaysApply: true
+---
 
-@../_shared/CLAUDE.md
+# NestJS Project Guidelines
 
 ## Stack
 

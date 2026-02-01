@@ -1,6 +1,9 @@
-# .NET Project Guidelines
+---
+description: ".NET 9 project conventions and architecture"
+alwaysApply: true
+---
 
-@../_shared/CLAUDE.md
+# .NET Project Guidelines
 
 ## Stack
 

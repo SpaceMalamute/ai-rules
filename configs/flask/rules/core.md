@@ -1,6 +1,9 @@
-# Flask Project Guidelines
+---
+description: "Flask 3.0+ project conventions and architecture"
+alwaysApply: true
+---
 
-@../_shared/CLAUDE.md
+# Flask Project Guidelines
 
 ## Stack
 

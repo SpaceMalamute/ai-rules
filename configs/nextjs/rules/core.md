@@ -1,6 +1,9 @@
-# Next.js Project Guidelines
+---
+description: "Next.js 15+ project conventions and architecture"
+alwaysApply: true
+---
 
-@../_shared/CLAUDE.md
+# Next.js Project Guidelines
 
 ## Stack
 
@@ -31,7 +34,7 @@ libs/[domain]/
 ### Folder Conventions
 
 | Pattern | Meaning |
-|---------|---------	|
+|---------|---------|
 | `_folder/` | Private - co-located, not a route |
 | `(folder)/` | Route group - organizational only |
 | `[param]/` | Dynamic segment |

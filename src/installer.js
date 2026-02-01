@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { colors, log, getFilesRecursive, copyDirRecursive, backupFile } from './utils.js';
 import { CONFIGS_DIR, AVAILABLE_TECHS, VERSION, getRulePathsToInclude, shouldIncludeRule } from './config.js';
-import { mergeClaudeMd, mergeSettingsJson, readManifest, writeManifest } from './merge.js';
+import { mergeSettingsJson, readManifest, writeManifest } from './merge.js';
 
 /**
  * Copy skills to target directory with flat structure.
@@ -187,8 +187,6 @@ export function init(techs, options) {
     fs.mkdirSync(path.join(targetDir, '.claude', 'rules'), { recursive: true });
   }
 
-  let isFirstClaudeMd = true;
-
   for (const tech of techs) {
     log.info(`${dryRun ? 'Would install' : 'Installing'} ${tech}...`);
 
@@ -197,24 +195,6 @@ export function init(techs, options) {
     if (!fs.existsSync(techDir)) {
       log.error(`Technology directory not found: ${tech}`);
       process.exit(1);
-    }
-
-    const claudeMdPath = path.join(techDir, 'CLAUDE.md');
-    if (fs.existsSync(claudeMdPath)) {
-      const op = mergeClaudeMd(
-        path.join(targetDir, 'CLAUDE.md'),
-        claudeMdPath,
-        isFirstClaudeMd,
-        { dryRun, backup, targetDir }
-      );
-      operations.push(op);
-      isFirstClaudeMd = false;
-
-      if (dryRun) {
-        log.dry(`  CLAUDE.md (${op.type})`);
-      } else {
-        log.success(`  CLAUDE.md`);
-      }
     }
 
     const settingsPath = path.join(techDir, 'settings.json');
@@ -308,23 +288,6 @@ export function init(techs, options) {
       if (skippedPaths.length > 0) {
         const uniqueSkipped = [...new Set(skippedPaths)];
         log.info(`  (skipped: ${uniqueSkipped.join(', ')} - not applicable)`);
-      }
-    }
-  }
-
-  // Resolve @../_shared/CLAUDE.md imports
-  const targetClaudeMd = path.join(targetDir, 'CLAUDE.md');
-  if (!dryRun && fs.existsSync(targetClaudeMd)) {
-    let content = fs.readFileSync(targetClaudeMd, 'utf8');
-
-    if (content.includes('@../_shared/CLAUDE.md')) {
-      const sharedClaudeMd = path.join(sharedDir, 'CLAUDE.md');
-      if (fs.existsSync(sharedClaudeMd)) {
-        const sharedContent = fs.readFileSync(sharedClaudeMd, 'utf8');
-        content = content.replace(/@..\/_shared\/CLAUDE\.md/g, '');
-        content = sharedContent + '\n\n' + content;
-        fs.writeFileSync(targetClaudeMd, content);
-        log.success('Merged shared conventions into CLAUDE.md');
       }
     }
   }

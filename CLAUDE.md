@@ -16,14 +16,18 @@ configs/
 ```
 
 Each technology has:
-- `CLAUDE.md` → imports `_shared` + framework-specific concepts
-- `rules/` → code patterns with path-based activation
+- `rules/core.md` → framework conventions (architecture, stack, commands)
+- `rules/*.md` → code patterns with path-based activation
 - `settings.json` → permissions
 
 ## Principles
 
+**No CLAUDE.md installation**
+- The target project's `CLAUDE.md` should contain project-specific info only
+- All framework conventions go in `rules/core.md`
+
 **Separation of concerns**
-- `CLAUDE.md` = architecture, tables, diagrams (no code)
+- `rules/core.md` = architecture, stack, conventions (no code examples)
 - `rules/*.md` = code examples, GOOD/BAD patterns
 
 **Path scoping**
@@ -36,7 +40,7 @@ Each technology has:
 
 ## Adding a Technology
 
-1. Create `configs/[tech]/CLAUDE.md` starting with `@../_shared/CLAUDE.md`
+1. Create `configs/[tech]/rules/core.md` with framework conventions
 2. Add rules in `configs/[tech]/rules/`
 3. Add `configs/[tech]/settings.json`
 4. Update `src/tech-config.json` with `type` and `language`
