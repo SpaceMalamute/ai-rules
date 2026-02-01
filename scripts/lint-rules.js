@@ -76,12 +76,6 @@ function validateRule(filePath) {
     return;
   }
 
-  // CLAUDE.md files don't need frontmatter
-  if (path.basename(filePath) === 'CLAUDE.md') {
-    filesChecked++;
-    return;
-  }
-
   const frontmatter = extractFrontmatter(content);
 
   // Rules should have frontmatter with paths

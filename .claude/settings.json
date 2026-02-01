@@ -36,9 +36,6 @@
       "Bash(curl *)",
       "Bash(gh *)"
     ],
-    "deny": [
-      "Bash(git push *)",
-      "Bash(git push)"
-    ]
+    "deny": ["Bash(git push *)", "Bash(git push)"]
   }
 }

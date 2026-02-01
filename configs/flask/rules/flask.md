@@ -1,11 +1,9 @@
-# Flask Rules
-
-## Activation
-
-```yaml
+---
 paths:
   - "**/*.py"
-```
+---
+
+# Flask Rules
 
 ## Application Factory
 

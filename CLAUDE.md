@@ -16,6 +16,7 @@ configs/
 ```
 
 Each technology has:
+
 - `rules/core.md` → framework conventions (architecture, stack, commands)
 - `rules/*.md` → code patterns with path-based activation
 - `settings.json` → permissions
@@ -23,18 +24,22 @@ Each technology has:
 ## Principles
 
 **No CLAUDE.md installation**
+
 - The target project's `CLAUDE.md` should contain project-specific info only
 - All framework conventions go in `rules/core.md`
 
 **Separation of concerns**
+
 - `rules/core.md` = architecture, stack, conventions (no code examples)
 - `rules/*.md` = code examples, GOOD/BAD patterns
 
 **Path scoping**
+
 - Rules use `paths:` globs to activate only on relevant files
 - Keep paths narrow to reduce noise
 
 **YAGNI**
+
 - Only technologies actively used
 - No hypothetical frameworks or patterns
 

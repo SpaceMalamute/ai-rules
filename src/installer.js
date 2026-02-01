@@ -1,7 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { colors, log, getFilesRecursive, copyDirRecursive, backupFile } from './utils.js';
-import { CONFIGS_DIR, AVAILABLE_TECHS, VERSION, getRulePathsToInclude, shouldIncludeRule } from './config.js';
+import {
+  CONFIGS_DIR,
+  AVAILABLE_TECHS,
+  VERSION,
+  getRulePathsToInclude,
+  shouldIncludeRule,
+} from './config.js';
 import { mergeSettingsJson, readManifest, writeManifest } from './merge.js';
 
 /**
@@ -114,8 +120,12 @@ export function listTechnologies() {
   const skills = fs.existsSync(path.join(sharedPath, 'skills'));
   const rules = fs.existsSync(path.join(sharedPath, 'rules'));
 
-  console.log(`  ${skills ? colors.green('✓') : colors.red('✗')} skills     /learning, /review, /spec, /debug, and more`);
-  console.log(`  ${rules ? colors.green('✓') : colors.red('✗')} rules      security, performance, accessibility`);
+  console.log(
+    `  ${skills ? colors.green('✓') : colors.red('✗')} skills     /learning, /review, /spec, /debug, and more`
+  );
+  console.log(
+    `  ${rules ? colors.green('✓') : colors.red('✗')} rules      security, performance, accessibility`
+  );
   console.log('');
 }
 
@@ -136,7 +146,9 @@ export function status(targetDir) {
 
   console.log(`  ${colors.bold('Installed version:')} ${manifest.version}`);
   console.log(`  ${colors.bold('Latest version:')}   ${VERSION}`);
-  console.log(`  ${colors.bold('Installed at:')}     ${new Date(manifest.installedAt).toLocaleString()}`);
+  console.log(
+    `  ${colors.bold('Installed at:')}     ${new Date(manifest.installedAt).toLocaleString()}`
+  );
   console.log('');
 
   if (manifest.technologies?.length) {
@@ -155,7 +167,9 @@ export function status(targetDir) {
   }
 
   if (manifest.version !== VERSION) {
-    console.log(`  ${colors.yellow('⚠')} Update available! Run ${colors.cyan('ai-rules update')} to update.`);
+    console.log(
+      `  ${colors.yellow('⚠')} Update available! Run ${colors.cyan('ai-rules update')} to update.`
+    );
     console.log('');
   }
 
@@ -199,11 +213,11 @@ export function init(techs, options) {
 
     const settingsPath = path.join(techDir, 'settings.json');
     if (fs.existsSync(settingsPath)) {
-      const op = mergeSettingsJson(
-        path.join(targetDir, '.claude', 'settings.json'),
-        settingsPath,
-        { dryRun, backup, targetDir }
-      );
+      const op = mergeSettingsJson(path.join(targetDir, '.claude', 'settings.json'), settingsPath, {
+        dryRun,
+        backup,
+        targetDir,
+      });
       operations.push(op);
 
       if (dryRun) {
@@ -215,11 +229,11 @@ export function init(techs, options) {
 
     const rulesDir = path.join(techDir, 'rules');
     if (fs.existsSync(rulesDir)) {
-      const ops = copyDirRecursive(
-        rulesDir,
-        path.join(targetDir, '.claude', 'rules', tech),
-        { dryRun, backup, targetDir }
-      );
+      const ops = copyDirRecursive(rulesDir, path.join(targetDir, '.claude', 'rules', tech), {
+        dryRun,
+        backup,
+        targetDir,
+      });
       operations.push(...ops);
 
       if (dryRun) {
@@ -232,11 +246,11 @@ export function init(techs, options) {
     if (options.withSkills) {
       const techSkillsDir = path.join(techDir, 'skills');
       if (fs.existsSync(techSkillsDir)) {
-        const ops = copySkillsToTarget(
-          techSkillsDir,
-          path.join(targetDir, '.claude', 'skills'),
-          { dryRun, backup, targetDir }
-        );
+        const ops = copySkillsToTarget(techSkillsDir, path.join(targetDir, '.claude', 'skills'), {
+          dryRun,
+          backup,
+          targetDir,
+        });
         operations.push(...ops);
       }
     }
@@ -248,11 +262,11 @@ export function init(techs, options) {
     log.info(`${dryRun ? 'Would install' : 'Installing'} skills...`);
     const skillsDir = path.join(sharedDir, 'skills');
     if (fs.existsSync(skillsDir)) {
-      const ops = copySkillsToTarget(
-        skillsDir,
-        path.join(targetDir, '.claude', 'skills'),
-        { dryRun, backup, targetDir }
-      );
+      const ops = copySkillsToTarget(skillsDir, path.join(targetDir, '.claude', 'skills'), {
+        dryRun,
+        backup,
+        targetDir,
+      });
       operations.push(...ops);
 
       if (dryRun) {

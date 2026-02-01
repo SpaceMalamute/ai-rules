@@ -36,10 +36,5 @@
       "backend": "domain/backend"
     }
   },
-  "alwaysInclude": [
-    "conventions",
-    "quality",
-    "security",
-    "devops"
-  ]
+  "alwaysInclude": ["conventions", "quality", "security", "devops"]
 }

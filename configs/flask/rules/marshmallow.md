@@ -1,11 +1,9 @@
-# Marshmallow Validation Rules
-
-## Activation
-
-```yaml
+---
 paths:
   - "**/*.py"
-```
+---
+
+# Marshmallow Validation Rules
 
 ## Schema Definition
 

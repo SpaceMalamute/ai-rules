@@ -10,12 +10,12 @@ AI Rules installs curated configuration boilerplates that teach Claude Code your
 
 ## Why Use This?
 
-| Without AI Rules | With AI Rules |
-|------------------|---------------|
-| Claude uses generic patterns | Claude follows your framework's idioms |
-| You repeat "use signals, not decorators" | Angular 21 patterns are built-in |
-| Security issues slip through | OWASP Top 10 rules catch vulnerabilities |
-| Inconsistent code style | Consistent conventions across the team |
+| Without AI Rules                         | With AI Rules                            |
+| ---------------------------------------- | ---------------------------------------- |
+| Claude uses generic patterns             | Claude follows your framework's idioms   |
+| You repeat "use signals, not decorators" | Angular 21 patterns are built-in         |
+| Security issues slip through             | OWASP Top 10 rules catch vulnerabilities |
+| Inconsistent code style                  | Consistent conventions across the team   |
 
 ## Quick Start
 
@@ -41,14 +41,14 @@ npx @malamute/ai-rules <command>
 
 ## Supported Technologies
 
-| Technology | Stack | Version |
-|------------|-------|---------|
-| **Angular** | Nx + NgRx + Signals + Vitest | 21+ |
-| **Next.js** | App Router + React 19 + Server Components | 15+ |
-| **NestJS** | Prisma/TypeORM + Passport + Vitest | 11+ |
-| **.NET** | Clean Architecture + MediatR + EF Core | 9+ |
-| **FastAPI** | Pydantic v2 + SQLAlchemy 2.0 + pytest | 0.115+ |
-| **Flask** | Marshmallow + SQLAlchemy 2.0 + pytest | 3.0+ |
+| Technology  | Stack                                     | Version |
+| ----------- | ----------------------------------------- | ------- |
+| **Angular** | Nx + NgRx + Signals + Vitest              | 21+     |
+| **Next.js** | App Router + React 19 + Server Components | 15+     |
+| **NestJS**  | Prisma/TypeORM + Passport + Vitest        | 11+     |
+| **.NET**    | Clean Architecture + MediatR + EF Core    | 9+      |
+| **FastAPI** | Pydantic v2 + SQLAlchemy 2.0 + pytest     | 0.115+  |
+| **Flask**   | Marshmallow + SQLAlchemy 2.0 + pytest     | 3.0+    |
 
 ## Commands
 
@@ -61,12 +61,12 @@ ai-rules list               # List available technologies
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `--minimal` | Skip skills and shared rules (only tech rules + settings) |
-| `--dry-run` | Preview changes without writing files |
-| `--target <dir>` | Install to a specific directory |
-| `--force` | Overwrite without creating backups |
+| Option           | Description                                               |
+| ---------------- | --------------------------------------------------------- |
+| `--minimal`      | Skip skills and shared rules (only tech rules + settings) |
+| `--dry-run`      | Preview changes without writing files                     |
+| `--target <dir>` | Install to a specific directory                           |
+| `--force`        | Overwrite without creating backups                        |
 
 By default, `init` installs everything (skills + shared rules). Use `--minimal` to skip extras.
 
@@ -100,9 +100,11 @@ Context-aware rules that activate based on file paths:
 ```markdown
 ---
 paths:
-  - "**/*.component.ts"
+  - '**/*.component.ts'
 ---
+
 # Angular Component Rules
+
 - Use `ChangeDetectionStrategy.OnPush`
 - Use `input()`, `output()`, not decorators
 - Template in separate `.html` file
@@ -112,33 +114,33 @@ paths:
 
 Interactive workflows invoked with `/skill-name`:
 
-| Skill | Description |
-|-------|-------------|
-| `/learning` | Pedagogical mode — explains before coding |
-| `/review` | Code review with security/perf checklist |
-| `/debug` | Structured debugging workflow |
-| `/spec` | Write technical spec before implementing |
-| `/fix-issue` | Analyze GitHub issue and implement fix |
-| `/generate-tests` | Generate comprehensive tests |
+| Skill             | Description                               |
+| ----------------- | ----------------------------------------- |
+| `/learning`       | Pedagogical mode — explains before coding |
+| `/review`         | Code review with security/perf checklist  |
+| `/debug`          | Structured debugging workflow             |
+| `/spec`           | Write technical spec before implementing  |
+| `/fix-issue`      | Analyze GitHub issue and implement fix    |
+| `/generate-tests` | Generate comprehensive tests              |
 
 <details>
 <summary><strong>See all 13 skills</strong></summary>
 
-| Skill | Usage | Description |
-|-------|-------|-------------|
-| `/learning` | `/learning nextjs` | Explains concepts before implementing |
-| `/review` | `/review src/users/` | Code review with checklist |
-| `/spec` | `/spec add auth` | Technical specification |
-| `/debug` | `/debug TypeError...` | Systematic debugging |
-| `/fix-issue` | `/fix-issue 123` | Fix GitHub issue |
-| `/review-pr` | `/review-pr 456` | Review pull request |
-| `/generate-tests` | `/generate-tests src/user.ts` | Generate tests |
-| `/api-endpoint` | `/api-endpoint POST /users` | Generate API endpoint |
-| `/migration` | `/migration add users` | Database migration |
-| `/security-audit` | `/security-audit` | Security analysis |
-| `/docker` | `/docker` | Dockerfile generation |
-| `/deploy` | `/deploy` | Deployment config |
-| `/explore` | `/explore` | Repository analysis |
+| Skill             | Usage                         | Description                           |
+| ----------------- | ----------------------------- | ------------------------------------- |
+| `/learning`       | `/learning nextjs`            | Explains concepts before implementing |
+| `/review`         | `/review src/users/`          | Code review with checklist            |
+| `/spec`           | `/spec add auth`              | Technical specification               |
+| `/debug`          | `/debug TypeError...`         | Systematic debugging                  |
+| `/fix-issue`      | `/fix-issue 123`              | Fix GitHub issue                      |
+| `/review-pr`      | `/review-pr 456`              | Review pull request                   |
+| `/generate-tests` | `/generate-tests src/user.ts` | Generate tests                        |
+| `/api-endpoint`   | `/api-endpoint POST /users`   | Generate API endpoint                 |
+| `/migration`      | `/migration add users`        | Database migration                    |
+| `/security-audit` | `/security-audit`             | Security analysis                     |
+| `/docker`         | `/docker`                     | Dockerfile generation                 |
+| `/deploy`         | `/deploy`                     | Deployment config                     |
+| `/explore`        | `/explore`                    | Repository analysis                   |
 
 </details>
 
@@ -146,15 +148,15 @@ Interactive workflows invoked with `/skill-name`:
 
 Cross-framework rules included with `--with-rules`:
 
-| Rule | What It Covers |
-|------|----------------|
-| **security.md** | OWASP Top 10: injection, XSS, CSRF, secrets |
-| **performance.md** | N+1 queries, caching, lazy loading |
-| **accessibility.md** | WCAG 2.1, semantic HTML, ARIA |
-| **testing-patterns.md** | AAA pattern, mocking, coverage |
-| **error-handling.md** | Error categories, response formats |
-| **git.md** | Conventional commits, branching, PRs |
-| **observability.md** | Logging, metrics, tracing |
+| Rule                    | What It Covers                              |
+| ----------------------- | ------------------------------------------- |
+| **security.md**         | OWASP Top 10: injection, XSS, CSRF, secrets |
+| **performance.md**      | N+1 queries, caching, lazy loading          |
+| **accessibility.md**    | WCAG 2.1, semantic HTML, ARIA               |
+| **testing-patterns.md** | AAA pattern, mocking, coverage              |
+| **error-handling.md**   | Error categories, response formats          |
+| **git.md**              | Conventional commits, branching, PRs        |
+| **observability.md**    | Logging, metrics, tracing                   |
 
 ## Examples
 
@@ -178,6 +180,7 @@ ai-rules init angular --dry-run
 ```
 
 Output:
+
 ```
 DRY RUN - No files will be modified
 
@@ -210,77 +213,77 @@ ai-rules update
 <details>
 <summary><strong>Angular</strong></summary>
 
-| Aspect | Convention |
-|--------|------------|
-| Components | Standalone, OnPush change detection |
-| Signals | `input()`, `output()`, `model()` functions |
-| State | NgRx with Entity Adapter + Functional Effects |
-| Structure | Nx monorepo with feature/ui/data-access libs |
-| Tests | Vitest + Marble testing |
+| Aspect     | Convention                                    |
+| ---------- | --------------------------------------------- |
+| Components | Standalone, OnPush change detection           |
+| Signals    | `input()`, `output()`, `model()` functions    |
+| State      | NgRx with Entity Adapter + Functional Effects |
+| Structure  | Nx monorepo with feature/ui/data-access libs  |
+| Tests      | Vitest + Marble testing                       |
 
 </details>
 
 <details>
 <summary><strong>Next.js</strong></summary>
 
-| Aspect | Convention |
-|--------|------------|
-| Components | Server Components by default |
-| Client | `'use client'` directive for interactivity |
-| Data | Server Components + fetch, Server Actions |
-| State | Zustand (simple) / Redux Toolkit (complex) |
-| Structure | App Router with route groups |
+| Aspect     | Convention                                 |
+| ---------- | ------------------------------------------ |
+| Components | Server Components by default               |
+| Client     | `'use client'` directive for interactivity |
+| Data       | Server Components + fetch, Server Actions  |
+| State      | Zustand (simple) / Redux Toolkit (complex) |
+| Structure  | App Router with route groups               |
 
 </details>
 
 <details>
 <summary><strong>NestJS</strong></summary>
 
-| Aspect | Convention |
-|--------|------------|
-| Architecture | Modular Monolith |
-| Validation | class-validator + class-transformer |
-| Database | Prisma (modern) / TypeORM (decorators) |
-| Auth | Passport + JWT |
-| Tests | Vitest + Supertest |
+| Aspect       | Convention                             |
+| ------------ | -------------------------------------- |
+| Architecture | Modular Monolith                       |
+| Validation   | class-validator + class-transformer    |
+| Database     | Prisma (modern) / TypeORM (decorators) |
+| Auth         | Passport + JWT                         |
+| Tests        | Vitest + Supertest                     |
 
 </details>
 
 <details>
 <summary><strong>.NET</strong></summary>
 
-| Aspect | Convention |
-|--------|------------|
+| Aspect       | Convention                                |
+| ------------ | ----------------------------------------- |
 | Architecture | Clean Architecture (Domain → App → Infra) |
-| API | Minimal APIs (preferred) or Controllers |
-| CQRS | MediatR for Commands/Queries |
-| ORM | Entity Framework Core |
-| Tests | xUnit + NSubstitute + FluentAssertions |
+| API          | Minimal APIs (preferred) or Controllers   |
+| CQRS         | MediatR for Commands/Queries              |
+| ORM          | Entity Framework Core                     |
+| Tests        | xUnit + NSubstitute + FluentAssertions    |
 
 </details>
 
 <details>
 <summary><strong>FastAPI</strong></summary>
 
-| Aspect | Convention |
-|--------|------------|
-| Framework | FastAPI with async/await |
-| Validation | Pydantic v2 |
-| ORM | SQLAlchemy 2.0 with async support |
-| Tests | pytest + httpx |
-| Migrations | Alembic |
+| Aspect     | Convention                        |
+| ---------- | --------------------------------- |
+| Framework  | FastAPI with async/await          |
+| Validation | Pydantic v2                       |
+| ORM        | SQLAlchemy 2.0 with async support |
+| Tests      | pytest + httpx                    |
+| Migrations | Alembic                           |
 
 </details>
 
 <details>
 <summary><strong>Flask</strong></summary>
 
-| Aspect | Convention |
-|--------|------------|
-| Framework | Flask 3.0 with Application Factory |
-| Validation | Marshmallow schemas |
-| ORM | SQLAlchemy 2.0 |
-| Tests | pytest |
+| Aspect     | Convention                                          |
+| ---------- | --------------------------------------------------- |
+| Framework  | Flask 3.0 with Application Factory                  |
+| Validation | Marshmallow schemas                                 |
+| ORM        | SQLAlchemy 2.0                                      |
+| Tests      | pytest                                              |
 | Extensions | Flask-SQLAlchemy, Flask-Migrate, Flask-JWT-Extended |
 
 </details>

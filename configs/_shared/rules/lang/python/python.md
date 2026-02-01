@@ -1,13 +1,11 @@
-# Python Conventions
-
-## Activation
-
-```yaml
+---
 paths:
   - "**/*.py"
   - "**/pyproject.toml"
   - "**/requirements*.txt"
-```
+---
+
+# Python Conventions
 
 ## Type Hints (Required)
 

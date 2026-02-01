@@ -100,6 +100,7 @@ yarn lint:rules
 ### 2. Bump Version
 
 Edit `package.json` and update the version following [semver](https://semver.org/):
+
 - **patch** (1.2.3 → 1.2.4): Bug fixes
 - **minor** (1.2.3 → 1.3.0): New features, backward compatible
 - **major** (1.2.3 → 2.0.0): Breaking changes
@@ -138,6 +139,7 @@ npm view @malamute/ai-rules version
 This project uses [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) with OIDC - no npm tokens required.
 
 **Configuration:**
+
 - Owner: `SpaceMalamute`
 - Repository: `ai-rules`
 - Workflow: `publish.yml`
@@ -165,7 +167,7 @@ test: add backup functionality tests
 
 ## CI/CD
 
-| Workflow | Trigger | Actions |
-|----------|---------|---------|
-| `ci.yml` | Push to main, PRs | Lint, Test, Validate rules |
-| `publish.yml` | GitHub Release | Publish to npm |
+| Workflow      | Trigger           | Actions                    |
+| ------------- | ----------------- | -------------------------- |
+| `ci.yml`      | Push to main, PRs | Lint, Test, Validate rules |
+| `publish.yml` | GitHub Release    | Publish to npm             |
