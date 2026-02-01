@@ -1,6 +1,6 @@
 {
   "name": "@malamute/ai-rules",
-  "version": "1.1.9",
+  "version": "1.2.0",
   "description": "Claude Code configuration boilerplates for Angular, Next.js, NestJS, .NET, Python and more",
   "main": "src/index.js",
   "bin": "./bin/cli.js",
@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/malamute/ai-rules.git"
+    "url": "git+https://github.com/SpaceMalamute/ai-rules.git"
   },
   "bugs": {
-    "url": "https://github.com/malamute/ai-rules/issues"
+    "url": "https://github.com/SpaceMalamute/ai-rules/issues"
   },
-  "homepage": "https://github.com/malamute/ai-rules#readme",
+  "homepage": "https://github.com/SpaceMalamute/ai-rules#readme",
   "files": [
     "bin",
     "src",
