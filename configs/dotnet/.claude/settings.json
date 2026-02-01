@@ -14,6 +14,8 @@
       "Write"
     ],
     "deny": [
+      "Bash(git push *)",
+      "Bash(git push)",
       "Bash(rm -rf *)",
       "Read(appsettings.*.json)",
       "Read(**/secrets.json)",
