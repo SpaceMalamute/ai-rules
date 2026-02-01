@@ -121,17 +121,19 @@ Interactive workflows invoked with `/skill-name`:
 | `/review`         | Code review with security/perf checklist  |
 | `/debug`          | Structured debugging workflow             |
 | `/spec`           | Write technical spec before implementing  |
+| `/sudden-death`   | Kill indecision with rapid-fire questions |
 | `/fix-issue`      | Analyze GitHub issue and implement fix    |
 | `/generate-tests` | Generate comprehensive tests              |
 
 <details>
-<summary><strong>See all 13 skills</strong></summary>
+<summary><strong>See all 14 skills</strong></summary>
 
 | Skill             | Usage                         | Description                           |
 | ----------------- | ----------------------------- | ------------------------------------- |
 | `/learning`       | `/learning nextjs`            | Explains concepts before implementing |
 | `/review`         | `/review src/users/`          | Code review with checklist            |
 | `/spec`           | `/spec add auth`              | Technical specification               |
+| `/sudden-death`   | `/sudden-death backend`       | Kill indecision, get a verdict        |
 | `/debug`          | `/debug TypeError...`         | Systematic debugging                  |
 | `/fix-issue`      | `/fix-issue 123`              | Fix GitHub issue                      |
 | `/review-pr`      | `/review-pr 456`              | Review pull request                   |
