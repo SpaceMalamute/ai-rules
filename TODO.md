@@ -28,12 +28,12 @@
 
 ## Config Changes
 
-- [ ] Next.js should be `type: "fullstack"` (frontend + backend)
+- [x] Next.js should be `type: "fullstack"` (frontend + backend)
   - Add Server Actions rules
   - Add API routes rules
   - Include both domain/frontend and domain/backend shared rules
 
-- [ ] Next.js yarn issue - fallback to pnpm
+- [x] Next.js yarn issue - fallback to pnpm
   - Detect package manager
   - Add pnpm commands to settings.json
 

@@ -5,7 +5,7 @@
       "language": "typescript"
     },
     "nextjs": {
-      "type": "frontend",
+      "type": "fullstack",
       "language": "typescript"
     },
     "nestjs": {
@@ -41,7 +41,8 @@
     },
     "type": {
       "frontend": "domain/frontend",
-      "backend": "domain/backend"
+      "backend": "domain/backend",
+      "fullstack": ["domain/frontend", "domain/backend"]
     }
   },
   "alwaysInclude": ["conventions", "quality", "security", "devops"]

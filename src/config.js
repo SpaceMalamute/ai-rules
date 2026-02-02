@@ -39,7 +39,12 @@ export function getRulePathsToInclude(techs) {
 
     // Add domain-specific rules (e.g., "domain/frontend")
     if (config.type && ruleMapping.type[config.type]) {
-      paths.add(ruleMapping.type[config.type]);
+      const domainRules = ruleMapping.type[config.type];
+      if (Array.isArray(domainRules)) {
+        domainRules.forEach((rule) => paths.add(rule));
+      } else {
+        paths.add(domainRules);
+      }
     }
   }
 
