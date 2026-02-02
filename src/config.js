@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 export const CONFIGS_DIR = path.join(__dirname, '..', 'configs');
-export const AVAILABLE_TECHS = ['angular', 'nextjs', 'nestjs', 'dotnet', 'fastapi', 'flask'];
+export const AVAILABLE_TECHS = ['angular', 'react', 'nextjs', 'nestjs', 'adonisjs', 'dotnet', 'fastapi', 'flask'];
 export const VERSION = require('../package.json').version;
 
 export const TECH_CONFIG = JSON.parse(

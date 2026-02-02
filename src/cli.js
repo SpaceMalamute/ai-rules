@@ -24,6 +24,7 @@ ${colors.bold('Commands:')}
 
 ${colors.bold('Technologies:')}
   angular    Angular 21 + Nx + NgRx
+  react      React 19 + Vite + Vitest
   nextjs     Next.js 15 + React 19
   nestjs     NestJS + Prisma/TypeORM
   adonisjs   AdonisJS 6 + Lucid + VineJS
@@ -55,6 +56,7 @@ async function interactiveInit() {
     instructions: '(Space to select, Enter to confirm)',
     choices: [
       { name: 'Angular - Angular 21 + Nx + NgRx + Signals', value: 'angular' },
+      { name: 'React - React 19 + Vite + Vitest', value: 'react' },
       { name: 'Next.js - Next.js 15 + React 19 + App Router', value: 'nextjs' },
       { name: 'NestJS - NestJS 11 + Prisma/TypeORM + Passport', value: 'nestjs' },
       { name: 'AdonisJS - AdonisJS 6 + Lucid ORM + VineJS', value: 'adonisjs' },

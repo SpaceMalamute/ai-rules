@@ -44,6 +44,7 @@ npx @malamute/ai-rules <command>
 | Technology   | Stack                                     | Version |
 | ------------ | ----------------------------------------- | ------- |
 | **Angular**  | Nx + NgRx + Signals + Vitest              | 21+     |
+| **React**    | Vite + Vitest + Testing Library           | 19+     |
 | **Next.js**  | App Router + React 19 + Server Components | 15+     |
 | **NestJS**   | Prisma/TypeORM + Passport + Vitest        | 11+     |
 | **AdonisJS** | Lucid ORM + VineJS + Japa                 | 6+      |
@@ -227,6 +228,19 @@ ai-rules update
 | State      | NgRx with Entity Adapter + Functional Effects |
 | Structure  | Nx monorepo with feature/ui/data-access libs  |
 | Tests      | Vitest + Marble testing                       |
+
+</details>
+
+<details>
+<summary><strong>React</strong></summary>
+
+| Aspect     | Convention                                |
+| ---------- | ----------------------------------------- |
+| Components | Functional components with hooks          |
+| State      | useState, Context, Zustand/Jotai          |
+| Server     | TanStack Query for server state           |
+| Forms      | React 19 actions, useActionState          |
+| Tests      | Vitest + React Testing Library            |
 
 </details>
 

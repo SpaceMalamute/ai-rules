@@ -27,6 +27,10 @@
     "adonisjs": {
       "type": "backend",
       "language": "typescript"
+    },
+    "react": {
+      "type": "frontend",
+      "language": "typescript"
     }
   },
   "ruleMapping": {

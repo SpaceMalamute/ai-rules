@@ -7,8 +7,10 @@ Reusable configurations for Claude Code projects. Copy `configs/[tech]/` to your
 ```
 configs/
 ├── angular/          # Angular 21+, Nx, Signals
+├── react/            # React 19+, Vite, Vitest
 ├── nextjs/           # Next.js 15+, App Router
 ├── nestjs/           # NestJS 11+, Modular Monolith
+├── adonisjs/         # AdonisJS 6+, Lucid, VineJS
 ├── dotnet/           # .NET 9, Clean Architecture
 ├── fastapi/          # FastAPI + Pydantic v2
 ├── flask/            # Flask 3.0+ + Marshmallow
