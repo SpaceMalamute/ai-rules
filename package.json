@@ -1,7 +1,7 @@
 {
   "name": "@malamute/ai-rules",
-  "version": "1.5.2",
-  "description": "Claude Code configuration boilerplates for Angular, Next.js, NestJS, .NET, Python and more",
+  "version": "1.6.0",
+  "description": "AI coding tool configurations (Claude, Cursor, Copilot, Windsurf) for Angular, Next.js, NestJS, .NET, Python and more",
   "type": "module",
   "main": "src/index.js",
   "bin": "./bin/cli.js",

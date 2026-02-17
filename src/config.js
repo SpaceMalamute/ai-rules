@@ -10,6 +10,8 @@ const require = createRequire(import.meta.url);
 
 export const CONFIGS_DIR = path.join(__dirname, '..', 'configs');
 export const AVAILABLE_TECHS = ['angular', 'react', 'nextjs', 'nestjs', 'adonisjs', 'dotnet', 'fastapi', 'flask'];
+export const AVAILABLE_TARGETS = ['claude', 'cursor', 'copilot', 'windsurf'];
+export const DEFAULT_TARGET = 'claude';
 export const VERSION = require('../package.json').version;
 
 export const TECH_CONFIG = JSON.parse(

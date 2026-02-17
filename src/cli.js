@@ -1,12 +1,12 @@
 import { checkbox, input } from '@inquirer/prompts';
 import { colors, log } from './utils.js';
-import { VERSION, AVAILABLE_TECHS } from './config.js';
+import { VERSION, AVAILABLE_TECHS, AVAILABLE_TARGETS, DEFAULT_TARGET } from './config.js';
 import { init, update, status, listTechnologies } from './installer.js';
 import { readManifest } from './merge.js';
 
 function printUsage() {
   console.log(`
-${colors.bold('AI Rules')} v${VERSION} - Claude Code configuration boilerplates
+${colors.bold('AI Rules')} v${VERSION} - AI tool configuration boilerplates
 
 ${colors.bold('Usage:')}
   ai-rules init [tech] [tech2] [options]
@@ -32,17 +32,26 @@ ${colors.bold('Technologies:')}
   fastapi    FastAPI + SQLAlchemy + Pydantic
   flask      Flask + SQLAlchemy + Marshmallow
 
+${colors.bold('AI Targets:')}
+  claude     Claude Code (.claude/rules/)
+  cursor     Cursor (.cursor/rules/)
+  copilot    GitHub Copilot (.github/instructions/)
+  windsurf   Windsurf (.windsurf/rules/)
+
 ${colors.bold('Options:')}
-  --minimal        Only install settings.json and tech rules (no shared skills/rules)
-  --target <dir>   Target directory (default: current directory)
-  --dry-run        Preview changes without writing files
-  --force          Overwrite files without backup (update command)
+  --minimal            Only install settings.json and tech rules (no shared skills/rules)
+  --dir <directory>    Target directory (default: current directory)
+  --targets <t1,t2>    AI tools to target (default: claude)
+  --dry-run            Preview changes without writing files
+  --force              Overwrite files without backup (update command)
 
 ${colors.bold('Examples:')}
-  ai-rules init                          # Interactive mode
-  ai-rules init angular                  # Full install (skills + rules)
-  ai-rules init angular --minimal        # Minimal install
-  ai-rules add nestjs                    # Add NestJS to existing install
+  ai-rules init                                    # Interactive mode
+  ai-rules init angular                            # Install for Claude (default)
+  ai-rules init angular --targets cursor           # Install for Cursor
+  ai-rules init angular --targets claude,cursor    # Install for both
+  ai-rules init angular --minimal                  # Minimal install
+  ai-rules add nestjs                              # Add NestJS to existing install
   ai-rules update
   ai-rules status
 `);
@@ -71,12 +80,28 @@ async function interactiveInit() {
     process.exit(1);
   }
 
+  const targets = await checkbox({
+    message: 'Select AI tools:',
+    instructions: '(Space to select, Enter to confirm)',
+    choices: [
+      { name: 'Claude Code - .claude/rules/', value: 'claude', checked: true },
+      { name: 'Cursor - .cursor/rules/', value: 'cursor' },
+      { name: 'GitHub Copilot - .github/instructions/', value: 'copilot' },
+      { name: 'Windsurf - .windsurf/rules/', value: 'windsurf' },
+    ],
+  });
+
+  if (targets.length === 0) {
+    log.error('No AI tool selected');
+    process.exit(1);
+  }
+
   const extras = await checkbox({
     message: 'Include extras:',
     instructions: '(Space to toggle, Enter to confirm)',
     choices: [
       {
-        name: 'Skills - /learning, /review, /spec, /debug, etc.',
+        name: 'Skills - /learning, /review, /spec, /debug, etc. (Claude only)',
         value: 'skills',
         checked: true,
       },
@@ -95,6 +120,7 @@ async function interactiveInit() {
 
   const options = {
     target: targetDir === '.' ? null : targetDir,
+    targets,
     withSkills: extras.includes('skills'),
     withRules: extras.includes('rules'),
     all: false,
@@ -125,8 +151,8 @@ export async function run(args) {
   }
 
   if (command === 'status') {
-    const targetIndex = args.indexOf('--target');
-    const targetDir = targetIndex !== -1 ? args[targetIndex + 1] : process.cwd();
+    const dirIndex = args.indexOf('--dir');
+    const targetDir = dirIndex !== -1 ? args[dirIndex + 1] : process.cwd();
     status(targetDir);
     return;
   }
@@ -138,9 +164,9 @@ export async function run(args) {
       force: args.includes('--force'),
     };
 
-    const targetIndex = args.indexOf('--target');
-    if (targetIndex !== -1) {
-      options.target = args[targetIndex + 1];
+    const dirIndex = args.indexOf('--dir');
+    if (dirIndex !== -1) {
+      options.target = args[dirIndex + 1];
     }
 
     await update(options);
@@ -148,8 +174,8 @@ export async function run(args) {
   }
 
   if (command === 'add') {
-    const targetIndex = args.indexOf('--target');
-    const targetDir = targetIndex !== -1 ? args[targetIndex + 1] : process.cwd();
+    const dirIndex = args.indexOf('--dir');
+    const targetDir = dirIndex !== -1 ? args[dirIndex + 1] : process.cwd();
 
     const manifest = readManifest(targetDir);
     if (!manifest) {
@@ -161,7 +187,7 @@ export async function run(args) {
     const newTechs = [];
     for (let i = 1; i < args.length; i++) {
       const arg = args[i];
-      if (arg === '--target') {
+      if (arg === '--dir' || arg === '--targets') {
         i++; // Skip next arg
       } else if (arg === '--dry-run' || arg === '--force') {
         // Handled below
@@ -189,6 +215,7 @@ export async function run(args) {
 
     const options = {
       target: targetDir === process.cwd() ? null : targetDir,
+      targets: manifest.targets || [DEFAULT_TARGET],
       withSkills: manifest.options?.withSkills ?? true,
       withRules: manifest.options?.withRules ?? true,
       dryRun: args.includes('--dry-run'),
@@ -206,6 +233,7 @@ export async function run(args) {
     const minimal = args.includes('--minimal');
     const options = {
       target: null,
+      targets: [DEFAULT_TARGET],
       withSkills: !minimal,
       withRules: !minimal,
       dryRun: args.includes('--dry-run'),
@@ -219,8 +247,25 @@ export async function run(args) {
 
       if (arg === '--minimal') {
         // Already handled above
-      } else if (arg === '--target') {
+      } else if (arg === '--dir') {
         options.target = args[++i];
+      } else if (arg === '--targets') {
+        const targetsArg = args[++i];
+        if (!targetsArg) {
+          log.error('--targets requires a value');
+          process.exit(1);
+        }
+        // Support both comma-separated and space-separated
+        const parsedTargets = targetsArg.split(',').map((t) => t.trim());
+        // Validate targets
+        for (const t of parsedTargets) {
+          if (!AVAILABLE_TARGETS.includes(t)) {
+            log.error(`Unknown target: ${t}`);
+            console.log(`Available: ${AVAILABLE_TARGETS.join(', ')}`);
+            process.exit(1);
+          }
+        }
+        options.targets = parsedTargets;
       } else if (arg === '--dry-run' || arg === '--force') {
         // Already handled
       } else if (!arg.startsWith('-')) {

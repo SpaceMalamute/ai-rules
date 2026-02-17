@@ -1,6 +1,6 @@
-# Claude Code Configuration Boilerplates
+# AI Rules - Multi-Target AI Tool Configurations
 
-Reusable configurations for Claude Code projects. Copy `configs/[tech]/` to your project root.
+Reusable configurations for AI coding tools (Claude Code, Cursor, Copilot, Windsurf).
 
 ## Structure
 
@@ -15,13 +15,28 @@ configs/
 ├── fastapi/          # FastAPI + Pydantic v2
 ├── flask/            # Flask 3.0+ + Marshmallow
 └── _shared/          # Cross-tech conventions
+
+src/
+├── adapters/         # Format adapters per AI tool
+│   ├── base.js       # Abstract adapter
+│   ├── claude.js     # → .claude/rules/*.md
+│   ├── cursor.js     # → .cursor/rules/*.mdc
+│   ├── copilot.js    # → .github/instructions/*.instructions.md
+│   └── windsurf.js   # → .windsurf/rules/*.md
+├── transformers/
+│   └── frontmatter.js # Parse/serialize YAML frontmatter
+├── cli.js            # CLI entry point
+├── config.js         # Constants, tech config
+├── installer.js      # Multi-target installation logic
+├── merge.js          # Settings merge + manifest
+└── utils.js          # File utilities
 ```
 
 Each technology has:
 
 - `rules/core.md` → framework conventions (architecture, stack, commands)
 - `rules/*.md` → code patterns with path-based activation
-- `settings.json` → permissions
+- `settings.json` → permissions (Claude only)
 
 ## Principles
 
@@ -37,7 +52,8 @@ Each technology has:
 
 **Path scoping**
 
-- Rules use `paths:` globs to activate only on relevant files
+- Source rules use `paths:` globs (Claude format) to activate only on relevant files
+- Adapters transform `paths` → `globs` (Cursor/Windsurf) or `applyTo` (Copilot)
 - Keep paths narrow to reduce noise
 
 **YAGNI**
@@ -61,6 +77,16 @@ Each technology has:
 ## Language
 
 All files in **English**.
+
+## Adapter Format Mapping
+
+| Source (Claude) | Cursor       | Copilot      | Windsurf              |
+|-----------------|--------------|--------------|----------------------|
+| `paths`         | `globs`      | `applyTo`    | `globs` + `trigger: glob` |
+| `alwaysApply`   | `alwaysApply`| aggregated   | `trigger: always`    |
+| `.md`           | `.mdc`       | `.instructions.md` | `.md`          |
+| skills          | -            | -            | workflows            |
+| settings.json   | -            | -            | -                    |
 
 ## Shared Rules Structure
 

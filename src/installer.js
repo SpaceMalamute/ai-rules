@@ -1,73 +1,101 @@
 import fs from 'fs';
 import path from 'path';
-import { colors, log, getFilesRecursive, copyDirRecursive, backupFile } from './utils.js';
+import { colors, log, getFilesRecursive, backupFile } from './utils.js';
 import {
   CONFIGS_DIR,
   AVAILABLE_TECHS,
+  DEFAULT_TARGET,
   VERSION,
   getRulePathsToInclude,
   shouldIncludeRule,
 } from './config.js';
 import { mergeSettingsJson, readManifest, writeManifest } from './merge.js';
+import { getAdapter, getAdapterClass } from './adapters/index.js';
 
 /**
- * Copy skills to target directory with flat structure.
- * Source: skills/<category>/<skill-name>/SKILL.md
- * Target: .claude/skills/<skill-name>/SKILL.md
+ * Write a file with optional dry-run, backup, and operation tracking.
  */
-function copySkillsToTarget(srcDir, destDir, options = {}) {
+function writeFile(destFile, content, options = {}) {
   const { dryRun, backup, targetDir } = options;
-  const operations = [];
+  const exists = fs.existsSync(destFile);
+  const relativeDestPath = path.relative(targetDir, destFile);
 
-  // getFilesRecursive returns paths relative to srcDir
-  const relativeFiles = getFilesRecursive(srcDir).filter((f) => f.endsWith('SKILL.md'));
-
-  for (const relativePath of relativeFiles) {
-    const srcFile = path.join(srcDir, relativePath);
-    const parts = relativePath.split(path.sep);
-
-    // Extract skill name from parent directory
-    // e.g., dev/debug/SKILL.md → debug
-    const skillName = parts[parts.length - 2];
-
-    // Create .claude/skills/<skill-name>/SKILL.md
-    const destSkillDir = path.join(destDir, skillName);
-    const destFile = path.join(destSkillDir, 'SKILL.md');
-    const exists = fs.existsSync(destFile);
-    const relativeDestPath = path.relative(targetDir, destFile);
-
-    if (dryRun) {
-      operations.push({ type: exists ? 'overwrite' : 'create', path: relativeDestPath });
-    } else {
-      if (exists && backup) {
-        backupFile(destFile, targetDir);
-      }
-      fs.mkdirSync(destSkillDir, { recursive: true });
-      fs.copyFileSync(srcFile, destFile);
-      operations.push({ type: exists ? 'overwrite' : 'create', path: relativeDestPath });
-    }
+  if (dryRun) {
+    return { type: exists ? 'overwrite' : 'create', path: relativeDestPath };
   }
 
-  return operations;
+  if (exists && backup) {
+    backupFile(destFile, targetDir);
+  }
+  fs.mkdirSync(path.dirname(destFile), { recursive: true });
+  fs.writeFileSync(destFile, content);
+  return { type: exists ? 'overwrite' : 'create', path: relativeDestPath };
 }
 
 /**
- * Copy rules selectively based on technology configuration.
- * Only copies rules that match the included paths.
+ * Install tech rules for a specific adapter target.
+ * Reads source files, transforms via adapter, writes to target output dir.
  */
-function copyRulesSelectively(srcDir, destDir, includedPaths, skippedPaths, options = {}) {
-  const { dryRun, backup, targetDir } = options;
+function installTechRules(tech, adapter, adapterClass, targetDir, options) {
+  const { dryRun, backup } = options;
   const operations = [];
+  const globalRules = [];
 
-  // getFilesRecursive returns paths relative to srcDir
-  const relativeFiles = getFilesRecursive(srcDir);
+  const techDir = path.join(CONFIGS_DIR, tech);
+  const rulesDir = path.join(techDir, 'rules');
+  if (!fs.existsSync(rulesDir)) return { operations, globalRules };
+
+  const relativeFiles = getFilesRecursive(rulesDir);
+
+  for (const relativePath of relativeFiles) {
+    const srcFile = path.join(rulesDir, relativePath);
+    const content = fs.readFileSync(srcFile, 'utf8');
+
+    const { content: transformed, filename, isGlobal } = adapter.transformRule(content, relativePath);
+
+    // Track global rules for aggregation
+    if (isGlobal) {
+      globalRules.push({ content, sourcePath: relativePath });
+    }
+
+    // Build output path: <outputDir>/rules/<tech>/<transformed-path>
+    const transformedRelative = path.join(
+      path.dirname(relativePath),
+      filename
+    );
+    const outputPath = path.join(
+      targetDir,
+      adapterClass.outputDir,
+      adapter.getRuleOutputPath(tech, transformedRelative)
+    );
+
+    const op = writeFile(outputPath, transformed, { dryRun, backup, targetDir });
+    operations.push(op);
+  }
+
+  return { operations, globalRules };
+}
+
+/**
+ * Install shared rules for a specific adapter target, filtered by tech config.
+ */
+function installSharedRules(techs, adapter, adapterClass, targetDir, options) {
+  const { dryRun, backup } = options;
+  const operations = [];
+  const globalRules = [];
+  const skippedPaths = [];
+
+  const sharedDir = path.join(CONFIGS_DIR, '_shared');
+  const rulesDir = path.join(sharedDir, 'rules');
+  if (!fs.existsSync(rulesDir)) return { operations, globalRules, skippedPaths };
+
+  const includedPaths = getRulePathsToInclude(techs);
+  const relativeFiles = getFilesRecursive(rulesDir);
 
   for (const relativePath of relativeFiles) {
     const relativeDir = path.dirname(relativePath);
 
-    // Check if this file should be included
     if (!shouldIncludeRule(relativeDir, includedPaths)) {
-      // Track skipped top-level directories for logging
       const topLevel = relativePath.split(path.sep).slice(0, 2).join('/');
       if (!skippedPaths.includes(topLevel)) {
         skippedPaths.push(topLevel);
@@ -75,24 +103,204 @@ function copyRulesSelectively(srcDir, destDir, includedPaths, skippedPaths, opti
       continue;
     }
 
-    const srcFile = path.join(srcDir, relativePath);
-    const destFile = path.join(destDir, relativePath);
-    const exists = fs.existsSync(destFile);
-    const relativeDestPath = path.relative(targetDir, destFile);
+    const srcFile = path.join(rulesDir, relativePath);
+    const content = fs.readFileSync(srcFile, 'utf8');
 
-    if (dryRun) {
-      operations.push({ type: exists ? 'overwrite' : 'create', path: relativeDestPath });
-    } else {
-      if (exists && backup) {
-        backupFile(destFile, targetDir);
+    const { content: transformed, filename, isGlobal } = adapter.transformRule(content, relativePath);
+
+    if (isGlobal) {
+      globalRules.push({ content, sourcePath: relativePath });
+    }
+
+    // Build output path preserving directory structure
+    const transformedRelative = path.join(
+      path.dirname(relativePath),
+      filename
+    );
+    const outputPath = path.join(
+      targetDir,
+      adapterClass.outputDir,
+      adapter.getSharedRuleOutputPath(transformedRelative)
+    );
+
+    const op = writeFile(outputPath, transformed, { dryRun, backup, targetDir });
+    operations.push(op);
+  }
+
+  return { operations, globalRules, skippedPaths };
+}
+
+/**
+ * Install skills for a specific adapter target (Claude only, or workflows for Windsurf).
+ */
+function installSkills(adapter, adapterClass, targetDir, skillsSrcDirs, options) {
+  const { dryRun, backup } = options;
+  const operations = [];
+
+  for (const srcDir of skillsSrcDirs) {
+    if (!fs.existsSync(srcDir)) continue;
+
+    const relativeFiles = getFilesRecursive(srcDir).filter((f) => f.endsWith('SKILL.md'));
+
+    for (const relativePath of relativeFiles) {
+      const srcFile = path.join(srcDir, relativePath);
+      const content = fs.readFileSync(srcFile, 'utf8');
+
+      const result = adapter.transformSkill(content, relativePath);
+      if (!result) continue;
+
+      let destFile;
+      if (result.skillDir) {
+        // Claude: .claude/skills/<skill-name>/SKILL.md
+        destFile = path.join(targetDir, adapterClass.outputDir, 'skills', result.skillDir, result.filename);
+      } else if (result.workflowDir) {
+        // Windsurf: .windsurf/workflows/<name>/workflow.md
+        destFile = path.join(targetDir, adapterClass.outputDir, 'workflows', result.workflowDir, result.filename);
+      } else {
+        continue;
       }
-      fs.mkdirSync(path.dirname(destFile), { recursive: true });
-      fs.copyFileSync(srcFile, destFile);
-      operations.push({ type: exists ? 'overwrite' : 'create', path: relativeDestPath });
+
+      const op = writeFile(destFile, result.content, { dryRun, backup, targetDir });
+      operations.push(op);
     }
   }
 
   return operations;
+}
+
+/**
+ * Install settings for a specific adapter target (Claude only).
+ */
+function installSettings(tech, adapterClass, targetDir, options) {
+  const { dryRun, backup } = options;
+  const techDir = path.join(CONFIGS_DIR, tech);
+  const settingsPath = path.join(techDir, 'settings.json');
+
+  if (!fs.existsSync(settingsPath)) return null;
+
+  const destSettingsPath = path.join(targetDir, adapterClass.outputDir, 'settings.json');
+  return mergeSettingsJson(destSettingsPath, settingsPath, {
+    dryRun,
+    backup,
+    targetDir,
+  });
+}
+
+/**
+ * Run installation for a single adapter target.
+ */
+function installForTarget(target, techs, targetDir, options) {
+  const { dryRun, backup } = options;
+  const adapter = getAdapter(target);
+  const adapterClass = getAdapterClass(target);
+  const allOperations = [];
+  const allGlobalRules = [];
+
+  log.info(`${dryRun ? 'Would install' : 'Installing'} for ${colors.bold(adapterClass.name)}...`);
+
+  if (!dryRun) {
+    fs.mkdirSync(path.join(targetDir, adapterClass.outputDir, 'rules'), { recursive: true });
+  }
+
+  // 1. Install tech rules + settings + skills per tech
+  for (const tech of techs) {
+    const techDir = path.join(CONFIGS_DIR, tech);
+    if (!fs.existsSync(techDir)) {
+      log.error(`Technology directory not found: ${tech}`);
+      process.exit(1);
+    }
+
+    // Settings (only for adapters that support it)
+    if (adapterClass.supports.settings) {
+      const op = installSettings(tech, adapterClass, targetDir, { dryRun, backup });
+      if (op) {
+        allOperations.push(op);
+        if (dryRun) {
+          log.dry(`  settings.json (${op.type})`);
+        } else {
+          log.success(`  settings.json`);
+        }
+      }
+    }
+
+    // Rules
+    if (adapterClass.supports.rules) {
+      const { operations, globalRules } = installTechRules(
+        tech, adapter, adapterClass, targetDir, { dryRun, backup }
+      );
+      allOperations.push(...operations);
+      allGlobalRules.push(...globalRules);
+
+      if (dryRun) {
+        log.dry(`  rules/${tech}/ (${operations.length} files)`);
+      } else {
+        log.success(`  rules/${tech}/`);
+      }
+    }
+
+    // Tech-specific skills
+    if (options.withSkills && (adapterClass.supports.skills || adapterClass.supports.workflows)) {
+      const techSkillsDir = path.join(techDir, 'skills');
+      if (fs.existsSync(techSkillsDir)) {
+        const ops = installSkills(adapter, adapterClass, targetDir, [techSkillsDir], { dryRun, backup });
+        allOperations.push(...ops);
+      }
+    }
+  }
+
+  // 2. Shared skills
+  const sharedDir = path.join(CONFIGS_DIR, '_shared');
+  if (options.withSkills && (adapterClass.supports.skills || adapterClass.supports.workflows)) {
+    log.info(`${dryRun ? 'Would install' : 'Installing'} ${adapterClass.supports.workflows ? 'workflows' : 'skills'}...`);
+    const skillsDir = path.join(sharedDir, 'skills');
+    const ops = installSkills(adapter, adapterClass, targetDir, [skillsDir], { dryRun, backup });
+    allOperations.push(...ops);
+
+    if (dryRun) {
+      log.dry(`  ${adapterClass.supports.workflows ? 'workflows' : 'skills'}/ (${ops.length} files)`);
+    } else {
+      log.success(`  ${adapterClass.supports.workflows ? 'workflows' : 'skills'}/`);
+    }
+  }
+
+  // 3. Shared rules
+  if (options.withRules && adapterClass.supports.rules) {
+    log.info(`${dryRun ? 'Would install' : 'Installing'} shared rules...`);
+    const { operations, globalRules, skippedPaths } = installSharedRules(
+      techs, adapter, adapterClass, targetDir, { dryRun, backup }
+    );
+    allOperations.push(...operations);
+    allGlobalRules.push(...globalRules);
+
+    if (dryRun) {
+      log.dry(`  shared rules/ (${operations.length} files)`);
+    } else {
+      log.success(`  shared rules/`);
+    }
+
+    if (skippedPaths.length > 0) {
+      const uniqueSkipped = [...new Set(skippedPaths)];
+      log.info(`  (skipped: ${uniqueSkipped.join(', ')} - not applicable)`);
+    }
+  }
+
+  // 4. Aggregate global rules (for non-Claude targets)
+  if (allGlobalRules.length > 0) {
+    const aggregated = adapter.aggregateGlobalRules(allGlobalRules);
+    if (aggregated) {
+      const destFile = path.join(targetDir, adapterClass.outputDir, aggregated.filename);
+      const op = writeFile(destFile, aggregated.content, { dryRun, backup, targetDir });
+      allOperations.push(op);
+
+      if (dryRun) {
+        log.dry(`  ${aggregated.filename} (aggregated global rules)`);
+      } else {
+        log.success(`  ${aggregated.filename} (aggregated global rules)`);
+      }
+    }
+  }
+
+  return allOperations;
 }
 
 export function listTechnologies() {
@@ -100,8 +308,10 @@ export function listTechnologies() {
 
   const techInfo = {
     angular: 'Angular 21 + Nx + NgRx + Signals',
+    react: 'React 19 + Vite + Vitest',
     nextjs: 'Next.js 15 + React 19 + App Router',
     nestjs: 'NestJS 11 + Prisma/TypeORM + Passport',
+    adonisjs: 'AdonisJS 6 + Lucid ORM + VineJS',
     dotnet: '.NET 9 + ASP.NET Core + EF Core',
     fastapi: 'FastAPI + SQLAlchemy 2.0 + Pydantic v2',
     flask: 'Flask + SQLAlchemy 2.0 + Marshmallow',
@@ -110,8 +320,8 @@ export function listTechnologies() {
   for (const tech of AVAILABLE_TECHS) {
     const techPath = path.join(CONFIGS_DIR, tech);
     const exists = fs.existsSync(techPath);
-    const status = exists ? colors.green('✓') : colors.red('✗');
-    console.log(`  ${status} ${colors.bold(tech.padEnd(10))} ${techInfo[tech]}`);
+    const indicator = exists ? colors.green('✓') : colors.red('✗');
+    console.log(`  ${indicator} ${colors.bold(tech.padEnd(10))} ${techInfo[tech] || ''}`);
   }
 
   console.log(`\n${colors.bold('Shared resources:')}\n`);
@@ -151,6 +361,14 @@ export function status(targetDir) {
   );
   console.log('');
 
+  // Display targets
+  const targets = manifest.targets || [DEFAULT_TARGET];
+  console.log(`  ${colors.bold('AI Targets:')}`);
+  targets.forEach((target) => {
+    console.log(`    ${colors.green('✓')} ${target}`);
+  });
+  console.log('');
+
   if (manifest.technologies?.length) {
     console.log(`  ${colors.bold('Technologies:')}`);
     manifest.technologies.forEach((tech) => {
@@ -185,6 +403,7 @@ export function status(targetDir) {
 
 export function init(techs, options) {
   const targetDir = path.resolve(options.target || process.cwd());
+  const targets = options.targets || [DEFAULT_TARGET];
   const { dryRun, force } = options;
   const backup = !force;
 
@@ -193,123 +412,29 @@ export function init(techs, options) {
   }
 
   log.info(`${dryRun ? 'Would install' : 'Installing'} to: ${targetDir}`);
+  log.info(`Targets: ${targets.join(', ')}`);
   console.log('');
 
-  const operations = [];
+  const allOperations = [];
 
-  if (!dryRun) {
-    fs.mkdirSync(path.join(targetDir, '.claude', 'rules'), { recursive: true });
+  // Install for each target
+  for (const target of targets) {
+    const ops = installForTarget(target, techs, targetDir, {
+      dryRun,
+      backup,
+      withSkills: options.withSkills,
+      withRules: options.withRules,
+    });
+    allOperations.push(...ops);
+    console.log('');
   }
 
-  for (const tech of techs) {
-    log.info(`${dryRun ? 'Would install' : 'Installing'} ${tech}...`);
-
-    const techDir = path.join(CONFIGS_DIR, tech);
-
-    if (!fs.existsSync(techDir)) {
-      log.error(`Technology directory not found: ${tech}`);
-      process.exit(1);
-    }
-
-    const settingsPath = path.join(techDir, 'settings.json');
-    if (fs.existsSync(settingsPath)) {
-      const op = mergeSettingsJson(path.join(targetDir, '.claude', 'settings.json'), settingsPath, {
-        dryRun,
-        backup,
-        targetDir,
-      });
-      operations.push(op);
-
-      if (dryRun) {
-        log.dry(`  settings.json (${op.type})`);
-      } else {
-        log.success(`  settings.json`);
-      }
-    }
-
-    const rulesDir = path.join(techDir, 'rules');
-    if (fs.existsSync(rulesDir)) {
-      const ops = copyDirRecursive(rulesDir, path.join(targetDir, '.claude', 'rules', tech), {
-        dryRun,
-        backup,
-        targetDir,
-      });
-      operations.push(...ops);
-
-      if (dryRun) {
-        log.dry(`  rules/${tech}/ (${ops.length} files)`);
-      } else {
-        log.success(`  rules/${tech}/`);
-      }
-    }
-
-    if (options.withSkills) {
-      const techSkillsDir = path.join(techDir, 'skills');
-      if (fs.existsSync(techSkillsDir)) {
-        const ops = copySkillsToTarget(techSkillsDir, path.join(targetDir, '.claude', 'skills'), {
-          dryRun,
-          backup,
-          targetDir,
-        });
-        operations.push(...ops);
-      }
-    }
-  }
-
-  const sharedDir = path.join(CONFIGS_DIR, '_shared');
-
-  if (options.withSkills) {
-    log.info(`${dryRun ? 'Would install' : 'Installing'} skills...`);
-    const skillsDir = path.join(sharedDir, 'skills');
-    if (fs.existsSync(skillsDir)) {
-      const ops = copySkillsToTarget(skillsDir, path.join(targetDir, '.claude', 'skills'), {
-        dryRun,
-        backup,
-        targetDir,
-      });
-      operations.push(...ops);
-
-      if (dryRun) {
-        log.dry(`  skills/ (${ops.length} files)`);
-      } else {
-        log.success(`  skills/`);
-      }
-    }
-  }
-
-  if (options.withRules) {
-    log.info(`${dryRun ? 'Would install' : 'Installing'} shared rules...`);
-    const rulesDir = path.join(sharedDir, 'rules');
-    if (fs.existsSync(rulesDir)) {
-      const includedPaths = getRulePathsToInclude(techs);
-      const skippedPaths = [];
-
-      const ops = copyRulesSelectively(
-        rulesDir,
-        path.join(targetDir, '.claude', 'rules'),
-        includedPaths,
-        skippedPaths,
-        { dryRun, backup, targetDir }
-      );
-      operations.push(...ops);
-
-      if (dryRun) {
-        log.dry(`  shared rules/ (${ops.length} files)`);
-      } else {
-        log.success(`  shared rules/`);
-      }
-
-      if (skippedPaths.length > 0) {
-        const uniqueSkipped = [...new Set(skippedPaths)];
-        log.info(`  (skipped: ${uniqueSkipped.join(', ')} - not applicable)`);
-      }
-    }
-  }
-
+  // Write manifest (always in .claude/)
   writeManifest(
     targetDir,
     {
       technologies: techs,
+      targets,
       options: {
         withSkills: options.withSkills,
         withRules: options.withRules,
@@ -318,11 +443,9 @@ export function init(techs, options) {
     dryRun
   );
 
-  console.log('');
-
   if (dryRun) {
-    const creates = operations.filter((op) => op.type === 'create').length;
-    const overwrites = operations.filter((op) => ['overwrite', 'merge'].includes(op.type)).length;
+    const creates = allOperations.filter((op) => op.type === 'create').length;
+    const overwrites = allOperations.filter((op) => ['overwrite', 'merge'].includes(op.type)).length;
 
     console.log(colors.bold('Summary:'));
     console.log(`  ${colors.green(creates)} file(s) would be created`);
@@ -334,6 +457,7 @@ export function init(techs, options) {
     console.log('');
     console.log('Installed:');
     console.log(`  - Technologies: ${techs.join(', ')}`);
+    console.log(`  - Targets: ${targets.join(', ')}`);
     if (options.withSkills) {
       console.log('  - Skills: /learning, /review, /spec, /debug, and more');
     }
@@ -380,9 +504,9 @@ export async function update(options) {
 
   const initOptions = {
     target: targetDir,
+    targets: manifest.targets || [DEFAULT_TARGET],
     withSkills: manifest.options?.withSkills || false,
     withRules: manifest.options?.withRules || false,
-    all: false,
     dryRun,
     force,
   };

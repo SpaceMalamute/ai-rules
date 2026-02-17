@@ -4,18 +4,18 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 
-**Supercharge Claude Code with framework-specific rules, skills, and best practices.**
+**Supercharge your AI coding tools with framework-specific rules, skills, and best practices.**
 
-AI Rules installs curated configuration boilerplates that teach Claude Code your stack's conventions, patterns, and guardrails. Stop explaining the same things over and over — let Claude understand your architecture from the start.
+AI Rules installs curated configuration boilerplates that teach your AI tools your stack's conventions, patterns, and guardrails. Works with **Claude Code**, **Cursor**, **GitHub Copilot**, and **Windsurf**. Stop explaining the same things over and over — let your AI understand your architecture from the start.
 
 ## Why Use This?
 
-| Without AI Rules                         | With AI Rules                            |
-| ---------------------------------------- | ---------------------------------------- |
-| Claude uses generic patterns             | Claude follows your framework's idioms   |
-| You repeat "use signals, not decorators" | Angular 21 patterns are built-in         |
-| Security issues slip through             | OWASP Top 10 rules catch vulnerabilities |
-| Inconsistent code style                  | Consistent conventions across the team   |
+| Without AI Rules                         | With AI Rules                                |
+| ---------------------------------------- | -------------------------------------------- |
+| You repeat the same conventions to each tool | Configure once, apply to Claude, Cursor, Copilot, Windsurf |
+| Generic patterns, outdated idioms        | Framework-specific rules (Angular 21, React 19, ...) |
+| Security issues slip through             | OWASP Top 10 rules catch vulnerabilities     |
+| Different style per developer per tool   | Consistent conventions across the team       |
 
 ## Quick Start
 
@@ -25,9 +25,12 @@ npx @malamute/ai-rules init
 
 # Or specify your stack directly
 npx @malamute/ai-rules init angular nestjs
+
+# Multi-tool setup
+npx @malamute/ai-rules init angular --targets claude,cursor
 ```
 
-That's it. Claude Code now understands your stack.
+That's it. Your AI tools now understand your stack.
 
 ## Installation
 
@@ -38,6 +41,15 @@ npm install -g @malamute/ai-rules
 # Or use with npx (no install needed)
 npx @malamute/ai-rules <command>
 ```
+
+## Supported AI Tools
+
+| Tool             | Output Directory           | Rules | Skills | Settings |
+| ---------------- | -------------------------- | ----- | ------ | -------- |
+| **Claude Code**  | `.claude/rules/`           | yes   | yes    | yes      |
+| **Cursor**       | `.cursor/rules/`           | yes   | -      | -        |
+| **GitHub Copilot** | `.github/instructions/`  | yes   | -      | -        |
+| **Windsurf**     | `.windsurf/rules/`         | yes   | workflows | -     |
 
 ## Supported Technologies
 
@@ -64,16 +76,19 @@ ai-rules list               # List available technologies
 
 ### Options
 
-| Option           | Description                                               |
-| ---------------- | --------------------------------------------------------- |
-| `--minimal`      | Skip skills and shared rules (only tech rules + settings) |
-| `--dry-run`      | Preview changes without writing files                     |
-| `--target <dir>` | Install to a specific directory                           |
-| `--force`        | Overwrite without creating backups                        |
+| Option              | Description                                               |
+| ------------------- | --------------------------------------------------------- |
+| `--targets <t1,t2>` | AI tools to target (default: `claude`)                    |
+| `--minimal`         | Skip skills and shared rules (only tech rules + settings) |
+| `--dry-run`         | Preview changes without writing files                     |
+| `--dir <directory>` | Install to a specific directory                           |
+| `--force`           | Overwrite without creating backups                        |
 
-By default, `init` installs everything (skills + shared rules). Use `--minimal` to skip extras.
+By default, `init` installs everything (skills + shared rules) for Claude Code. Use `--targets` to install for multiple AI tools, and `--minimal` to skip extras.
 
 ## What Gets Installed
+
+### Claude Code (default)
 
 ```
 your-project/
@@ -92,6 +107,26 @@ your-project/
         ├── learning/
         ├── review/
         └── debug/
+```
+
+### Multi-target (e.g. `--targets claude,cursor,copilot`)
+
+```
+your-project/
+├── .claude/                     # Claude Code
+│   ├── settings.json
+│   ├── rules/angular/core.md
+│   └── skills/
+├── .cursor/                     # Cursor
+│   ├── rules/angular/core.mdc  # .mdc extension, paths → globs
+│   └── .cursorrules             # Aggregated global rules
+├── .github/                     # GitHub Copilot
+│   ├── instructions/angular/core.instructions.md
+│   └── copilot-instructions.md  # Aggregated global rules
+└── .windsurf/                   # Windsurf
+    ├── rules/angular/core.md    # paths → globs + trigger
+    ├── global_rules.md          # Aggregated global rules
+    └── workflows/               # Skills → Workflows
 ```
 
 > **Note:** Your project's `CLAUDE.md` is never modified. Use it for project-specific context (business domain, team conventions, etc.).
@@ -181,10 +216,23 @@ ai-rules add nestjs
 ai-rules init angular --minimal
 ```
 
+### Multi-Tool Setup
+
+```bash
+# Install for Claude Code + Cursor
+ai-rules init angular --targets claude,cursor
+
+# Install for all supported tools
+ai-rules init angular --targets claude,cursor,copilot,windsurf
+
+# Install for Cursor only
+ai-rules init angular --targets cursor
+```
+
 ### Preview Before Installing
 
 ```bash
-ai-rules init angular --dry-run
+ai-rules init angular --targets claude,cursor --dry-run
 ```
 
 Output:
@@ -193,13 +241,18 @@ Output:
 DRY RUN - No files will be modified
 
 ℹ Would install to: /your/project
+ℹ Targets: claude, cursor
 
-ℹ Would install angular...
+ℹ Would install for Claude Code...
 ○   settings.json (create)
-○   rules/angular/ (9 files)
+○   rules/angular/ (13 files)
+
+ℹ Would install for Cursor...
+○   rules/angular/ (13 files)
+○   .cursorrules (aggregated global rules)
 
 Summary:
-  10 file(s) would be created
+  27 file(s) would be created
   0 file(s) would be modified
 ```
 
@@ -212,7 +265,7 @@ ai-rules status
 # Preview updates
 ai-rules update --dry-run
 
-# Apply updates (auto-backup enabled)
+# Apply updates (auto-backup enabled, reinstalls all targets)
 ai-rules update
 ```
 
@@ -324,10 +377,15 @@ ai-rules update
 
 ## How It Works
 
-1. **Rules** are loaded by Claude Code based on file paths you're editing
+1. **Rules** are loaded by your AI tool based on file paths you're editing
 2. **`rules/core.md`** with `alwaysApply: true` provides framework conventions
-3. **Skills** are invoked on-demand with `/skill-name`
-4. **Settings** define what commands Claude can run
+3. **Skills** are invoked on-demand with `/skill-name` (Claude Code only)
+4. **Settings** define what commands Claude can run (Claude Code only)
+5. **Adapters** transform rules to each tool's format automatically:
+   - Claude: `paths` frontmatter, `.md` extension
+   - Cursor: `globs` frontmatter, `.mdc` extension
+   - Copilot: `applyTo` frontmatter, `.instructions.md` extension
+   - Windsurf: `globs` + `trigger: glob` frontmatter, `.md` extension
 
 Your project's `CLAUDE.md` stays clean for project-specific context, while framework conventions live in rules.
 
