@@ -29,7 +29,7 @@ Never disable lint rules without an explicit reason and ticket reference.
 ## Testing
 
 - Test behavior, not implementation
-- Descriptive names: `should_returnUser_when_validId`
+- Descriptive names: `should return user when id is valid`
 - One assertion per test when practical
 - Mock external dependencies only
 

@@ -198,6 +198,19 @@ Cross-framework rules included with `--with-rules`:
 | **git.md**              | Conventional commits, branching, PRs        |
 | **observability.md**    | Logging, metrics, tracing                   |
 
+## Recommended MCP Servers
+
+MCP (Model Context Protocol) servers extend your AI tool's capabilities with framework-specific context. These are **not installed by AI Rules** — set them up manually via `claude mcp add` or `~/.claude/settings.json`.
+
+| Server | Technologies | Purpose | Setup |
+|--------|-------------|---------|-------|
+| [GitHub](https://github.com/github/github-mcp-server) | All | Repository management, PRs, issues | `claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp"}'` |
+| [Next.js DevTools](https://www.npmjs.com/package/next-devtools-mcp) | Next.js | Project context, diagnostics | `claude mcp add next-devtools -- npx -y next-devtools-mcp@latest` |
+| [Angular CLI](https://angular.dev/tools/cli/mcp) | Angular | Best practices, docs search | `claude mcp add angular-cli -- npx -y @angular/cli mcp` |
+| [Clerk](https://clerk.com/docs/mcp) | All (auth) | Authentication patterns, SDK snippets | `claude mcp add-json clerk '{"type":"http","url":"https://mcp.clerk.com/sse"}'` |
+
+> **Tip:** After adding an MCP server, verify with `claude mcp list`.
+
 ## Examples
 
 ### Fullstack Setup

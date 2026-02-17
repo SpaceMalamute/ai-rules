@@ -13,11 +13,11 @@ paths:
 
 ## Naming Conventions
 
-| Language | Pattern |
-|----------|---------|
-| TypeScript | `should_ExpectedBehavior_When_Condition` |
-| Python | `test_action_condition_expected` |
-| C# | `MethodName_Scenario_ExpectedBehavior` |
+| Language | Pattern | Example |
+|----------|---------|---------|
+| TypeScript | `should [expected] when [condition]` | `it('should display error when input is invalid')` |
+| Python | `test_action_condition_expected` | `def test_login_invalid_password_returns_401()` |
+| C# | `MethodName_Scenario_ExpectedBehavior` | `Login_InvalidPassword_ReturnsUnauthorized()` |
 
 ## Test Organization
 

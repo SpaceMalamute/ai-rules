@@ -11,21 +11,44 @@ paths:
 
 ## Project Structure
 
+Prefer nested structure for new projects. Respect existing convention if the project already uses flat naming.
+
+### Nested (recommended)
+
 ```
 workspace/
-├── apps/                    # Deployable applications
-│   ├── web/                 # Main app
-│   └── web-e2e/             # E2E tests
-├── libs/                    # Reusable libraries
-│   ├── shared/              # Cross-domain (ui, util)
-│   └── [domain]/            # Domain-specific
-│       ├── feature-*/       # Smart components, pages
-│       ├── ui-*/            # Dumb/presentational components
-│       ├── data-access-*/   # State, API services
-│       └── util-*/          # Pure functions, helpers
+├── apps/                    # Minimal bootstrap, routes, wiring
+│   ├── web/
+│   └── web-e2e/
+├── libs/
+│   ├── shared/
+│   │   ├── ui/              # Design system (Button, Modal...)
+│   │   └── util/            # Cross-domain helpers
+│   └── [domain]/
+│       ├── feature/         # Smart components, pages
+│       ├── ui/              # Domain presentational components
+│       ├── data-access/     # State, API services
+│       └── util/            # Domain pure functions, helpers
 ├── nx.json
 └── tsconfig.base.json
 ```
+
+### Flat (legacy, also valid)
+
+```
+workspace/
+├── libs/
+│   ├── shared/
+│   │   ├── ui-button/
+│   │   └── util-format/
+│   └── [domain]/
+│       ├── feature-list/
+│       ├── ui-avatar/
+│       ├── data-access/
+│       └── util-permissions/
+```
+
+Both are official Nx conventions. See [Library Types](https://nx.dev/concepts/more-concepts/library-types).
 
 ## Library Types
 
@@ -37,6 +60,22 @@ workspace/
 | `util` | Pure functions, types, constants | util only |
 
 ## Naming Convention
+
+### Nested (recommended)
+
+```
+libs/[scope]/[type]/
+
+# Examples
+libs/users/feature/            # User pages and business logic
+libs/users/ui/                 # User presentational components
+libs/users/data-access/        # User state/API
+libs/users/util/               # User helpers
+libs/shared/ui/                # Design system
+libs/shared/util/              # Shared utilities
+```
+
+### Flat
 
 ```
 libs/[scope]/[type]-[name]
@@ -155,6 +194,19 @@ import { ButtonComponent } from '@myorg/shared/ui-button';
 import { UserService } from '../../../users/data-access/src';
 ```
 
+## Apps = Orchestration Only
+
+Apps contain minimal bootstrap, routing, and wiring. All application code goes in libs.
+
+```tsx
+// apps/web/app/layout.tsx
+import { AppShell } from '@myorg/shared/ui';
+
+export default function AppLayout({ children }) {
+  return <AppShell>{children}</AppShell>;
+}
+```
+
 ## Anti-patterns
 
 - Never import from `apps/` into `libs/`
@@ -162,6 +214,7 @@ import { UserService } from '../../../users/data-access/src';
 - Never import `feature` into `ui` or `data-access`
 - Never import domain-specific into `shared/` scope
 - Never skip the public API (`index.ts`)
+- Never put business logic in `apps/` — move it to a lib
 
 ## Caching
 

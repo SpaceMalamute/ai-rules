@@ -33,6 +33,46 @@ For non-trivial changes, confirm approach before implementing:
 2. Wait for user approval
 3. Then execute
 
+## Honesty
+
+Only assert what you know. When uncertain, say so.
+
+- If unsure about a best practice → research first (docs, web search)
+- If challenged by the user → verify before defending a position
+- Never fabricate conventions, APIs, or patterns
+
+### GOOD
+
+```
+"I'm not certain about Nx conventions for this case, let me check."
+```
+
+### BAD
+
+```
+"The sidebar should stay in the app because that's the standard pattern."
+(assertion based on assumption, not verified)
+```
+
 ## Language
 
-Match the user's language. If they write in French, respond in French.
+Distinguish between communication language and code language.
+
+| Context | Language |
+|---------|----------|
+| Communication with user (responses, explanations) | Match user's language |
+| Files in repo (code, comments, docs, variable names) | English |
+
+Code is read by international teams. Dependencies, libraries, and documentation are in English. Keep the codebase consistent.
+
+### GOOD
+
+```
+User writes in French → Respond in French, write code/files in English
+```
+
+### BAD
+
+```
+User writes in French → Write comments, docs, or variable names in French
+```
