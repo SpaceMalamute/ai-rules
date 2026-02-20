@@ -129,6 +129,35 @@ user-list/
 - `template:` inline templates
 - `styles:` inline styles
 
+## @defer — Lazy Loading Heavy Components
+
+Use `@defer` for components that are below the fold, heavy, or not critical to
+initial paint. This is the Angular way to code-split at component level without
+needing router-level lazy loading.
+
+```html
+<!-- Heavy component below the fold -->
+@defer (on viewport) {
+  <app-analytics-chart [data]="chartData()" />
+} @placeholder {
+  <div class="chart-skeleton" />
+} @loading (minimum 200ms) {
+  <app-spinner />
+}
+
+<!-- Conditionally shown heavy component -->
+@defer (when isExpanded()) {
+  <app-rich-text-editor [content]="content()" />
+} @placeholder {
+  <div class="editor-placeholder">Click to edit</div>
+}
+```
+
+**Use `@defer` when:**
+- Component is below the fold on initial render
+- Component has heavy third-party dependencies (charts, editors, maps, etc.)
+- Component is not visible on page load and shown only on user interaction
+
 ## Smart Components (feature/)
 
 Smart components are located in `feature/` libraries.

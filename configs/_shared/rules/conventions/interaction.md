@@ -1,6 +1,5 @@
 ---
-paths:
-  - "**/*"
+alwaysApply: true
 ---
 
 # Interaction Rules

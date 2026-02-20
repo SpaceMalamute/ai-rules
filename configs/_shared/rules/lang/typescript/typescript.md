@@ -1,4 +1,5 @@
 ---
+description: "TypeScript strict mode fundamentals"
 paths:
   - "**/*.ts"
   - "**/*.tsx"

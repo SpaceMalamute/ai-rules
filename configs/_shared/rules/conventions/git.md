@@ -1,6 +1,12 @@
 ---
 paths:
-  - "**/*"
+  - "**/.github/**"
+  - "**/COMMIT_EDITMSG"
+  - "**/*.md"
+  - "**/.husky/**"
+  - "**/commitlint.config.*"
+  - "**/release.config.*"
+  - "**/CHANGELOG*"
 ---
 
 # Git Rules

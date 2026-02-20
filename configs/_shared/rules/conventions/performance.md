@@ -1,9 +1,8 @@
 ---
 paths:
   - "**/*.ts"
+  - "**/*.tsx"
   - "**/*.js"
-  - "**/*.py"
-  - "**/*.cs"
 ---
 
 # Performance Rules

@@ -1,11 +1,15 @@
 ---
 paths:
-  - "**/apps/**/app/**/*.tsx"
-  - "**/apps/**/app/**/*.ts"
-  - "**/app/**/*.tsx"
-  - "**/app/**/*.ts"
   - "**/actions.ts"
-  - "**/actions/*.ts"
+  - "**/actions.tsx"
+  - "**/actions/**/*.ts"
+  - "**/actions/**/*.tsx"
+  - "**/_actions/**/*.ts"
+  - "**/_actions/**/*.tsx"
+  - "**/*.action.ts"
+  - "**/*.actions.ts"
+  - "**/app/**/page.tsx"
+  - "**/app/**/route.ts"
 ---
 
 # Next.js Server Actions

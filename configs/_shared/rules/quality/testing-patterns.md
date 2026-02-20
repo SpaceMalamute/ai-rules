@@ -1,6 +1,16 @@
 ---
 paths:
-  - "**/*"
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/*.spec.tsx"
+  - "**/*.test.tsx"
+  - "**/test_*.py"
+  - "**/*_test.py"
+  - "**/tests/**/*.py"
+  - "**/*Tests.cs"
+  - "**/*Test.cs"
+  - "**/*.spec.js"
+  - "**/*.test.js"
 ---
 
 # Testing Principles

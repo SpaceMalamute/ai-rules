@@ -58,6 +58,62 @@ async function bootstrap() {
 bootstrap();
 ```
 
+## Environment Variable Validation (Required)
+
+Always validate env vars at startup with a typed schema. Never access
+`process.env.X` directly in services — always go through typed `ConfigService`.
+
+```typescript
+// config/env.validation.ts
+import { z } from 'zod';
+
+const EnvSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+  PORT: z.coerce.number().default(3000),
+  DATABASE_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32),
+  // Add all required env vars here
+});
+
+export type Env = z.infer<typeof EnvSchema>;
+
+export function validate(config: Record<string, unknown>) {
+  const result = EnvSchema.safeParse(config);
+  if (!result.success) {
+    throw new Error(`Invalid environment variables:\n${result.error.toString()}`);
+  }
+  return result.data;
+}
+```
+
+```typescript
+// app.module.ts
+import { ConfigModule } from '@nestjs/config';
+import { validate } from './config/env.validation';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate,  // ← throws at boot if any var is missing or invalid
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+```typescript
+// In services — always inject ConfigService, never process.env directly
+@Injectable()
+export class AuthService {
+  private readonly jwtSecret: string;
+
+  constructor(private readonly configService: ConfigService<Env, true>) {
+    this.jwtSecret = this.configService.get('JWT_SECRET', { infer: true });
+  }
+}
+```
+
 ## Custom Decorators
 
 ### @CurrentUser Decorator
@@ -297,4 +353,59 @@ findAll(
   @Query('page', ParseOptionalIntPipe) page?: number,
   @Query('limit', ParseOptionalIntPipe) limit?: number,
 ) { ... }
+```
+
+## Pagination — Canonical Pattern
+
+Always use this shared shape for paginated endpoints. Never invent a different
+response structure per feature.
+
+```typescript
+// common/dto/pagination.dto.ts
+
+export class PaginationQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  pageSize: number = 20;
+}
+
+export class PaginatedResponseDto<T> {
+  constructor(data: T[], total: number, query: PaginationQueryDto) {
+    this.data = data;
+    this.meta = {
+      page: query.page,
+      pageSize: query.pageSize,
+      total,
+      totalPages: Math.ceil(total / query.pageSize),
+    };
+  }
+
+  data: T[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+```
+
+```typescript
+// Usage in service
+async findAll(query: PaginationQueryDto): Promise<PaginatedResponseDto<UserDto>> {
+  const [users, total] = await this.userRepository.findAndCount({
+    skip: (query.page - 1) * query.pageSize,
+    take: query.pageSize,
+  });
+  return new PaginatedResponseDto(users.map(toDto), total, query);
+}
 ```

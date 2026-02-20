@@ -136,6 +136,23 @@ function ThemeButton({ showTheme }: { showTheme: boolean }) {
 }
 ```
 
+## React Compiler and Manual Memoization
+
+If React Compiler (`babel-plugin-react-compiler`) is enabled in the project
+(`babel.config.js` or `next.config.js`), do NOT add `useMemo` or `useCallback`
+manually — the compiler handles all memoization automatically and manual hooks
+become redundant at best, conflicting at worst.
+
+**Always check before adding any `useMemo`/`useCallback`:**
+
+```typescript
+// With React Compiler active — NEVER add these manually
+const sorted = useMemo(() => items.sort(...), [items]);  // BAD — compiler does this
+const handler = useCallback(() => onSelect(id), [id]);  // BAD — compiler does this
+
+// Without React Compiler — follow the rules below
+```
+
 ## useMemo / useCallback
 
 ### GOOD

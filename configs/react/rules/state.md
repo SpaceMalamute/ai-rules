@@ -2,7 +2,6 @@
 description: "React state management patterns"
 paths:
   - "**/src/**/*.tsx"
-  - "**/src/**/*.ts"
 ---
 
 # React State Management

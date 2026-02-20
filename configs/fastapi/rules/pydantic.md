@@ -107,19 +107,11 @@ def validate_phone(v: str) -> str:
     return v
 
 
-def validate_slug(v: str) -> str:
-    pattern = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
-    if not re.match(pattern, v):
-        raise ValueError("Invalid slug format")
-    return v
-
-
 def normalize_email(v: str) -> str:
     return v.lower().strip()
 
 
 PhoneNumber = Annotated[str, AfterValidator(validate_phone)]
-Slug = Annotated[str, AfterValidator(validate_slug)]
 NormalizedEmail = Annotated[str, BeforeValidator(normalize_email)]
 
 
@@ -127,42 +119,6 @@ NormalizedEmail = Annotated[str, BeforeValidator(normalize_email)]
 class UserCreate(BaseModel):
     email: NormalizedEmail
     phone: Optional[PhoneNumber] = None
-
-
-class PostCreate(BaseModel):
-    title: str
-    slug: Slug
-```
-
-## Enum Validation
-
-```python
-# schemas/enums.py
-from enum import Enum
-
-
-class UserRole(str, Enum):
-    USER = "user"
-    ADMIN = "admin"
-    MODERATOR = "moderator"
-
-
-class OrderStatus(str, Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    SHIPPED = "shipped"
-    DELIVERED = "delivered"
-    CANCELLED = "cancelled"
-
-
-# Usage
-class UserCreate(BaseModel):
-    email: EmailStr
-    role: UserRole = UserRole.USER
-
-
-class OrderUpdate(BaseModel):
-    status: OrderStatus
 ```
 
 ## Computed Fields
@@ -183,13 +139,6 @@ class Product(BaseModel):
     def discounted_price(self) -> Decimal:
         discount = self.price * self.discount_percent / 100
         return self.price - discount
-
-    @computed_field
-    @property
-    def display_name(self) -> str:
-        if self.discount_percent > 0:
-            return f"{self.name} ({self.discount_percent}% off)"
-        return self.name
 ```
 
 ## Conditional Validation
@@ -197,13 +146,6 @@ class Product(BaseModel):
 ```python
 # schemas/payment.py
 from pydantic import BaseModel, model_validator
-from typing import Optional
-
-
-class PaymentMethod(str, Enum):
-    CREDIT_CARD = "credit_card"
-    BANK_TRANSFER = "bank_transfer"
-    PAYPAL = "paypal"
 
 
 class PaymentCreate(BaseModel):
@@ -244,7 +186,7 @@ class PaymentCreate(BaseModel):
 ```python
 # schemas/pagination.py
 from typing import Generic, TypeVar, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
@@ -280,96 +222,6 @@ class PaginationParams(BaseModel):
     @property
     def offset(self) -> int:
         return (self.page - 1) * self.size
-
-
-# Usage
-# PaginatedResponse[UserResponse]
-```
-
-## FastAPI Integration
-
-```python
-# api/users.py
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import ValidationError
-
-router = APIRouter(prefix="/users", tags=["users"])
-
-
-@router.post("/", response_model=UserResponse, status_code=201)
-async def create_user(
-    user: UserCreate,
-    db: AsyncSession = Depends(get_db),
-) -> UserResponse:
-    # Validation already done by Pydantic
-    existing = await db.execute(
-        select(User).where(User.email == user.email)
-    )
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="Email already registered")
-
-    new_user = User(**user.model_dump())
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
-
-    return UserResponse.model_validate(new_user)
-
-
-@router.get("/", response_model=PaginatedResponse[UserResponse])
-async def list_users(
-    pagination: PaginationParams = Depends(),
-    search: Optional[str] = Query(None, min_length=1),
-    db: AsyncSession = Depends(get_db),
-) -> PaginatedResponse[UserResponse]:
-    query = select(User)
-
-    if search:
-        query = query.where(User.name.ilike(f"%{search}%"))
-
-    total = await db.scalar(select(func.count()).select_from(query.subquery()))
-    users = await db.scalars(
-        query.offset(pagination.offset).limit(pagination.size)
-    )
-
-    return PaginatedResponse.create(
-        items=[UserResponse.model_validate(u) for u in users],
-        total=total,
-        page=pagination.page,
-        size=pagination.size,
-    )
-```
-
-## Custom Error Messages
-
-```python
-# schemas/user.py
-from pydantic import BaseModel, Field
-
-
-class UserCreate(BaseModel):
-    email: EmailStr = Field(
-        ...,
-        description="User email address",
-        json_schema_extra={"example": "user@example.com"},
-    )
-    password: str = Field(
-        ...,
-        min_length=8,
-        max_length=100,
-        description="User password (min 8 characters)",
-    )
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "email": "john@example.com",
-                    "password": "SecurePass123!",
-                }
-            ]
-        }
-    }
 ```
 
 ## Anti-patterns
@@ -399,22 +251,6 @@ class UserCreate(BaseModel):
 # GOOD: Use built-in validators
 class UserCreate(BaseModel):
     email: EmailStr  # Automatic validation
-
-
-# BAD: Catching all exceptions
-try:
-    user = UserCreate(**data)
-except Exception as e:
-    return {"error": str(e)}
-
-
-# GOOD: Catch specific validation errors
-from pydantic import ValidationError
-
-try:
-    user = UserCreate(**data)
-except ValidationError as e:
-    return {"errors": e.errors()}
 
 
 # BAD: Not using model_config for ORM

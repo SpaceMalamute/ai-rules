@@ -40,8 +40,6 @@ public class HealthCheckWorker : BackgroundService
 
             await Task.Delay(_checkInterval, stoppingToken);
         }
-
-        _logger.LogInformation("Health Check Worker stopping");
     }
 
     private async Task PerformHealthCheckAsync(CancellationToken ct)
@@ -156,8 +154,6 @@ public class QueueWorker : BackgroundService
                 var handler = scope.ServiceProvider.GetRequiredService<IWorkItemHandler>();
 
                 await handler.HandleAsync(item, ct);
-
-                _logger.LogDebug("Worker {WorkerId} processed item {ItemId}", workerId, item.Id);
             }
             catch (Exception ex)
             {
@@ -175,203 +171,67 @@ builder.Services.AddSingleton(Channel.CreateUnbounded<WorkItem>(new UnboundedCha
 }));
 ```
 
-## Timed Background Service
+## Scheduled Worker (Timer or Cron)
 
 ```csharp
-// BackgroundServices/ReportGenerationWorker.cs
+// Timer-based: run at fixed interval
 public class ReportGenerationWorker : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ReportGenerationWorker> _logger;
-    private Timer? _timer;
 
-    public ReportGenerationWorker(
-        IServiceProvider serviceProvider,
-        ILogger<ReportGenerationWorker> logger)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
+        // Wait until next midnight, then run daily
+        await Task.Delay(GetDelayUntilMidnight(), stoppingToken);
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _timer = new Timer(
-            DoWork,
-            null,
-            GetDelayUntilMidnight(),
-            TimeSpan.FromDays(1));
-
-        stoppingToken.Register(() => _timer?.Change(Timeout.Infinite, 0));
-
-        return Task.CompletedTask;
-    }
-
-    private async void DoWork(object? state)
-    {
-        try
+        while (!stoppingToken.IsCancellationRequested)
         {
-            await using var scope = _serviceProvider.CreateAsyncScope();
-            var reportService = scope.ServiceProvider.GetRequiredService<IReportService>();
+            try
+            {
+                await using var scope = _serviceProvider.CreateAsyncScope();
+                var reportService = scope.ServiceProvider.GetRequiredService<IReportService>();
+                await reportService.GenerateDailyReportAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate daily report");
+            }
 
-            await reportService.GenerateDailyReportAsync();
-
-            _logger.LogInformation("Daily report generated successfully");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to generate daily report");
+            await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
         }
     }
 
     private static TimeSpan GetDelayUntilMidnight()
     {
         var now = DateTime.UtcNow;
-        var midnight = now.Date.AddDays(1);
-        return midnight - now;
-    }
-
-    public override void Dispose()
-    {
-        _timer?.Dispose();
-        base.Dispose();
+        return now.Date.AddDays(1) - now;
     }
 }
-```
 
-## Cron-Based Worker (with NCronTab)
-
-```csharp
-// BackgroundServices/ScheduledWorker.cs
+// Cron-based (with NCronTab): run on cron schedule
 public class ScheduledWorker : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ScheduledWorker> _logger;
     private readonly CrontabSchedule _schedule;
-
-    public ScheduledWorker(
-        IServiceProvider serviceProvider,
-        IOptions<SchedulerOptions> options,
-        ILogger<ScheduledWorker> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-        _schedule = CrontabSchedule.Parse(options.Value.CronExpression);
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var now = DateTime.UtcNow;
-            var nextRun = _schedule.GetNextOccurrence(now);
-            var delay = nextRun - now;
+            var nextRun = _schedule.GetNextOccurrence(DateTime.UtcNow);
+            var delay = nextRun - DateTime.UtcNow;
 
             if (delay > TimeSpan.Zero)
-            {
                 await Task.Delay(delay, stoppingToken);
-            }
 
             if (!stoppingToken.IsCancellationRequested)
             {
-                await ExecuteJobAsync(stoppingToken);
+                await using var scope = _serviceProvider.CreateAsyncScope();
+                var job = scope.ServiceProvider.GetRequiredService<IScheduledJob>();
+                await job.ExecuteAsync(stoppingToken);
             }
         }
-    }
-
-    private async Task ExecuteJobAsync(CancellationToken ct)
-    {
-        try
-        {
-            await using var scope = _serviceProvider.CreateAsyncScope();
-            var job = scope.ServiceProvider.GetRequiredService<IScheduledJob>();
-
-            await job.ExecuteAsync(ct);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Scheduled job failed");
-        }
-    }
-}
-```
-
-## Message Queue Consumer (RabbitMQ)
-
-```csharp
-// BackgroundServices/RabbitMqConsumer.cs
-public class RabbitMqConsumer : BackgroundService
-{
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<RabbitMqConsumer> _logger;
-    private readonly IConnection _connection;
-    private readonly IModel _channel;
-
-    public RabbitMqConsumer(
-        IServiceProvider serviceProvider,
-        IOptions<RabbitMqOptions> options,
-        ILogger<RabbitMqConsumer> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-
-        var factory = new ConnectionFactory
-        {
-            HostName = options.Value.Host,
-            UserName = options.Value.Username,
-            Password = options.Value.Password,
-            DispatchConsumersAsync = true
-        };
-
-        _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
-
-        _channel.QueueDeclare(
-            queue: options.Value.QueueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false);
-    }
-
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-
-        consumer.Received += async (model, ea) =>
-        {
-            try
-            {
-                var body = ea.Body.ToArray();
-                var message = JsonSerializer.Deserialize<Message>(body);
-
-                await ProcessMessageAsync(message!, stoppingToken);
-
-                _channel.BasicAck(ea.DeliveryTag, false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing message");
-                _channel.BasicNack(ea.DeliveryTag, false, true);
-            }
-        };
-
-        _channel.BasicConsume(queue: "orders", autoAck: false, consumer: consumer);
-
-        return Task.CompletedTask;
-    }
-
-    private async Task ProcessMessageAsync(Message message, CancellationToken ct)
-    {
-        await using var scope = _serviceProvider.CreateAsyncScope();
-        var handler = scope.ServiceProvider.GetRequiredService<IMessageHandler>();
-
-        await handler.HandleAsync(message, ct);
-    }
-
-    public override void Dispose()
-    {
-        _channel?.Close();
-        _connection?.Close();
-        base.Dispose();
     }
 }
 ```
@@ -379,19 +239,11 @@ public class RabbitMqConsumer : BackgroundService
 ## Startup/Shutdown Tasks
 
 ```csharp
-// BackgroundServices/StartupTask.cs
+// Run database migrations at startup
 public class DatabaseMigrationTask : IHostedService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DatabaseMigrationTask> _logger;
-
-    public DatabaseMigrationTask(
-        IServiceProvider serviceProvider,
-        ILogger<DatabaseMigrationTask> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -399,45 +251,7 @@ public class DatabaseMigrationTask : IHostedService
 
         await using var scope = _serviceProvider.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
         await dbContext.Database.MigrateAsync(cancellationToken);
-
-        _logger.LogInformation("Database migrations completed");
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-}
-
-// Graceful shutdown
-public class GracefulShutdownService : IHostedService
-{
-    private readonly ILogger<GracefulShutdownService> _logger;
-    private readonly IHostApplicationLifetime _lifetime;
-
-    public GracefulShutdownService(
-        ILogger<GracefulShutdownService> logger,
-        IHostApplicationLifetime lifetime)
-    {
-        _logger = logger;
-        _lifetime = lifetime;
-    }
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        _lifetime.ApplicationStopping.Register(OnStopping);
-        _lifetime.ApplicationStopped.Register(OnStopped);
-        return Task.CompletedTask;
-    }
-
-    private void OnStopping()
-    {
-        _logger.LogInformation("Application is shutting down...");
-        // Complete in-flight requests, close connections
-    }
-
-    private void OnStopped()
-    {
-        _logger.LogInformation("Application has stopped");
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -447,15 +261,9 @@ public class GracefulShutdownService : IHostedService
 ## Health Checks for Workers
 
 ```csharp
-// Health/WorkerHealthCheck.cs
 public class WorkerHealthCheck : IHealthCheck
 {
     private readonly IWorkerStatusService _workerStatus;
-
-    public WorkerHealthCheck(IWorkerStatusService workerStatus)
-    {
-        _workerStatus = workerStatus;
-    }
 
     public Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
@@ -463,18 +271,12 @@ public class WorkerHealthCheck : IHealthCheck
     {
         var status = _workerStatus.GetStatus();
 
-        if (status.IsHealthy)
-        {
-            return Task.FromResult(HealthCheckResult.Healthy(
-                $"Last run: {status.LastRunTime}, Items processed: {status.ItemsProcessed}"));
-        }
-
-        return Task.FromResult(HealthCheckResult.Unhealthy(
-            $"Worker unhealthy: {status.ErrorMessage}"));
+        return Task.FromResult(status.IsHealthy
+            ? HealthCheckResult.Healthy($"Last run: {status.LastRunTime}")
+            : HealthCheckResult.Unhealthy($"Worker unhealthy: {status.ErrorMessage}"));
     }
 }
 
-// Registration
 builder.Services.AddHealthChecks()
     .AddCheck<WorkerHealthCheck>("worker");
 ```
@@ -497,56 +299,33 @@ public class BadWorker : BackgroundService
 await using var scope = _serviceProvider.CreateAsyncScope();
 var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
 
-// BAD: No error handling
+// BAD: No error handling — exception kills the worker!
 protected override async Task ExecuteAsync(CancellationToken ct)
 {
     while (!ct.IsCancellationRequested)
     {
-        await ProcessAsync(); // Exception kills the worker!
+        await ProcessAsync();
     }
 }
 
-// GOOD: Proper error handling
-try
-{
-    await ProcessAsync();
-}
+// GOOD: Wrap in try/catch with delay on error
+try { await ProcessAsync(); }
 catch (Exception ex)
 {
     _logger.LogError(ex, "Processing failed");
     await Task.Delay(TimeSpan.FromSeconds(5), ct);
 }
 
-// BAD: Not respecting cancellation
-protected override async Task ExecuteAsync(CancellationToken ct)
-{
-    while (true) // Never stops!
-    {
-        await Task.Delay(1000);
-    }
-}
+// BAD: Not respecting cancellation token
+while (true) { await Task.Delay(1000); }
 
 // GOOD: Check cancellation token
-while (!ct.IsCancellationRequested)
-{
-    await Task.Delay(1000, ct);
-}
+while (!ct.IsCancellationRequested) { await Task.Delay(1000, ct); }
 
-// BAD: Tight polling loop
-while (!ct.IsCancellationRequested)
-{
-    var item = await GetNextItemAsync();
-    if (item == null) continue; // CPU spinning!
-}
+// BAD: Tight polling loop without delay
+var item = await GetNextItemAsync();
+if (item == null) continue; // CPU spinning!
 
-// GOOD: Use delay or blocking read
-while (!ct.IsCancellationRequested)
-{
-    var item = await GetNextItemAsync();
-    if (item == null)
-    {
-        await Task.Delay(TimeSpan.FromSeconds(1), ct);
-        continue;
-    }
-}
+// GOOD: Delay when idle
+if (item == null) { await Task.Delay(TimeSpan.FromSeconds(1), ct); continue; }
 ```
