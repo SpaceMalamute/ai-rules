@@ -14,6 +14,16 @@ const __dirname = path.dirname(__filename);
 
 const CONFIGS_DIR = path.join(__dirname, '..', 'configs');
 
+const VALID_KEYS = new Set([
+  'description',
+  'paths',
+  'alwaysApply',
+  'name',
+  'version',
+]);
+
+const CATCH_ALL_PATTERNS = new Set(['**/*', '**', '*']);
+
 const colors = {
   red: (text) => `\x1b[31m${text}\x1b[0m`,
   green: (text) => `\x1b[32m${text}\x1b[0m`,
@@ -32,7 +42,6 @@ function extractFrontmatter(content) {
 }
 
 function parseYamlSimple(yaml) {
-  // Simple YAML parser for our use case (paths, name, description)
   const result = {};
   const lines = yaml.split('\n');
   let currentKey = null;
@@ -42,7 +51,6 @@ function parseYamlSimple(yaml) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
 
-    // Check for key: value
     const keyMatch = line.match(/^(\w+):\s*(.*)$/);
     if (keyMatch) {
       const [, key, value] = keyMatch;
@@ -56,7 +64,6 @@ function parseYamlSimple(yaml) {
       continue;
     }
 
-    // Check for array item
     const arrayMatch = line.match(/^\s+-\s*["']?(.+?)["']?\s*$/);
     if (arrayMatch && currentArray) {
       currentArray.push(arrayMatch[1]);
@@ -66,11 +73,21 @@ function parseYamlSimple(yaml) {
   return result;
 }
 
+function error(relativePath, message) {
+  console.log(`${colors.red('✗')} ${relativePath}: ${message}`);
+  errors++;
+}
+
+function warn(relativePath, message) {
+  console.log(`${colors.yellow('⚠')} ${relativePath}: ${message}`);
+  warnings++;
+}
+
 function validateRule(filePath) {
   const relativePath = path.relative(CONFIGS_DIR, filePath);
   const content = fs.readFileSync(filePath, 'utf8');
 
-  // Skills don't need frontmatter
+  // Skills have their own format
   if (filePath.includes('/skills/')) {
     filesChecked++;
     return;
@@ -78,46 +95,67 @@ function validateRule(filePath) {
 
   const frontmatter = extractFrontmatter(content);
 
-  // Rules should have frontmatter with paths
   if (!frontmatter) {
-    // Some shared rules apply globally, that's OK
-    if (filePath.includes('shared/.claude/rules/')) {
-      // Check if it has paths anyway (some do, some don't)
-      filesChecked++;
-      return;
-    }
-    console.log(`${colors.yellow('⚠')} ${relativePath}: No frontmatter found`);
-    warnings++;
+    error(relativePath, 'No frontmatter found');
     filesChecked++;
     return;
   }
 
-  // Parse frontmatter
   let parsed;
   try {
     parsed = parseYamlSimple(frontmatter);
   } catch (e) {
-    console.log(`${colors.red('✗')} ${relativePath}: Invalid YAML frontmatter`);
-    console.log(`  ${colors.dim(e.message)}`);
-    errors++;
+    error(relativePath, `Invalid YAML frontmatter: ${e.message}`);
     filesChecked++;
     return;
   }
 
-  // Validate paths if present
-  if (parsed.paths) {
-    if (!Array.isArray(parsed.paths)) {
-      console.log(`${colors.red('✗')} ${relativePath}: 'paths' must be an array`);
-      errors++;
-      filesChecked++;
-      return;
+  // Check for unknown keys
+  for (const key of Object.keys(parsed)) {
+    if (!VALID_KEYS.has(key)) {
+      warn(relativePath, `Unknown frontmatter key: "${key}"`);
     }
+  }
 
-    for (const pattern of parsed.paths) {
-      // Basic glob pattern validation
-      if (typeof pattern !== 'string') {
-        console.log(`${colors.red('✗')} ${relativePath}: Invalid path pattern: ${pattern}`);
-        errors++;
+  // Must have description
+  if (!parsed.description) {
+    error(relativePath, 'Missing "description" field');
+  } else if (typeof parsed.description === 'string' && parsed.description.trim() === '') {
+    error(relativePath, 'Empty "description" field');
+  }
+
+  // Must have either paths or alwaysApply (not both, not neither)
+  const hasPaths = parsed.paths !== undefined;
+  const hasAlwaysApply = parsed.alwaysApply !== undefined;
+
+  if (hasPaths && hasAlwaysApply) {
+    error(relativePath, 'Cannot have both "paths" and "alwaysApply"');
+  } else if (!hasPaths && !hasAlwaysApply) {
+    error(relativePath, 'Must have either "paths" or "alwaysApply"');
+  }
+
+  // Validate paths array
+  if (hasPaths) {
+    if (!Array.isArray(parsed.paths)) {
+      error(relativePath, '"paths" must be an array');
+    } else if (parsed.paths.length === 0) {
+      error(relativePath, '"paths" array is empty (rule will never activate)');
+    } else {
+      for (const pattern of parsed.paths) {
+        if (typeof pattern !== 'string') {
+          error(relativePath, `Invalid path pattern: ${pattern}`);
+          continue;
+        }
+
+        // Catch-all patterns
+        if (CATCH_ALL_PATTERNS.has(pattern)) {
+          error(relativePath, `Catch-all pattern "${pattern}" — use "alwaysApply: true" or narrow the glob`);
+        }
+
+        // Root-only globs (no **/ prefix, but has extension)
+        if (/^\*\.\w+$/.test(pattern)) {
+          warn(relativePath, `Root-only glob "${pattern}" — did you mean "**/${pattern}"?`);
+        }
       }
     }
   }
