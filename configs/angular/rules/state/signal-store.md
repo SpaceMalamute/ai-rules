@@ -1,6 +1,6 @@
 ---
 paths:
-  - "libs/**/data-access/**/*.ts"
+  - "**/libs/**/data-access/**/*.ts"
   - "**/*.store.ts"
   - "**/+state/**/*.ts"
 ---

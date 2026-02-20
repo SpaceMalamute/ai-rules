@@ -1,7 +1,7 @@
 ---
 paths:
-  - "libs/**/data-access/**/*.ts"
-  - "libs/**/+state/**/*.ts"
+  - "**/libs/**/data-access/**/*.ts"
+  - "**/libs/**/+state/**/*.ts"
 ---
 
 # NgRx State Management Rules

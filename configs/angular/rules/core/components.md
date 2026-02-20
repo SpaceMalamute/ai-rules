@@ -1,8 +1,8 @@
 ---
 paths:
-  - "libs/**/feature/**/*.ts"
-  - "libs/**/ui/**/*.ts"
-  - "apps/**/*.component.ts"
+  - "**/libs/**/feature/**/*.ts"
+  - "**/libs/**/ui/**/*.ts"
+  - "**/apps/**/*.component.ts"
 ---
 
 # Component Rules (Angular 21)

@@ -1,9 +1,9 @@
 ---
 paths:
   - "Dockerfile"
-  - "docker-compose*.yml"
-  - "gunicorn.conf.py"
-  - "uvicorn_config.py"
+  - "**/docker-compose*.yml"
+  - "**/gunicorn.conf.py"
+  - "**/uvicorn_config.py"
   - "**/deploy/**"
   - ".github/workflows/*.yml"
 ---

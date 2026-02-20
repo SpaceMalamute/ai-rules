@@ -1,6 +1,6 @@
 ---
 paths:
-  - "prisma/**/*.prisma"
+  - "**/prisma/**/*.prisma"
   - "**/src/**/*.repository.ts"
   - "**/src/**/prisma*.ts"
 ---

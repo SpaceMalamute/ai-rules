@@ -2,7 +2,7 @@
 paths:
   - ".github/workflows/**"
   - ".gitlab-ci.yml"
-  - "azure-pipelines.yml"
+  - "**/azure-pipelines.yml"
   - "Jenkinsfile"
   - ".circleci/**"
 ---

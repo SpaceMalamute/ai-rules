@@ -1,7 +1,7 @@
 ---
 paths:
-  - "apps/**/*.tsx"
-  - "libs/**/*.tsx"
+  - "**/apps/**/*.tsx"
+  - "**/libs/**/*.tsx"
 ---
 
 # Component Rules (Next.js 15 / React 19)

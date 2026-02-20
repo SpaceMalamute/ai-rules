@@ -1,9 +1,9 @@
 ---
 paths:
-  - "libs/**/*"
-  - "apps/**/*"
-  - "nx.json"
-  - "project.json"
+  - "**/libs/**/*"
+  - "**/apps/**/*"
+  - "**/nx.json"
+  - "**/project.json"
   - "*.ts"
 ---
 

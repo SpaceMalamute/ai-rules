@@ -1,7 +1,7 @@
 ---
 paths:
-  - "apps/**/app/**/*.tsx"
-  - "apps/**/app/**/*.ts"
+  - "**/apps/**/app/**/*.tsx"
+  - "**/apps/**/app/**/*.ts"
   - "**/app/**/*.tsx"
   - "**/app/**/*.ts"
   - "**/actions.ts"

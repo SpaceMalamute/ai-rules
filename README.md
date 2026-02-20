@@ -163,7 +163,7 @@ Interactive workflows invoked with `/skill-name`:
 | `/generate-tests` | Generate comprehensive tests              |
 
 <details>
-<summary><strong>See all 14 skills</strong></summary>
+<summary><strong>See all 16 skills</strong></summary>
 
 | Skill             | Usage                         | Description                           |
 | ----------------- | ----------------------------- | ------------------------------------- |
@@ -181,22 +181,23 @@ Interactive workflows invoked with `/skill-name`:
 | `/docker`         | `/docker`                     | Dockerfile generation                 |
 | `/deploy`         | `/deploy`                     | Deployment config                     |
 | `/explore`        | `/explore`                    | Repository analysis                   |
+| `/nx-affected`    | `/nx-affected`                | Run affected commands on changes      |
+| `/nx-lib`         | `/nx-lib users-feature`       | Generate Nx library                   |
 
 </details>
 
 ## Shared Rules
 
-Cross-framework rules included with `--with-rules`:
+Cross-framework rules included by default (use `--minimal` to skip):
 
-| Rule                    | What It Covers                              |
-| ----------------------- | ------------------------------------------- |
-| **security.md**         | OWASP Top 10: injection, XSS, CSRF, secrets |
-| **performance.md**      | N+1 queries, caching, lazy loading          |
-| **accessibility.md**    | WCAG 2.1, semantic HTML, ARIA               |
-| **testing-patterns.md** | AAA pattern, mocking, coverage              |
-| **error-handling.md**   | Error categories, response formats          |
-| **git.md**              | Conventional commits, branching, PRs        |
-| **observability.md**    | Logging, metrics, tracing                   |
+| Category | Rules | What They Cover |
+| -------- | ----- | --------------- |
+| **conventions** | core, git, interaction, principles, documentation, npm, performance | Naming, commits, communication, SOLID, docs |
+| **quality** | testing-patterns, error-handling, logging, observability | AAA pattern, mocking, structured logging, tracing |
+| **security** | security, secrets-management | OWASP Top 10, env vars, vault patterns |
+| **devops** | docker, ci-cd, nx | Dockerfile, GitHub Actions, Nx monorepo |
+| **domain** | accessibility, api-design | WCAG 2.1, REST conventions |
+| **lang** | typescript (3), python (10), csharp (3) | Language-specific patterns (auto-selected by tech) |
 
 ## Recommended MCP Servers
 
