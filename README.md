@@ -137,6 +137,7 @@ Context-aware rules that activate based on file paths:
 
 ```markdown
 ---
+description: "Angular component patterns and @defer"
 paths:
   - '**/*.component.ts'
 ---
@@ -193,7 +194,7 @@ Cross-framework rules included by default (use `--minimal` to skip):
 | Category | Rules | What They Cover |
 | -------- | ----- | --------------- |
 | **conventions** | core, git, interaction, principles, documentation, npm, performance | Naming, commits, communication, SOLID, docs |
-| **quality** | testing-patterns, error-handling, logging, observability | AAA pattern, mocking, structured logging, tracing |
+| **quality** | testing-patterns, observability | AAA pattern, mocking, structured logging, tracing |
 | **security** | security, secrets-management | OWASP Top 10, env vars, vault patterns |
 | **devops** | docker, ci-cd, nx | Dockerfile, GitHub Actions, Nx monorepo |
 | **domain** | accessibility, api-design | WCAG 2.1, REST conventions |
