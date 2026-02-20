@@ -46,26 +46,6 @@ Never disable lint rules without an explicit reason and ticket reference.
 - Comments explain "why", not "what"
 - Keep comments up-to-date or delete them
 
-## Git Workflow
-
-### Commits
-
-- Atomic commits: one logical change per commit
-- Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
-- Present tense: "add feature" not "added feature"
-
-### Branches
-
-- `feature/<ticket>-<description>` for new features
-- `fix/<ticket>-<description>` for bug fixes
-- `refactor/<description>` for refactoring
-
-### Pull Requests
-
-- Small, focused PRs (< 400 lines)
-- Clear description with context
-- Link to related issues
-
 ## Dependencies
 
 - Pin exact versions in lock files

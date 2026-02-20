@@ -2,13 +2,11 @@
 paths:
   - "**/app/**/*.tsx"
   - "**/app/**/*.ts"
-  - "**/actions.ts"
-  - "**/actions/*.ts"
 ---
 
-# Data Fetching & Server Actions
+# Data Fetching (Server Components)
 
-## Server Components - Data Fetching
+## Fetch in Server Components
 
 ```tsx
 // app/users/page.tsx
@@ -47,117 +45,6 @@ export default async function UsersPage() {
 | `cache: 'no-store'` | Dynamic, never cached |
 | `next: { revalidate: N }` | ISR, revalidate every N seconds |
 | `next: { tags: ['users'] }` | Tagged for on-demand revalidation |
-
-## Server Actions
-
-```tsx
-// app/users/actions.ts
-'use server';
-
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { redirect } from 'next/navigation';
-import { z } from 'zod';
-
-const CreateUserSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-});
-
-export async function createUser(formData: FormData) {
-  // Validate
-  const parsed = CreateUserSchema.safeParse({
-    name: formData.get('name'),
-    email: formData.get('email'),
-  });
-
-  if (!parsed.success) {
-    return { error: 'Invalid data' };
-  }
-
-  // Create
-  await db.user.create({ data: parsed.data });
-
-  // Revalidate and redirect
-  revalidatePath('/users');
-  redirect('/users');
-}
-```
-
-## Form with Server Action
-
-```tsx
-// app/users/_components/user-form.tsx
-'use client';
-
-import { useActionState } from 'react';
-import { createUser } from '../actions';
-
-const initialState = { error: null };
-
-export function UserForm() {
-  const [state, formAction, isPending] = useActionState(
-    createUser,
-    initialState
-  );
-
-  return (
-    <form action={formAction}>
-      <input name="name" required disabled={isPending} />
-      <input name="email" type="email" required disabled={isPending} />
-
-      {state.error && <p className="error">{state.error}</p>}
-
-      <button type="submit" disabled={isPending}>
-        {isPending ? 'Creating...' : 'Create User'}
-      </button>
-    </form>
-  );
-}
-```
-
-## Optimistic Updates
-
-```tsx
-'use client';
-
-import { useOptimistic } from 'react';
-import { addItem } from './actions';
-
-export function ItemList({ items }: { items: Item[] }) {
-  const [optimisticItems, addOptimisticItem] = useOptimistic(
-    items,
-    (state, newItem: Item) => [...state, newItem]
-  );
-
-  async function handleAdd(formData: FormData) {
-    const newItem = {
-      id: crypto.randomUUID(),
-      name: formData.get('name') as string,
-      pending: true,
-    };
-
-    addOptimisticItem(newItem);
-    await addItem(formData);
-  }
-
-  return (
-    <>
-      <form action={handleAdd}>
-        <input name="name" />
-        <button type="submit">Add</button>
-      </form>
-
-      <ul>
-        {optimisticItems.map((item) => (
-          <li key={item.id} style={{ opacity: item.pending ? 0.5 : 1 }}>
-            {item.name}
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-}
-```
 
 ## Parallel Data Fetching
 
@@ -204,46 +91,5 @@ export default function Page() {
 async function UsersSection() {
   const users = await getUsers();
   return <UserList users={users} />;
-}
-```
-
-## Revalidation Patterns
-
-```tsx
-'use server';
-
-// Path-based
-revalidatePath('/users');           // Revalidate specific path
-revalidatePath('/users', 'layout'); // Revalidate layout and children
-
-// Tag-based
-revalidateTag('users');             // Revalidate all with this tag
-
-// Usage with tags
-await fetch('/api/users', {
-  next: { tags: ['users'] }
-});
-```
-
-## Error Handling in Server Actions
-
-```tsx
-'use server';
-
-export async function createUser(formData: FormData) {
-  try {
-    const user = await db.user.create({
-      data: { name: formData.get('name') as string }
-    });
-
-    revalidatePath('/users');
-    return { success: true, user };
-  } catch (error) {
-    // Log for debugging
-    console.error('Failed to create user:', error);
-
-    // Return user-friendly error
-    return { success: false, error: 'Failed to create user' };
-  }
 }
 ```
