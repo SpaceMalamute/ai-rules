@@ -1,9 +1,9 @@
 ---
 paths:
-  - "src/**/*.cs"
-  - "src/**/Program.cs"
-  - "src/**/Startup.cs"
-  - "src/**/DependencyInjection.cs"
+  - "**/src/**/*.cs"
+  - "**/src/**/Program.cs"
+  - "**/src/**/Startup.cs"
+  - "**/src/**/DependencyInjection.cs"
 ---
 
 # Dependency Injection (.NET)

@@ -1,6 +1,6 @@
 ---
 paths:
-  - "tests/**/*.py"
+  - "**/tests/**/*.py"
   - "**/test_*.py"
 ---
 

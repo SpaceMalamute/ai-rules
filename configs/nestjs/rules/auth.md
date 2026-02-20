@@ -1,8 +1,8 @@
 ---
 paths:
-  - "src/**/auth/**/*.ts"
-  - "src/**/*.guard.ts"
-  - "src/**/*.strategy.ts"
+  - "**/src/**/auth/**/*.ts"
+  - "**/src/**/*.guard.ts"
+  - "**/src/**/*.strategy.ts"
 ---
 
 # NestJS Authentication

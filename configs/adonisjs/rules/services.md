@@ -1,6 +1,6 @@
 ---
 paths:
-  - "app/services/**/*.ts"
+  - "**/app/services/**/*.ts"
 ---
 
 # AdonisJS Services

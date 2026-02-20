@@ -1,6 +1,6 @@
 ---
 paths:
-  - "tests/**/*.ts"
+  - "**/tests/**/*.ts"
 ---
 
 # AdonisJS Testing (Japa)

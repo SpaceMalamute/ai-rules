@@ -1,8 +1,8 @@
 ---
 paths:
-  - "src/**/*.cs"
-  - "src/Application/**/*.cs"
-  - "src/Domain/**/*.cs"
+  - "**/src/**/*.cs"
+  - "**/src/Application/**/*.cs"
+  - "**/src/Domain/**/*.cs"
 ---
 
 # Result Pattern

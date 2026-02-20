@@ -1,7 +1,7 @@
 ---
 paths:
-  - "app/middleware/**/*.ts"
-  - "start/kernel.ts"
+  - "**/app/middleware/**/*.ts"
+  - "**/start/kernel.ts"
 ---
 
 # AdonisJS Middleware

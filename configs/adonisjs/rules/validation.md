@@ -1,6 +1,6 @@
 ---
 paths:
-  - "app/validators/**/*.ts"
+  - "**/app/validators/**/*.ts"
 ---
 
 # VineJS Validation

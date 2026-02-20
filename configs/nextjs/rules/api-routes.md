@@ -1,7 +1,7 @@
 ---
 paths:
-  - "app/api/**/*.ts"
-  - "src/app/api/**/*.ts"
+  - "**/app/api/**/*.ts"
+  - "**/src/app/api/**/*.ts"
 ---
 
 # Next.js API Routes (App Router)

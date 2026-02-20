@@ -1,10 +1,10 @@
 ---
 description: "React testing patterns with Vitest and Testing Library"
 paths:
-  - "src/**/*.test.tsx"
-  - "src/**/*.test.ts"
-  - "src/**/*.spec.tsx"
-  - "src/**/*.spec.ts"
+  - "**/src/**/*.test.tsx"
+  - "**/src/**/*.test.ts"
+  - "**/src/**/*.spec.tsx"
+  - "**/src/**/*.spec.ts"
 ---
 
 # React Testing

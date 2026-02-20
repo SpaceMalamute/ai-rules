@@ -1,9 +1,9 @@
 ---
 paths:
-  - "src/**/*.interceptor.ts"
-  - "src/**/interceptors/**/*.ts"
-  - "src/**/*.controller.ts"
-  - "src/**/*.module.ts"
+  - "**/src/**/*.interceptor.ts"
+  - "**/src/**/interceptors/**/*.ts"
+  - "**/src/**/*.controller.ts"
+  - "**/src/**/*.module.ts"
 ---
 
 # NestJS Interceptors

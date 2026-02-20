@@ -1,8 +1,8 @@
 ---
 description: "React component patterns and best practices"
 paths:
-  - "src/components/**/*.tsx"
-  - "src/features/**/components/**/*.tsx"
+  - "**/src/components/**/*.tsx"
+  - "**/src/features/**/components/**/*.tsx"
 ---
 
 # React Components

@@ -1,8 +1,8 @@
 ---
 paths:
-  - "src/WebApi/**/*.cs"
-  - "src/**/Controllers/**/*.cs"
-  - "src/**/Endpoints/**/*.cs"
+  - "**/src/WebApi/**/*.cs"
+  - "**/src/**/Controllers/**/*.cs"
+  - "**/src/**/Endpoints/**/*.cs"
 ---
 
 # ASP.NET Core API Rules

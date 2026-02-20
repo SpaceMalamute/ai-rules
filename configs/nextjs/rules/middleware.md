@@ -1,7 +1,7 @@
 ---
 paths:
-  - "middleware.ts"
-  - "src/middleware.ts"
+  - "**/middleware.ts"
+  - "**/src/middleware.ts"
 ---
 
 # Next.js Middleware

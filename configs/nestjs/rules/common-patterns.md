@@ -1,11 +1,11 @@
 ---
 paths:
-  - "src/common/**/*.ts"
-  - "src/**/*.decorator.ts"
-  - "src/**/*.filter.ts"
-  - "src/**/*.interceptor.ts"
-  - "src/**/*.pipe.ts"
-  - "src/main.ts"
+  - "**/src/common/**/*.ts"
+  - "**/src/**/*.decorator.ts"
+  - "**/src/**/*.filter.ts"
+  - "**/src/**/*.interceptor.ts"
+  - "**/src/**/*.pipe.ts"
+  - "**/src/main.ts"
 ---
 
 # NestJS Common Patterns

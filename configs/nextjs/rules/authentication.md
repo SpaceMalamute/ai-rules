@@ -3,7 +3,7 @@ paths:
   - "**/auth/**"
   - "**/login/**"
   - "**/api/auth/**"
-  - "middleware.ts"
+  - "**/middleware.ts"
 ---
 
 # Next.js Authentication

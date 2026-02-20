@@ -1,6 +1,6 @@
 ---
 paths:
-  - "src/**/*.cs"
+  - "**/src/**/*.cs"
 ---
 
 # Clean Architecture Rules

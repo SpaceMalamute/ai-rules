@@ -1,8 +1,8 @@
 ---
 description: "React hooks patterns and best practices"
 paths:
-  - "src/hooks/**/*.ts"
-  - "src/features/**/hooks/**/*.ts"
+  - "**/src/hooks/**/*.ts"
+  - "**/src/features/**/hooks/**/*.ts"
 ---
 
 # React Hooks

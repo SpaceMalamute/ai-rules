@@ -1,6 +1,6 @@
 ---
 paths:
-  - "app/models/**/*.ts"
+  - "**/app/models/**/*.ts"
   - "database/migrations/**/*.ts"
   - "database/seeders/**/*.ts"
   - "database/factories/**/*.ts"

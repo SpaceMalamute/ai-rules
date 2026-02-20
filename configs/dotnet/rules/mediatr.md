@@ -1,7 +1,7 @@
 ---
 paths:
-  - "src/**/*.cs"
-  - "src/Application/**/*.cs"
+  - "**/src/**/*.cs"
+  - "**/src/Application/**/*.cs"
 ---
 
 # MediatR Patterns

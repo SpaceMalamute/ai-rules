@@ -1,6 +1,6 @@
 ---
 paths:
-  - "app/controllers/**/*.ts"
+  - "**/app/controllers/**/*.ts"
 ---
 
 # AdonisJS Controllers

@@ -1,9 +1,9 @@
 ---
 description: "React form handling patterns"
 paths:
-  - "src/components/forms/**/*.tsx"
-  - "src/**/form*.tsx"
-  - "src/**/*-form.tsx"
+  - "**/src/components/forms/**/*.tsx"
+  - "**/src/**/form*.tsx"
+  - "**/src/**/*-form.tsx"
 ---
 
 # React Forms

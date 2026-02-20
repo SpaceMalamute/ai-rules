@@ -2,8 +2,8 @@
 paths:
   - "**/layout.tsx"
   - "**/page.tsx"
-  - "app/sitemap.ts"
-  - "app/robots.ts"
+  - "**/app/sitemap.ts"
+  - "**/app/robots.ts"
 ---
 
 # Next.js SEO

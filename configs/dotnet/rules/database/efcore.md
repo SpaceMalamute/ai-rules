@@ -1,6 +1,6 @@
 ---
 paths:
-  - "src/Infrastructure/**/*.cs"
+  - "**/src/Infrastructure/**/*.cs"
   - "**/*DbContext*.cs"
   - "**/*Repository*.cs"
   - "**/Configurations/**/*.cs"

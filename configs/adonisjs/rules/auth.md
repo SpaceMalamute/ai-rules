@@ -1,8 +1,8 @@
 ---
 paths:
-  - "app/controllers/auth/**/*.ts"
-  - "app/middleware/**/*.ts"
-  - "config/auth.ts"
+  - "**/app/controllers/auth/**/*.ts"
+  - "**/app/middleware/**/*.ts"
+  - "**/config/auth.ts"
 ---
 
 # AdonisJS Authentication

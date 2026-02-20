@@ -1,7 +1,7 @@
 ---
 paths:
-  - "src/**/*.spec.ts"
-  - "test/**/*.e2e-spec.ts"
+  - "**/src/**/*.spec.ts"
+  - "**/test/**/*.e2e-spec.ts"
 ---
 
 # NestJS Testing

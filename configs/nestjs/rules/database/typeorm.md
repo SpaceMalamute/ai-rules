@@ -1,8 +1,8 @@
 ---
 paths:
-  - "src/**/*.entity.ts"
-  - "src/**/*.repository.ts"
-  - "src/**/typeorm*.ts"
+  - "**/src/**/*.entity.ts"
+  - "**/src/**/*.repository.ts"
+  - "**/src/**/typeorm*.ts"
 ---
 
 # NestJS with TypeORM

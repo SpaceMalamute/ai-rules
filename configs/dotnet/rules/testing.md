@@ -1,6 +1,6 @@
 ---
 paths:
-  - "tests/**/*.cs"
+  - "**/tests/**/*.cs"
   - "**/*.Tests/**/*.cs"
   - "**/*Tests.cs"
 ---

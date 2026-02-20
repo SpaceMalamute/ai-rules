@@ -1,8 +1,8 @@
 ---
 paths:
   - "prisma/**/*.prisma"
-  - "src/**/*.repository.ts"
-  - "src/**/prisma*.ts"
+  - "**/src/**/*.repository.ts"
+  - "**/src/**/prisma*.ts"
 ---
 
 # NestJS with Prisma

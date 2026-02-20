@@ -1,9 +1,9 @@
 ---
 paths:
-  - "src/Domain/**/*.cs"
-  - "src/**/Entities/**/*.cs"
-  - "src/**/ValueObjects/**/*.cs"
-  - "src/**/Aggregates/**/*.cs"
+  - "**/src/Domain/**/*.cs"
+  - "**/src/**/Entities/**/*.cs"
+  - "**/src/**/ValueObjects/**/*.cs"
+  - "**/src/**/Aggregates/**/*.cs"
 ---
 
 # Domain-Driven Design (.NET)

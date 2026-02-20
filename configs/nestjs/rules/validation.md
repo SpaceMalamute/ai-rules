@@ -1,7 +1,7 @@
 ---
 paths:
-  - "src/**/*.dto.ts"
-  - "src/**/dto/*.ts"
+  - "**/src/**/*.dto.ts"
+  - "**/src/**/dto/*.ts"
 ---
 
 # NestJS Validation & DTOs

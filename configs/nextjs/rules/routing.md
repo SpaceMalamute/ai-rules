@@ -1,7 +1,7 @@
 ---
 paths:
   - "apps/**/app/**/*.tsx"
-  - "app/**/*.tsx"
+  - "**/app/**/*.tsx"
 ---
 
 # Next.js App Router Patterns
