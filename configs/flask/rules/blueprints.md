@@ -182,8 +182,9 @@ from flask.views import MethodView
 class UserAPI(MethodView):
     def get(self, user_id: int | None = None):
         if user_id is None:
-            return jsonify(UserSchema(many=True).dump(User.query.all()))
-        user = User.query.get_or_404(user_id)
+            users = db.session.execute(db.select(User)).scalars().all()
+            return jsonify(UserSchema(many=True).dump(users))
+        user = db.get_or_404(User, user_id)
         return jsonify(UserSchema().dump(user))
 
     def post(self):
@@ -192,7 +193,7 @@ class UserAPI(MethodView):
         return jsonify(UserSchema().dump(user)), 201
 
     def put(self, user_id: int):
-        user = User.query.get_or_404(user_id)
+        user = db.get_or_404(User, user_id)
         data = UserUpdateSchema().load(request.get_json())
         user = UserService.update(user, data)
         return jsonify(UserSchema().dump(user))

@@ -101,13 +101,13 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
-    return User.query.get(identity)
+    return db.session.get(User, identity)
 
 # Login endpoint
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = LoginSchema().load(request.get_json())
-    user = User.query.filter_by(email=data["email"]).first()
+    user = db.session.execute(db.select(User).filter_by(email=data["email"])).scalar_one_or_none()
 
     if not user or not user.check_password(data["password"]):
         return jsonify({"error": "Invalid credentials"}), 401
@@ -260,7 +260,7 @@ login_manager.login_view = "auth.login"
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 # Login
 @auth_bp.route("/login", methods=["POST"])

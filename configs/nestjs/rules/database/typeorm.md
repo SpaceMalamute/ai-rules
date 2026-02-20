@@ -360,12 +360,12 @@ export class AddUsersTable1234567890 implements MigrationInterface {
 import { getRepositoryToken } from '@nestjs/typeorm';
 
 const mockRepository = {
-  find: jest.fn(),
-  findOne: jest.fn(),
-  create: jest.fn(),
-  save: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
+  find: vi.fn(),
+  findOne: vi.fn(),
+  create: vi.fn(),
+  save: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
 };
 
 const module = await Test.createTestingModule({

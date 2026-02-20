@@ -1,5 +1,5 @@
 ---
-description: "NestJS testing with Jest"
+description: "NestJS testing with Vitest"
 paths:
   - "**/src/**/*.spec.ts"
   - "**/test/**/*.e2e-spec.ts"
@@ -21,7 +21,7 @@ import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let repository: jest.Mocked<UsersRepository>;
+  let repository: Mocked<UsersRepository>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,10 +30,10 @@ describe('UsersService', () => {
         {
           provide: UsersRepository,
           useValue: {
-            findById: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
+            findById: vi.fn(),
+            create: vi.fn(),
+            update: vi.fn(),
+            delete: vi.fn(),
           },
         },
       ],
@@ -74,7 +74,7 @@ import { UsersService } from './users.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
-  let service: jest.Mocked<UsersService>;
+  let service: Mocked<UsersService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -83,8 +83,8 @@ describe('UsersController', () => {
         {
           provide: UsersService,
           useValue: {
-            findOne: jest.fn(),
-            create: jest.fn(),
+            findOne: vi.fn(),
+            create: vi.fn(),
           },
         },
       ],
@@ -113,20 +113,20 @@ describe('UsersController', () => {
 ```typescript
 // Create reusable mock factory
 export const createMockRepository = <T = any>() => ({
-  find: jest.fn(),
-  findOne: jest.fn(),
-  create: jest.fn(),
-  save: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-  createQueryBuilder: jest.fn(() => ({
-    where: jest.fn().mockReturnThis(),
-    andWhere: jest.fn().mockReturnThis(),
-    orderBy: jest.fn().mockReturnThis(),
-    skip: jest.fn().mockReturnThis(),
-    take: jest.fn().mockReturnThis(),
-    getMany: jest.fn(),
-    getOne: jest.fn(),
+  find: vi.fn(),
+  findOne: vi.fn(),
+  create: vi.fn(),
+  save: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+  createQueryBuilder: vi.fn(() => ({
+    where: vi.fn().mockReturnThis(),
+    andWhere: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    skip: vi.fn().mockReturnThis(),
+    take: vi.fn().mockReturnThis(),
+    getMany: vi.fn(),
+    getOne: vi.fn(),
   })),
 });
 

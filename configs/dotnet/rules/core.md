@@ -39,7 +39,7 @@ src/
 - **Queries** (read): Return data, never modify state
 - Commands and queries implement `IRequest<T>`
 
-### C# 12 Style
+### C# 13 Style
 
 - File-scoped namespaces
 - Primary constructors for DI

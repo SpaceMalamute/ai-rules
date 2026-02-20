@@ -292,11 +292,11 @@ npx prisma generate
 // Mock PrismaService
 const mockPrismaService = {
   user: {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   },
 };
 

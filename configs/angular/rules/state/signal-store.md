@@ -268,11 +268,11 @@ export function withLoading() {
 export const ProductStore = signalStore(
   withLoading(),  // Adds loading and error state + methods
   withState({ products: [] as Product[] }),
-  withMethods((store) => ({
+  withMethods((store, productService = inject(ProductService)) => ({
     async loadProducts(): Promise<void> {
       store.setLoading(true);
       try {
-        const products = await this.fetch();
+        const products = await productService.getAll();
         patchState(store, { products });
         store.setLoading(false);
       } catch (e) {

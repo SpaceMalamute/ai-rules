@@ -41,7 +41,7 @@ it('should load users', fakeAsync(() => {
 it('should load users', () => {
   testScheduler.run(({ cold, expectObservable }) => {
     const users = [{ id: '1' }, { id: '2' }];
-    jest.spyOn(service, 'getUsers').mockReturnValue(cold('--a|', { a: users }));
+    vi.spyOn(service, 'getUsers').mockReturnValue(cold('--a|', { a: users }));
 
     expectObservable(service.getUsers()).toBe('--a|', { a: users });
   });
@@ -63,7 +63,7 @@ __tests__/
 
 ## Component Testing (Zoneless)
 
-Angular 21 is zoneless by default - tests must not rely on zone.js:
+Angular 21 is zoneless by default — tests must not rely on zone.js:
 
 ```typescript
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -75,7 +75,7 @@ describe('UserListComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [UserListComponent],
-      // No need for provideZonelessChangeDetection() - it's the default in Angular 21
+      // Zoneless is the default in Angular 21 — no provider needed
     }).compileComponents();
 
     fixture = TestBed.createComponent(UserListComponent);
@@ -131,18 +131,18 @@ const spy = vi.fn();
 component.myOutput.subscribe(spy);
 ```
 
-## Service Mocking with createSpyFromClass
+## Service Mocking
 
-Use `jasmine-auto-spies` or equivalent:
+Use Vitest mocks with `vi.fn()`:
 
 ```typescript
-import { createSpyFromClass, Spy } from 'jasmine-auto-spies';
-
 describe('UserEffects', () => {
-  let userService: Spy<UserService>;
+  let userService: { getAll: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    userService = createSpyFromClass(UserService);
+    userService = {
+      getAll: vi.fn(),
+    };
 
     TestBed.configureTestingModule({
       providers: [
@@ -152,12 +152,12 @@ describe('UserEffects', () => {
   });
 
   it('should load users', () => {
-    userService.getAll.and.returnValue(of([{ id: '1', name: 'John' }]));
+    userService.getAll.mockReturnValue(of([{ id: '1', name: 'John' }]));
     // ... test
   });
 
   it('should handle error', () => {
-    userService.getAll.and.returnValue(throwError(() => new Error('API Error')));
+    userService.getAll.mockReturnValue(throwError(() => new Error('API Error')));
     // ... test
   });
 });
@@ -173,14 +173,14 @@ import { TestScheduler } from 'rxjs/testing';
 describe('User Effects', () => {
   let testScheduler: TestScheduler;
   let actions$: Observable<Action>;
-  let userService: Spy<UserService>;
+  let userService: { getAll: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     testScheduler = new TestScheduler((actual, expected) => {
       expect(actual).toEqual(expected);
     });
 
-    userService = createSpyFromClass(UserService);
+    userService = { getAll: vi.fn() };
   });
 
   it('should load users successfully', () => {
@@ -188,7 +188,7 @@ describe('User Effects', () => {
       // Setup
       const users = [{ id: '1', name: 'John' }];
       actions$ = hot('-a', { a: UserActions.loadUsers() });
-      userService.getAll.and.returnValue(cold('--b|', { b: users }));
+      userService.getAll.mockReturnValue(cold('--b|', { b: users }));
 
       // Execute
       const effect = loadUsers$(actions$, userService);
@@ -204,7 +204,7 @@ describe('User Effects', () => {
     testScheduler.run(({ hot, cold, expectObservable }) => {
       const error = new Error('API Error');
       actions$ = hot('-a', { a: UserActions.loadUsers() });
-      userService.getAll.and.returnValue(cold('--#', {}, error));
+      userService.getAll.mockReturnValue(cold('--#', {}, error));
 
       const effect = loadUsers$(actions$, userService);
 

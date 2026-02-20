@@ -124,7 +124,7 @@ def update_user(user_id: int):
 # GOOD - Base schema with common fields
 class BaseSchema(Schema):
     class Meta:
-        strict = True
+        ordered = True
 
 class TimestampMixin:
     created_at = fields.DateTime(dump_only=True)

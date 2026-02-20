@@ -239,18 +239,20 @@ import { ListKeyManager } from '@angular/cdk/a11y';
     </ul>
   `,
 })
-export class MenuComponent implements AfterViewInit {
+export class MenuComponent {
   public readonly items = input.required<MenuItem[]>();
-
-  @ViewChildren('menuItem') menuItems!: QueryList<ElementRef>;
+  private readonly menuItems = viewChildren<ElementRef>('menuItem');
 
   protected keyManager?: ListKeyManager<MenuItem>;
 
-  ngAfterViewInit(): void {
-    this.keyManager = new ListKeyManager(this.items())
-      .withWrap()
-      .withHomeAndEnd()
-      .withTypeAhead();
+  constructor() {
+    effect(() => {
+      this.menuItems(); // track signal
+      this.keyManager = new ListKeyManager(this.items())
+        .withWrap()
+        .withHomeAndEnd()
+        .withTypeAhead();
+    });
   }
 
   protected onKeydown(event: KeyboardEvent): void {
