@@ -1,4 +1,5 @@
 ---
+description: "FastAPI middleware patterns"
 paths:
   - "**/*.py"
 ---

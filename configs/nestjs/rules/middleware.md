@@ -1,4 +1,5 @@
 ---
+description: "NestJS middleware patterns"
 paths:
   - "**/*.middleware.ts"
   - "**/middleware/**/*.ts"

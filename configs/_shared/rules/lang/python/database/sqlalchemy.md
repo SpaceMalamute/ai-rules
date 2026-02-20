@@ -1,4 +1,5 @@
 ---
+description: "SQLAlchemy 2.0 ORM patterns"
 paths:
   - "**/models/**/*.py"
   - "**/repositories/**/*.py"

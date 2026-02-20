@@ -1,4 +1,5 @@
 ---
+description: "TypeORM integration with NestJS"
 paths:
   - "**/src/**/*.entity.ts"
   - "**/src/**/*.repository.ts"

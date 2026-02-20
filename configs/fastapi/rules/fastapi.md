@@ -1,4 +1,5 @@
 ---
+description: "FastAPI route and endpoint patterns"
 paths:
   - "**/routers/**/*.py"
   - "**/routes/**/*.py"

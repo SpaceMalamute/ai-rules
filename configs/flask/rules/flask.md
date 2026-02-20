@@ -1,4 +1,5 @@
 ---
+description: "Flask route and view patterns"
 paths:
   - "**/*.py"
 ---

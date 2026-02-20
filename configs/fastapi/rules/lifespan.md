@@ -1,4 +1,5 @@
 ---
+description: "FastAPI application lifespan management"
 paths:
   - "**/*.py"
 ---

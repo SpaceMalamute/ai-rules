@@ -1,4 +1,5 @@
 ---
+description: "Angular accessibility and ARIA patterns"
 paths:
   - "**/ui/**/*.component.ts"
   - "**/ui/**/*.component.html"

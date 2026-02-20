@@ -1,4 +1,5 @@
 ---
+description: "AdonisJS controller patterns"
 paths:
   - "**/app/controllers/**/*.ts"
 ---

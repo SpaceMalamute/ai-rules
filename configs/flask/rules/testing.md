@@ -1,4 +1,5 @@
 ---
+description: "Flask testing with pytest"
 paths:
   - "**/tests/**/*.py"
   - "**/test_*.py"

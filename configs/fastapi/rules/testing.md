@@ -1,4 +1,5 @@
 ---
+description: "FastAPI testing with pytest and TestClient"
 paths:
   - "**/tests/**/*.py"
   - "**/test_*.py"

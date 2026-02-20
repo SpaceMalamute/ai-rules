@@ -1,4 +1,5 @@
 ---
+description: "NestJS authentication and guards"
 paths:
   - "**/src/**/auth/**/*.ts"
   - "**/src/**/*.guard.ts"

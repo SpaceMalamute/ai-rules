@@ -1,4 +1,5 @@
 ---
+description: ".NET background services and hosted workers"
 paths:
   - "**/*Worker.cs"
   - "**/*Service.cs"

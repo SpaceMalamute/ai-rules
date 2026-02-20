@@ -1,4 +1,5 @@
 ---
+description: "Git workflow, branching, and commit conventions"
 paths:
   - "**/.github/**"
   - "**/COMMIT_EDITMSG"

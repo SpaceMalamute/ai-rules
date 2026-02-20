@@ -1,4 +1,5 @@
 ---
+description: "OWASP Top 10 security rules"
 paths:
   - "**/*.ts"
   - "**/*.js"

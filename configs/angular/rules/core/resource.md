@@ -1,4 +1,5 @@
 ---
+description: "Angular Resource API for async data"
 paths:
   - "**/*.component.ts"
   - "**/*.store.ts"

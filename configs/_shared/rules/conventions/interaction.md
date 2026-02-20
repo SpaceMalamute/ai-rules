@@ -1,4 +1,5 @@
 ---
+description: "AI interaction rules and communication guidelines"
 alwaysApply: true
 ---
 

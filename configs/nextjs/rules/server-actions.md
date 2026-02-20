@@ -1,4 +1,5 @@
 ---
+description: "Next.js Server Actions and mutations"
 paths:
   - "**/actions.ts"
   - "**/actions.tsx"

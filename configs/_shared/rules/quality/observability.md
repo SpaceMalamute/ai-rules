@@ -1,4 +1,5 @@
 ---
+description: "Structured logging, metrics, and health checks"
 paths:
   - "**/*.ts"
   - "**/*.js"

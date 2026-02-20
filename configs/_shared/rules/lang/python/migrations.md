@@ -1,4 +1,5 @@
 ---
+description: "Alembic database migration patterns"
 paths:
   - "**/alembic/**/*.py"
   - "**/migrations/**/*.py"

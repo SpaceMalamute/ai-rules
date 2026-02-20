@@ -1,4 +1,5 @@
 ---
+description: "Python testing with pytest"
 paths:
   - "**/tests/**/*.py"
   - "**/test_*.py"

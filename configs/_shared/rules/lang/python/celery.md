@@ -1,4 +1,5 @@
 ---
+description: "Celery task queue patterns"
 paths:
   - "**/tasks/**/*.py"
   - "**/celery.py"

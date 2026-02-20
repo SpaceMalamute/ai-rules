@@ -1,4 +1,5 @@
 ---
+description: "LINQ query best practices"
 paths:
   - "**/*.cs"
 ---

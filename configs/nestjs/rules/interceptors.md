@@ -1,4 +1,5 @@
 ---
+description: "NestJS interceptors and response mapping"
 paths:
   - "**/src/**/*.interceptor.ts"
   - "**/src/**/interceptors/**/*.ts"

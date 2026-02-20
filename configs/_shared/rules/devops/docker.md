@@ -1,4 +1,5 @@
 ---
+description: "Docker containerization best practices"
 paths:
   - "**/Dockerfile"
   - "**/docker-compose*.yml"

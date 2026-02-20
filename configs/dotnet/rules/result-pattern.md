@@ -1,4 +1,5 @@
 ---
+description: "Result pattern for operation outcomes"
 paths:
   - "**/src/**/*.cs"
   - "**/src/Application/**/*.cs"

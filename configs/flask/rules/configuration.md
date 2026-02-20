@@ -1,4 +1,5 @@
 ---
+description: "Flask configuration and environments"
 paths:
   - "**/*.py"
 ---

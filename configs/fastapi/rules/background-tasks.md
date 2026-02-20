@@ -1,4 +1,5 @@
 ---
+description: "FastAPI background task patterns"
 paths:
   - "**/*.py"
 ---

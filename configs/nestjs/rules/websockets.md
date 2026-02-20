@@ -1,4 +1,5 @@
 ---
+description: "NestJS WebSocket gateway patterns"
 paths:
   - "**/*.gateway.ts"
   - "**/gateways/**/*.ts"

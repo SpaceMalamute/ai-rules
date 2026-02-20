@@ -1,4 +1,5 @@
 ---
+description: "FastAPI WebSocket patterns"
 paths:
   - "**/*.py"
 ---

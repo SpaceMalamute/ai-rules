@@ -1,4 +1,5 @@
 ---
+description: "AdonisJS service layer patterns"
 paths:
   - "**/app/services/**/*.ts"
 ---

@@ -1,4 +1,5 @@
 ---
+description: "FluentValidation rules and patterns"
 paths:
   - "**/*.Validator.cs"
   - "**/Validators/**/*.cs"

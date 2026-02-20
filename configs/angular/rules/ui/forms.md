@@ -1,4 +1,5 @@
 ---
+description: "Angular signal-based reactive forms"
 paths:
   - "**/*.component.ts"
   - "**/*.component.html"

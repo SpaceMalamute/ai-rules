@@ -1,4 +1,5 @@
 ---
+description: "VineJS validation rules"
 paths:
   - "**/app/validators/**/*.ts"
 ---

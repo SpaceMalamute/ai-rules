@@ -1,4 +1,5 @@
 ---
+description: "CI/CD pipeline best practices"
 paths:
   - ".github/workflows/**"
   - ".gitlab-ci.yml"

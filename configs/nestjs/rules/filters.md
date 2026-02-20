@@ -1,4 +1,5 @@
 ---
+description: "NestJS exception filters"
 paths:
   - "**/*.filter.ts"
   - "**/filters/**/*.ts"

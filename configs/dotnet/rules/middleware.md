@@ -1,4 +1,5 @@
 ---
+description: "ASP.NET Core middleware pipeline"
 paths:
   - "**/*Middleware.cs"
   - "**/Middleware/**/*.cs"

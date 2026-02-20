@@ -1,4 +1,5 @@
 ---
+description: "NestJS validation pipes"
 paths:
   - "**/*.pipe.ts"
   - "**/pipes/**/*.ts"

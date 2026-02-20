@@ -1,4 +1,5 @@
 ---
+description: "Python asyncio patterns"
 paths:
   - "**/handlers/**/*.py"
   - "**/services/**/*.py"

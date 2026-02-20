@@ -1,4 +1,5 @@
 ---
+description: "Async/await patterns, cancellation, and pitfalls"
 paths:
   - "**/*.ts"
   - "**/*.tsx"

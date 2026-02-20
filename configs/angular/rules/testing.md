@@ -1,4 +1,5 @@
 ---
+description: "Angular testing with TestBed"
 paths:
   - "**/*.spec.ts"
   - "**/*.test.ts"

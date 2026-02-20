@@ -1,4 +1,5 @@
 ---
+description: "Next.js SEO and metadata"
 paths:
   - "**/layout.tsx"
   - "**/page.tsx"

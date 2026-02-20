@@ -1,4 +1,5 @@
 ---
+description: "Next.js database access with Prisma"
 paths:
   - "**/prisma/**"
   - "**/db/**"

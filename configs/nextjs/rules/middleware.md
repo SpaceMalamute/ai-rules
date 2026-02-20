@@ -1,4 +1,5 @@
 ---
+description: "Next.js middleware and edge functions"
 paths:
   - "**/middleware.ts"
   - "**/src/middleware.ts"

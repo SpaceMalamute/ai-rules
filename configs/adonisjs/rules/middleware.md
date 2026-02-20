@@ -1,4 +1,5 @@
 ---
+description: "AdonisJS middleware patterns"
 paths:
   - "**/app/middleware/**/*.ts"
   - "**/start/kernel.ts"

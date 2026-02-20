@@ -1,4 +1,5 @@
 ---
+description: "NestJS DTO validation with class-validator"
 paths:
   - "**/src/**/*.dto.ts"
   - "**/src/**/dto/*.ts"

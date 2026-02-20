@@ -1,4 +1,5 @@
 ---
+description: "Flask application and request context"
 paths:
   - "**/*.py"
 ---

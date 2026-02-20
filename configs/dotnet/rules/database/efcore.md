@@ -1,4 +1,5 @@
 ---
+description: "Entity Framework Core patterns and migrations"
 paths:
   - "**/src/Infrastructure/**/*.cs"
   - "**/*DbContext*.cs"

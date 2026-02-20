@@ -1,4 +1,5 @@
 ---
+description: "Testing principles, AAA pattern, and mocking"
 paths:
   - "**/*.spec.ts"
   - "**/*.test.ts"

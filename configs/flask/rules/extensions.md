@@ -1,4 +1,5 @@
 ---
+description: "Flask extension integration patterns"
 paths:
   - "**/*.py"
 ---

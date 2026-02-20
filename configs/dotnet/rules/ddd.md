@@ -1,4 +1,5 @@
 ---
+description: "Domain-Driven Design patterns for .NET"
 paths:
   - "**/src/Domain/**/*.cs"
   - "**/src/**/Entities/**/*.cs"

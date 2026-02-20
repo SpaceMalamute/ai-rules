@@ -1,4 +1,5 @@
 ---
+description: "NestJS module organization"
 paths:
   - "**/src/**/*.module.ts"
   - "**/src/**/*.controller.ts"

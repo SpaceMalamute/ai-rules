@@ -1,4 +1,5 @@
 ---
+description: "Angular SSR and hydration"
 paths:
   - "**/app.config.ts"
   - "**/app.config.server.ts"

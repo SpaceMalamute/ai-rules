@@ -1,4 +1,5 @@
 ---
+description: "Advanced TypeScript types, guards, and inference"
 paths:
   - "**/*.ts"
   - "**/*.tsx"

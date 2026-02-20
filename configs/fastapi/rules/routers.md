@@ -1,4 +1,5 @@
 ---
+description: "FastAPI router organization"
 paths:
   - "**/routers/**/*.py"
   - "**/routes/**/*.py"

@@ -1,4 +1,5 @@
 ---
+description: "Python repository pattern for data access"
 paths:
   - "**/repositories/**/*.py"
   - "**/repository/**/*.py"

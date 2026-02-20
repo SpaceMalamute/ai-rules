@@ -1,4 +1,5 @@
 ---
+description: "NgRx SignalStore state management"
 paths:
   - "**/libs/**/data-access/**/*.ts"
   - "**/*.store.ts"

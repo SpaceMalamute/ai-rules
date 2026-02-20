@@ -1,4 +1,5 @@
 ---
+description: "NestJS common patterns and utilities"
 paths:
   - "**/src/common/**/*.ts"
   - "**/src/**/*.decorator.ts"

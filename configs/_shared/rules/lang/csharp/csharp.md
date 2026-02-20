@@ -1,4 +1,5 @@
 ---
+description: "C# code style and naming conventions"
 paths:
   - "**/*.cs"
   - "**/*.csproj"

@@ -1,4 +1,5 @@
 ---
+description: "Flask blueprint organization patterns"
 paths:
   - "**/*.py"
 ---

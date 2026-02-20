@@ -1,4 +1,5 @@
 ---
+description: "Web accessibility and ARIA patterns"
 paths:
   - "**/*.tsx"
   - "**/*.jsx"

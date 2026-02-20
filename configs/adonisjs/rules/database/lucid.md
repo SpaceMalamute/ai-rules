@@ -1,4 +1,5 @@
 ---
+description: "Lucid ORM models and queries"
 paths:
   - "**/app/models/**/*.ts"
   - "**/database/migrations/**/*.ts"

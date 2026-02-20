@@ -1,4 +1,5 @@
 ---
+description: "Next.js authentication patterns"
 paths:
   - "**/auth/**"
   - "**/login/**"

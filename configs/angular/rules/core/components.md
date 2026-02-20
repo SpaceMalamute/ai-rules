@@ -1,4 +1,5 @@
 ---
+description: "Angular component patterns and @defer"
 paths:
   - "**/libs/**/feature/**/*.ts"
   - "**/libs/**/ui/**/*.ts"

@@ -1,4 +1,5 @@
 ---
+description: "Next.js API route handlers"
 paths:
   - "**/app/api/**/*.ts"
   - "**/src/app/api/**/*.ts"

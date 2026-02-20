@@ -1,4 +1,5 @@
 ---
+description: "NPM/Yarn package management conventions"
 paths:
   - "**/package.json"
 ---

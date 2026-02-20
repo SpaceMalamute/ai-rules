@@ -1,4 +1,5 @@
 ---
+description: "Python code style and conventions"
 paths:
   - "**/*.py"
   - "**/pyproject.toml"

@@ -1,4 +1,5 @@
 ---
+description: "Prisma ORM integration with NestJS"
 paths:
   - "**/prisma/**/*.prisma"
   - "**/src/**/*.repository.ts"

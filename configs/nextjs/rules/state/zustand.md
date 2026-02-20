@@ -1,4 +1,5 @@
 ---
+description: "Zustand state management with Next.js"
 paths:
   - "**/*store*.ts"
   - "**/*store*.tsx"

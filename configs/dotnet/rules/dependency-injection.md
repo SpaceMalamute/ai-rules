@@ -1,4 +1,5 @@
 ---
+description: ".NET dependency injection and service lifetimes"
 paths:
   - "**/src/**/*.cs"
   - "**/src/**/Program.cs"

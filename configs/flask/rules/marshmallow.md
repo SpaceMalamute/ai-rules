@@ -1,4 +1,5 @@
 ---
+description: "Marshmallow schema validation"
 paths:
   - "**/*.py"
 ---

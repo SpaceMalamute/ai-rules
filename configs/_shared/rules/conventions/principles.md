@@ -1,4 +1,5 @@
 ---
+description: "YAGNI, KISS, SoC, DRY design principles"
 paths:
   - "**/*.ts"
   - "**/*.tsx"

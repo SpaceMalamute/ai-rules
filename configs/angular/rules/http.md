@@ -1,4 +1,5 @@
 ---
+description: "Angular HTTP client and interceptors"
 paths:
   - "**/interceptors/**"
   - "**/services/**/*.service.ts"

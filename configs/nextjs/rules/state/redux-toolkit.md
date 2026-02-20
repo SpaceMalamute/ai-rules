@@ -1,4 +1,5 @@
 ---
+description: "Redux Toolkit with Next.js"
 paths:
   - "**/*slice*.ts"
   - "**/*store*.ts"

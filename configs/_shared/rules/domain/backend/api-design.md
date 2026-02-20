@@ -1,4 +1,5 @@
 ---
+description: "REST API design conventions and HTTP methods"
 paths:
   - "**/controllers/**"
   - "**/routes/**"

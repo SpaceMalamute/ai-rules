@@ -1,4 +1,5 @@
 ---
+description: "Pydantic v2 model validation patterns"
 paths:
   - "**/schemas/**/*.py"
   - "**/models/**/*.py"

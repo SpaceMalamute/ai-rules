@@ -1,4 +1,5 @@
 ---
+description: ".NET configuration and options pattern"
 paths:
   - "**/appsettings*.json"
   - "**/Options/**/*.cs"

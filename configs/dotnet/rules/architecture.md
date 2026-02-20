@@ -1,4 +1,5 @@
 ---
+description: "Clean Architecture layers and dependencies"
 paths:
   - "**/src/**/*.cs"
 ---

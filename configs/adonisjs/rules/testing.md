@@ -1,4 +1,5 @@
 ---
+description: "AdonisJS testing with Japa"
 paths:
   - "**/tests/**/*.ts"
 ---

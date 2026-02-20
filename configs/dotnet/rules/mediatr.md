@@ -1,4 +1,5 @@
 ---
+description: "MediatR CQRS and pipeline behaviors"
 paths:
   - "**/src/**/*.cs"
   - "**/src/Application/**/*.cs"

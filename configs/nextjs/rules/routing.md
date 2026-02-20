@@ -1,4 +1,5 @@
 ---
+description: "Next.js App Router patterns"
 paths:
   - "**/apps/**/app/**/*.tsx"
   - "**/app/**/*.tsx"

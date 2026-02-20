@@ -1,4 +1,5 @@
 ---
+description: "Next.js server and client components"
 paths:
   - "**/apps/**/*.tsx"
   - "**/libs/**/*.tsx"

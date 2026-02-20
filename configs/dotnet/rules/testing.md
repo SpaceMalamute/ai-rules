@@ -1,4 +1,5 @@
 ---
+description: ".NET testing with xUnit and NSubstitute"
 paths:
   - "**/tests/**/*.cs"
   - "**/*.Tests/**/*.cs"

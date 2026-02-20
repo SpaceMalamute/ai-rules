@@ -1,4 +1,5 @@
 ---
+description: "Secrets and environment variable handling"
 paths:
   - "**/.env*"
   - "**/secrets/**"

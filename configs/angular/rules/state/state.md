@@ -1,4 +1,5 @@
 ---
+description: "NgRx state management rules"
 paths:
   - "**/libs/**/data-access/**/*.ts"
   - "**/libs/**/+state/**/*.ts"

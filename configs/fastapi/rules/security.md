@@ -1,4 +1,5 @@
 ---
+description: "FastAPI authentication and security"
 paths:
   - "**/*.py"
 ---

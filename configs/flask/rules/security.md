@@ -1,4 +1,5 @@
 ---
+description: "Flask security patterns"
 paths:
   - "**/*.py"
 ---

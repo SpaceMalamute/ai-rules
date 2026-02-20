@@ -1,4 +1,5 @@
 ---
+description: "Python deployment and packaging"
 paths:
   - "Dockerfile"
   - "**/docker-compose*.yml"

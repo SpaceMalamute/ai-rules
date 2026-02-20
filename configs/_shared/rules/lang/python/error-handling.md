@@ -1,4 +1,5 @@
 ---
+description: "Python error handling and custom exceptions"
 paths:
   - "**/exceptions/**/*.py"
   - "**/errors/**/*.py"

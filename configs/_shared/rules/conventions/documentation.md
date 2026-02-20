@@ -1,4 +1,5 @@
 ---
+description: "Documentation standards and API doc conventions"
 paths:
   - "**/README.md"
   - "**/CHANGELOG.md"

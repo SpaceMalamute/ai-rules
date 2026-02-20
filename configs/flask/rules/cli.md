@@ -1,4 +1,5 @@
 ---
+description: "Flask CLI command patterns"
 paths:
   - "**/*.py"
 ---

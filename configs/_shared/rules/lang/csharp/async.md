@@ -1,4 +1,5 @@
 ---
+description: "C# async/await and Task patterns"
 paths:
   - "**/*.cs"
 ---

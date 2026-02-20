@@ -1,4 +1,5 @@
 ---
+description: "Frontend performance optimization patterns"
 paths:
   - "**/*.ts"
   - "**/*.tsx"

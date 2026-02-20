@@ -1,4 +1,5 @@
 ---
+description: "FastAPI response models and status codes"
 paths:
   - "**/*.py"
 ---

@@ -1,4 +1,5 @@
 ---
+description: "Angular Signals and reactivity patterns"
 paths:
   - "**/*.component.ts"
   - "**/*.component.html"

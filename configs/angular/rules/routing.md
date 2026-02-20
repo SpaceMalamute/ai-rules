@@ -1,4 +1,5 @@
 ---
+description: "Angular routing and lazy loading"
 paths:
   - "**/*.routes.ts"
   - "**/app.routes.ts"

@@ -1,4 +1,5 @@
 ---
+description: "FastAPI dependency injection system"
 paths:
   - "**/*.py"
 ---

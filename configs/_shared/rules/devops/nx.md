@@ -1,4 +1,5 @@
 ---
+description: "Nx monorepo workspace rules"
 paths:
   - "**/libs/**/*"
   - "**/apps/**/*"

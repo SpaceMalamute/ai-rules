@@ -1,4 +1,5 @@
 ---
+description: "Python configuration with pydantic-settings"
 paths:
   - "**/config.py"
   - "**/settings.py"

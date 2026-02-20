@@ -1,4 +1,5 @@
 ---
+description: "NestJS testing with Jest"
 paths:
   - "**/src/**/*.spec.ts"
   - "**/test/**/*.e2e-spec.ts"

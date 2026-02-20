@@ -1,4 +1,5 @@
 ---
+description: "Flask error handling and responses"
 paths:
   - "**/*.py"
 ---

@@ -1,4 +1,5 @@
 ---
+description: "ASP.NET Core API conventions and controllers"
 paths:
   - "**/src/WebApi/**/*.cs"
   - "**/src/**/Controllers/**/*.cs"

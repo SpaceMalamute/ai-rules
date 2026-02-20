@@ -1,4 +1,5 @@
 ---
+description: "Next.js data fetching and caching"
 paths:
   - "**/app/**/*.tsx"
   - "**/app/**/*.ts"

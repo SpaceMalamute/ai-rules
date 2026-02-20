@@ -1,4 +1,5 @@
 ---
+description: "Angular pipes and custom directives"
 paths:
   - "**/*.pipe.ts"
   - "**/*.directive.ts"

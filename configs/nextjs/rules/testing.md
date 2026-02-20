@@ -1,4 +1,5 @@
 ---
+description: "Next.js testing with Vitest and Playwright"
 paths:
   - "**/*.test.tsx"
   - "**/*.test.ts"

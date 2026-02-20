@@ -1,4 +1,5 @@
 ---
+description: "AdonisJS authentication and session management"
 paths:
   - "**/app/controllers/auth/**/*.ts"
   - "**/app/middleware/**/*.ts"
