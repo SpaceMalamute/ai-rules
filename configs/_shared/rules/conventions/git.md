@@ -3,7 +3,6 @@ description: "Git workflow, branching, and commit conventions"
 paths:
   - "**/.github/**"
   - "**/COMMIT_EDITMSG"
-  - "**/*.md"
   - "**/.husky/**"
   - "**/commitlint.config.*"
   - "**/release.config.*"

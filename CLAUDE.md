@@ -14,10 +14,13 @@ configs/
 ├── dotnet/           # .NET 9, Clean Architecture
 ├── fastapi/          # FastAPI + Pydantic v2
 ├── flask/            # Flask 3.0+ + Marshmallow
-└── _shared/          # Cross-tech conventions
+└── _shared/
+    ├── rules/        # Cross-tech conventions
+    └── skills/       # Interactive workflows (/review, /debug, ...)
 
 src/
 ├── adapters/         # Format adapters per AI tool
+│   ├── index.js      # Barrel export
 │   ├── base.js       # Abstract adapter
 │   ├── claude.js     # → .claude/rules/*.md
 │   ├── cursor.js     # → .cursor/rules/*.mdc
@@ -25,8 +28,10 @@ src/
 │   └── windsurf.js   # → .windsurf/rules/*.md
 ├── transformers/
 │   └── frontmatter.js # Parse/serialize YAML frontmatter
+├── index.js          # Module entry point
 ├── cli.js            # CLI entry point
 ├── config.js         # Constants, tech config
+├── tech-config.json  # Technology definitions (type, language)
 ├── installer.js      # Multi-target installation logic
 ├── merge.js          # Settings merge + manifest
 └── utils.js          # File utilities

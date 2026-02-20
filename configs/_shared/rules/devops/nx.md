@@ -5,7 +5,6 @@ paths:
   - "**/apps/**/*"
   - "**/nx.json"
   - "**/project.json"
-  - "*.ts"
 ---
 
 # Nx Monorepo Rules
