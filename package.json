@@ -1,6 +1,6 @@
 {
   "name": "@malamute/ai-rules",
-  "version": "1.6.3",
+  "version": "1.7.0",
   "description": "AI coding tool configurations (Claude, Cursor, Copilot, Windsurf) for Angular, Next.js, NestJS, .NET, Python and more",
   "type": "module",
   "main": "src/index.js",
