@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { colors, log, getFilesRecursive, backupFile } from './utils.js';
+import { colors, log, getFilesRecursive, backupFile, printCoffee } from './utils.js';
 import {
   CONFIGS_DIR,
   DEFAULT_TARGET,
@@ -520,6 +520,8 @@ export function init(techs, options) {
         console.log(`Backups saved in: ${path.join('.claude', 'backups')}`);
       }
     }
+
+    printCoffee();
   }
 
   console.log('');

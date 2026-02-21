@@ -1,5 +1,5 @@
 import { checkbox, input, select, Separator } from '@inquirer/prompts';
-import { colors, log } from './utils.js';
+import { colors, log, printBanner } from './utils.js';
 import { VERSION, AVAILABLE_TECHS, AVAILABLE_TARGETS, DEFAULT_TARGET, TECH_CONFIG } from './config.js';
 import { init, update, status, listTechnologies } from './installer.js';
 import { readManifest } from './merge.js';
@@ -90,7 +90,8 @@ async function askVariantQuestions(techs) {
 }
 
 async function interactiveInit() {
-  console.log(`\n${colors.bold('AI Rules')} - Interactive Setup\n`);
+  printBanner();
+  console.log(`${colors.bold('AI Rules')} - Interactive Setup\n`);
 
   const techs = await checkbox({
     message: 'Select technologies:',
