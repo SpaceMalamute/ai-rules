@@ -29,27 +29,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
     Credentials({
       async authorize(credentials) {
-        const { email, password } = credentials;
-        const user = await verifyCredentials(email, password);
-        if (!user) return null;
-        return user;
+        const user = await verifyCredentials(credentials.email, credentials.password);
+        return user ?? null;
       },
     }),
   ],
 });
 ```
 
-### Auth Config (for Edge)
+### Auth Config (Edge-Compatible)
 
 ```typescript
-// auth.config.ts
+// auth.config.ts — separated for Edge middleware compatibility
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
-  pages: {
-    signIn: '/login',
-    error: '/auth/error',
-  },
+  pages: { signIn: '/login', error: '/auth/error' },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
@@ -73,11 +68,11 @@ export const authConfig = {
       return session;
     },
   },
-  providers: [], // Configured in auth.ts
+  providers: [],
 } satisfies NextAuthConfig;
 ```
 
-### Route Handlers
+### Route Handler
 
 ```typescript
 // app/api/auth/[...nextauth]/route.ts
@@ -85,138 +80,21 @@ import { handlers } from '@/auth';
 export const { GET, POST } = handlers;
 ```
 
-## Middleware Protection
+## Protected Layout
 
 ```typescript
-// middleware.ts
-import { auth } from './auth';
-
-export default auth((req) => {
-  const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
-
-  const publicPaths = ['/login', '/register', '/'];
-  const isPublic = publicPaths.includes(nextUrl.pathname);
-
-  if (!isLoggedIn && !isPublic) {
-    return Response.redirect(new URL('/login', nextUrl));
-  }
-
-  // Role-based protection
-  if (nextUrl.pathname.startsWith('/admin')) {
-    if (req.auth?.user?.role !== 'admin') {
-      return Response.redirect(new URL('/forbidden', nextUrl));
-    }
-  }
-});
-
-export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-};
-```
-
-## Server Components
-
-### Get Session
-
-```typescript
-// app/dashboard/page.tsx
+// app/(protected)/layout.tsx — protects all child routes
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 
-export default async function DashboardPage() {
+export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-
-  if (!session) {
-    redirect('/login');
-  }
-
-  return (
-    <div>
-      <h1>Welcome, {session.user.name}</h1>
-    </div>
-  );
-}
-```
-
-### Protected Layout
-
-```typescript
-// app/(protected)/layout.tsx
-import { auth } from '@/auth';
-import { redirect } from 'next/navigation';
-
-export default async function ProtectedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const session = await auth();
-
-  if (!session) {
-    redirect('/login');
-  }
-
+  if (!session) redirect('/login');
   return <>{children}</>;
 }
 ```
 
-## Client Components
-
-### Sign In/Out
-
-```typescript
-'use client';
-
-import { signIn, signOut } from 'next-auth/react';
-
-export function LoginButton() {
-  return (
-    <button onClick={() => signIn('google', { callbackUrl: '/dashboard' })}>
-      Sign in with Google
-    </button>
-  );
-}
-
-export function LogoutButton() {
-  return (
-    <button onClick={() => signOut({ callbackUrl: '/' })}>
-      Sign out
-    </button>
-  );
-}
-```
-
-### Use Session Hook
-
-```typescript
-'use client';
-
-import { useSession } from 'next-auth/react';
-
-export function UserProfile() {
-  const { data: session, status } = useSession();
-
-  if (status === 'loading') {
-    return <Skeleton />;
-  }
-
-  if (!session) {
-    return <LoginButton />;
-  }
-
-  return (
-    <div>
-      <img src={session.user.image} alt={session.user.name} />
-      <span>{session.user.name}</span>
-    </div>
-  );
-}
-```
-
-## Server Actions
-
-### Login Action
+## Login Action (useActionState)
 
 ```typescript
 // app/login/actions.ts
@@ -237,21 +115,17 @@ export async function loginAction(
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return { error: 'Invalid credentials' };
-        default:
-          return { error: 'Something went wrong' };
-      }
+      return error.type === 'CredentialsSignin'
+        ? { error: 'Invalid credentials' }
+        : { error: 'Something went wrong' };
     }
     throw error;
   }
 }
 ```
 
-### Login Form
-
-```typescript
+```tsx
+// app/login/page.tsx
 'use client';
 
 import { useActionState } from 'react';
@@ -264,9 +138,7 @@ export function LoginForm() {
     <form action={action}>
       <input name="email" type="email" required />
       <input name="password" type="password" required />
-
       {state?.error && <p className="error">{state.error}</p>}
-
       <button type="submit" disabled={isPending}>
         {isPending ? 'Signing in...' : 'Sign in'}
       </button>
@@ -282,71 +154,36 @@ export function LoginForm() {
 import 'next-auth';
 
 declare module 'next-auth' {
-  interface User {
-    role: string;
-  }
-
+  interface User { role: string }
   interface Session {
-    user: User & {
-      id: string;
-      role: string;
-    };
+    user: User & { id: string; role: string };
   }
 }
 
 declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string;
-    role: string;
-  }
-}
-```
-
-## Session Provider
-
-```typescript
-// app/providers.tsx
-'use client';
-
-import { SessionProvider } from 'next-auth/react';
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
-}
-
-// app/layout.tsx
-import { Providers } from './providers';
-
-export default function RootLayout({ children }) {
-  return (
-    <html>
-      <body>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
+  interface JWT { id: string; role: string }
 }
 ```
 
 ## Anti-patterns
 
 ```typescript
-// BAD: Checking auth in client component for protection
+// BAD: Checking auth client-side for route protection
 'use client';
 export function ProtectedPage() {
   const { data: session } = useSession();
-  if (!session) return <Redirect />;  // Too late, page already loaded
+  if (!session) return <Redirect />;  // Page already loaded — too late
 }
 
-// GOOD: Check in middleware or server component
+// GOOD: Check in middleware or Server Component
 export default async function ProtectedPage() {
   const session = await auth();
   if (!session) redirect('/login');
 }
 
-// BAD: Exposing secrets
+// BAD: Returning sensitive fields
 const user = await db.user.findUnique({ where: { id } });
-return { ...user, password: user.password }; // Leaking password!
+return { ...user }; // Leaks password hash!
 
 // GOOD: Select only needed fields
 const user = await db.user.findUnique({
