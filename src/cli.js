@@ -1,6 +1,6 @@
-import { checkbox, input } from '@inquirer/prompts';
+import { checkbox, input, select } from '@inquirer/prompts';
 import { colors, log } from './utils.js';
-import { VERSION, AVAILABLE_TECHS, AVAILABLE_TARGETS, DEFAULT_TARGET } from './config.js';
+import { VERSION, AVAILABLE_TECHS, AVAILABLE_TARGETS, DEFAULT_TARGET, TECH_CONFIG } from './config.js';
 import { init, update, status, listTechnologies } from './installer.js';
 import { readManifest } from './merge.js';
 
@@ -59,6 +59,33 @@ ${colors.bold('Examples:')}
 `);
 }
 
+async function askVariantQuestions(techs) {
+  const techChoices = {};
+  for (const tech of techs) {
+    const config = TECH_CONFIG.technologies[tech];
+    if (!config?.variants) continue;
+
+    techChoices[tech] = {};
+    for (const [category, variant] of Object.entries(config.variants)) {
+      const choices = Object.entries(variant.options).map(([value, name]) => ({
+        name, value,
+      }));
+      if (variant.optional) {
+        choices.push({ name: 'None', value: '__none__' });
+      }
+
+      const answer = await select({
+        message: `${tech} — ${variant.message}:`,
+        choices,
+        default: variant.default,
+      });
+
+      techChoices[tech][category] = answer;
+    }
+  }
+  return techChoices;
+}
+
 async function interactiveInit() {
   console.log(`\n${colors.bold('AI Rules')} - Interactive Setup\n`);
 
@@ -83,6 +110,9 @@ async function interactiveInit() {
     log.error('No technology selected');
     process.exit(1);
   }
+
+  // Ask variant questions for techs that have them
+  const techChoices = await askVariantQuestions(techs);
 
   const targets = await checkbox({
     message: 'Select AI tools:',
@@ -127,6 +157,7 @@ async function interactiveInit() {
     targets,
     withSkills: extras.includes('skills'),
     withRules: extras.includes('rules'),
+    techChoices,
     all: false,
     dryRun: false,
     force: false,
@@ -215,6 +246,19 @@ export async function run(args) {
       process.exit(1);
     }
 
+    // Ask variant questions for new techs only
+    let newTechChoices = {};
+    try {
+      newTechChoices = await askVariantQuestions(newTechs);
+    } catch (_e) {
+      console.log('\nAborted.');
+      process.exit(0);
+    }
+
+    // Merge with existing choices from manifest
+    const existingChoices = manifest.options?.techChoices || {};
+    const mergedChoices = { ...existingChoices, ...newTechChoices };
+
     const allTechs = [...manifest.technologies, ...newTechs];
 
     const options = {
@@ -222,6 +266,7 @@ export async function run(args) {
       targets: manifest.targets || [DEFAULT_TARGET],
       withSkills: manifest.options?.withSkills ?? true,
       withRules: manifest.options?.withRules ?? true,
+      techChoices: mergedChoices,
       dryRun: args.includes('--dry-run'),
       force: args.includes('--force'),
     };

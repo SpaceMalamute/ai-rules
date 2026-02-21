@@ -6,6 +6,7 @@ import {
   AVAILABLE_TECHS,
   DEFAULT_TARGET,
   VERSION,
+  TECH_CONFIG,
   getRulePathsToInclude,
   shouldIncludeRule,
 } from './config.js';
@@ -33,6 +34,28 @@ function writeFile(destFile, content, options = {}) {
 }
 
 /**
+ * Check if a tech rule file should be included based on variant choices.
+ * Files in variant directories are filtered; other files always pass.
+ */
+function shouldIncludeVariant(relativePath, tech, options) {
+  const techConfig = TECH_CONFIG.technologies[tech];
+  if (!techConfig?.variants) return true;
+
+  const choices = options.techChoices?.[tech];
+  if (!choices) return true; // No choices = install all (non-interactive)
+
+  for (const [category, selected] of Object.entries(choices)) {
+    if (relativePath.startsWith(category + '/')) {
+      if (selected === '__none__') return false;
+      const fileName = path.basename(relativePath, path.extname(relativePath));
+      return fileName === selected;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Install tech rules for a specific adapter target.
  * Reads source files, transforms via adapter, writes to target output dir.
  */
@@ -48,6 +71,8 @@ function installTechRules(tech, adapter, adapterClass, targetDir, options) {
   const relativeFiles = getFilesRecursive(rulesDir);
 
   for (const relativePath of relativeFiles) {
+    if (!shouldIncludeVariant(relativePath, tech, options)) continue;
+
     const srcFile = path.join(rulesDir, relativePath);
     const content = fs.readFileSync(srcFile, 'utf8');
 
@@ -226,7 +251,7 @@ function installForTarget(target, techs, targetDir, options) {
     // Rules
     if (adapterClass.supports.rules) {
       const { operations, globalRules } = installTechRules(
-        tech, adapter, adapterClass, targetDir, { dryRun, backup }
+        tech, adapter, adapterClass, targetDir, { dryRun, backup, techChoices: options.techChoices }
       );
       allOperations.push(...operations);
       allGlobalRules.push(...globalRules);
@@ -424,6 +449,7 @@ export function init(techs, options) {
       backup,
       withSkills: options.withSkills,
       withRules: options.withRules,
+      techChoices: options.techChoices,
     });
     allOperations.push(...ops);
     console.log('');
@@ -438,6 +464,7 @@ export function init(techs, options) {
       options: {
         withSkills: options.withSkills,
         withRules: options.withRules,
+        techChoices: options.techChoices || {},
       },
     },
     dryRun
@@ -507,6 +534,7 @@ export async function update(options) {
     targets: manifest.targets || [DEFAULT_TARGET],
     withSkills: manifest.options?.withSkills || false,
     withRules: manifest.options?.withRules || false,
+    techChoices: manifest.options?.techChoices || {},
     dryRun,
     force,
   };
