@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run dev)",
+      "Bash(bun run build)",
+      "Bash(bun run test*)",
+      "Bash(bun run lint*)",
+      "Bash(bun run format*)",
+      "Bash(bun test*)",
+      "Bash(bun add *)",
+      "Bash(bun install)",
+      "Bash(bun remove *)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run test*)",
+      "Bash(npm run lint*)",
+      "Bash(npm install *)",
+      "Bash(npm ci)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Bash(git push)",
+      "Bash(rm -rf *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)"
+    ]
+  },
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

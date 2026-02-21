@@ -2,15 +2,46 @@
   "technologies": {
     "angular": {
       "type": "frontend",
-      "language": "typescript"
+      "language": "typescript",
+      "variants": {
+        "state": {
+          "message": "State management",
+          "options": {
+            "signal-store": "NgRx SignalStore (modern, signal-based)",
+            "state": "NgRx Classic (Redux pattern, DevTools)"
+          },
+          "default": "signal-store"
+        }
+      }
     },
     "nextjs": {
       "type": "fullstack",
-      "language": "typescript"
+      "language": "typescript",
+      "variants": {
+        "state": {
+          "message": "State management",
+          "options": {
+            "zustand": "Zustand (lightweight, recommended)",
+            "redux-toolkit": "Redux Toolkit (complex state, middleware)"
+          },
+          "default": "zustand",
+          "optional": true
+        }
+      }
     },
     "nestjs": {
       "type": "backend",
-      "language": "typescript"
+      "language": "typescript",
+      "variants": {
+        "database": {
+          "message": "Database ORM",
+          "options": {
+            "prisma": "Prisma (type-safe, schema-driven)",
+            "typeorm": "TypeORM (decorator-based, mature)"
+          },
+          "default": "prisma"
+        }
+      }
     },
     "dotnet": {
       "type": "backend",
@@ -33,6 +64,10 @@
       "language": "typescript"
     },
     "hono": {
+      "type": "backend",
+      "language": "typescript"
+    },
+    "elysia": {
       "type": "backend",
       "language": "typescript"
     }

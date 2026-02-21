@@ -64,6 +64,7 @@ npx @malamute/ai-rules <command>
 | **FastAPI**  | Pydantic v2 + SQLAlchemy 2.0 + pytest     | 0.115+  |
 | **Flask**    | Marshmallow + SQLAlchemy 2.0 + pytest     | 3.0+    |
 | **Hono**     | Zod + Vitest + Multi-runtime              | 4+      |
+| **Elysia**   | TypeBox + Bun + Eden Treaty               | 1.4+    |
 
 ## Commands
 
@@ -401,6 +402,19 @@ ai-rules update
 | Routing    | Chained route modules with RPC type inference   |
 | Tests      | Vitest + app.request() / testClient()           |
 | Runtimes   | Cloudflare Workers, Node.js, Bun, Deno          |
+
+</details>
+
+<details>
+<summary><strong>Elysia</strong></summary>
+
+| Aspect     | Convention                                      |
+| ---------- | ----------------------------------------------- |
+| Framework  | Elysia v1.4 with Bun runtime                   |
+| Validation | TypeBox (built-in Elysia.t) + Standard Schema   |
+| Routing    | Method chaining with end-to-end type inference  |
+| Tests      | bun:test + .handle() / Eden Treaty              |
+| Client     | Eden Treaty for type-safe client-server         |
 
 </details>
 

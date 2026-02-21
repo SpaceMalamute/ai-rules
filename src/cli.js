@@ -32,6 +32,7 @@ ${colors.bold('Technologies:')}
   fastapi    FastAPI + SQLAlchemy + Pydantic
   flask      Flask + SQLAlchemy + Marshmallow
   hono       Hono + Zod + Multi-runtime
+  elysia     Elysia + TypeBox + Bun
 
 ${colors.bold('AI Targets:')}
   claude     Claude Code (.claude/rules/)
@@ -74,6 +75,7 @@ async function interactiveInit() {
       { name: 'FastAPI - FastAPI + SQLAlchemy 2.0 + Pydantic v2', value: 'fastapi' },
       { name: 'Flask - Flask + SQLAlchemy 2.0 + Marshmallow', value: 'flask' },
       { name: 'Hono - Hono v4 + Zod + Multi-runtime', value: 'hono' },
+      { name: 'Elysia - Elysia v1.4 + TypeBox + Bun + Eden', value: 'elysia' },
     ],
   });
 
