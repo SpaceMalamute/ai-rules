@@ -31,6 +31,10 @@
     "react": {
       "type": "frontend",
       "language": "typescript"
+    },
+    "hono": {
+      "type": "backend",
+      "language": "typescript"
     }
   },
   "ruleMapping": {

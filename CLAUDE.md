@@ -14,6 +14,7 @@ configs/
 ├── dotnet/           # .NET 9, Clean Architecture
 ├── fastapi/          # FastAPI + Pydantic v2
 ├── flask/            # Flask 3.0+ + Marshmallow
+├── hono/             # Hono v4+ + Zod + Multi-runtime
 └── _shared/
     ├── rules/        # Cross-tech conventions
     └── skills/       # Interactive workflows (/review, /debug, ...)
