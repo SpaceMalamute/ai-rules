@@ -33,7 +33,7 @@ src/
 ├── index.js          # Module entry point
 ├── cli.js            # CLI entry point
 ├── config.js         # Constants, tech config
-├── tech-config.json  # Technology definitions (type, language)
+├── tech-config.json  # Technology definitions (type, language, variants)
 ├── installer.js      # Multi-target installation logic
 ├── merge.js          # Settings merge + manifest
 └── utils.js          # File utilities

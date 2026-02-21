@@ -30,6 +30,8 @@ npx @malamute/ai-rules init angular nestjs
 npx @malamute/ai-rules init angular --targets claude,cursor
 ```
 
+Interactive mode asks you to pick variants (e.g., Zustand vs Redux Toolkit for Next.js, Prisma vs TypeORM for NestJS) so only the relevant rules get installed.
+
 That's it. Your AI tools now understand your stack.
 
 ## Installation
@@ -86,7 +88,7 @@ ai-rules list               # List available technologies
 | `--dir <directory>` | Install to a specific directory                           |
 | `--force`           | Overwrite without creating backups                        |
 
-By default, `init` installs everything (skills + shared rules) for Claude Code. Use `--targets` to install for multiple AI tools, and `--minimal` to skip extras.
+By default, `init` installs everything (skills + shared rules) for Claude Code. Use `--targets` to install for multiple AI tools, and `--minimal` to skip extras. In interactive mode, technologies with variants (Angular, Next.js, NestJS) prompt you to choose which variant to install.
 
 ## What Gets Installed
 
