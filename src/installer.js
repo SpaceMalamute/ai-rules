@@ -3,7 +3,6 @@ import path from 'path';
 import { colors, log, getFilesRecursive, backupFile } from './utils.js';
 import {
   CONFIGS_DIR,
-  AVAILABLE_TECHS,
   DEFAULT_TARGET,
   VERSION,
   TECH_CONFIG,
@@ -331,22 +330,43 @@ function installForTarget(target, techs, targetDir, options) {
 export function listTechnologies() {
   console.log(`\n${colors.bold('Available technologies:')}\n`);
 
-  const techInfo = {
-    angular: 'Angular 21 + Nx + NgRx + Signals',
-    react: 'React 19 + Vite + Vitest',
-    nextjs: 'Next.js 15 + React 19 + App Router',
-    nestjs: 'NestJS 11 + Prisma/TypeORM + Passport',
-    adonisjs: 'AdonisJS 6 + Lucid ORM + VineJS',
-    dotnet: '.NET 9 + ASP.NET Core + EF Core',
-    fastapi: 'FastAPI + SQLAlchemy 2.0 + Pydantic v2',
-    flask: 'Flask + SQLAlchemy 2.0 + Marshmallow',
-  };
+  const categories = [
+    {
+      label: 'Frontend',
+      techs: [
+        { key: 'angular', desc: 'Angular 21 + Nx + NgRx + Signals' },
+        { key: 'react', desc: 'React 19 + Vite + Vitest' },
+      ],
+    },
+    {
+      label: 'Fullstack',
+      techs: [
+        { key: 'nextjs', desc: 'Next.js 15 + React 19 + App Router' },
+      ],
+    },
+    {
+      label: 'Backend',
+      techs: [
+        { key: 'nestjs', desc: 'NestJS 11 + Prisma/TypeORM + Passport' },
+        { key: 'adonisjs', desc: 'AdonisJS 6 + Lucid ORM + VineJS' },
+        { key: 'hono', desc: 'Hono v4 + Zod + Multi-runtime' },
+        { key: 'elysia', desc: 'Elysia v1.4 + TypeBox + Bun + Eden' },
+        { key: 'dotnet', desc: '.NET 9 + ASP.NET Core + EF Core' },
+        { key: 'fastapi', desc: 'FastAPI + SQLAlchemy 2.0 + Pydantic v2' },
+        { key: 'flask', desc: 'Flask + SQLAlchemy 2.0 + Marshmallow' },
+      ],
+    },
+  ];
 
-  for (const tech of AVAILABLE_TECHS) {
-    const techPath = path.join(CONFIGS_DIR, tech);
-    const exists = fs.existsSync(techPath);
-    const indicator = exists ? colors.green('✓') : colors.red('✗');
-    console.log(`  ${indicator} ${colors.bold(tech.padEnd(10))} ${techInfo[tech] || ''}`);
+  for (const category of categories) {
+    console.log(`  ${colors.dim(category.label)}`);
+    for (const { key, desc } of category.techs) {
+      const techPath = path.join(CONFIGS_DIR, key);
+      const exists = fs.existsSync(techPath);
+      const indicator = exists ? colors.green('✓') : colors.red('✗');
+      console.log(`    ${indicator} ${colors.bold(key.padEnd(10))} ${desc}`);
+    }
+    console.log('');
   }
 
   console.log(`\n${colors.bold('Shared resources:')}\n`);

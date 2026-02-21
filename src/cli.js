@@ -1,4 +1,4 @@
-import { checkbox, input, select } from '@inquirer/prompts';
+import { checkbox, input, select, Separator } from '@inquirer/prompts';
 import { colors, log } from './utils.js';
 import { VERSION, AVAILABLE_TECHS, AVAILABLE_TARGETS, DEFAULT_TARGET, TECH_CONFIG } from './config.js';
 import { init, update, status, listTechnologies } from './installer.js';
@@ -23,16 +23,19 @@ ${colors.bold('Commands:')}
   list      List available technologies
 
 ${colors.bold('Technologies:')}
+  ${colors.dim('Frontend')}
   angular    Angular 21 + Nx + NgRx
   react      React 19 + Vite + Vitest
+  ${colors.dim('Fullstack')}
   nextjs     Next.js 15 + React 19
+  ${colors.dim('Backend')}
   nestjs     NestJS + Prisma/TypeORM
   adonisjs   AdonisJS 6 + Lucid + VineJS
+  hono       Hono + Zod + Multi-runtime
+  elysia     Elysia + TypeBox + Bun
   dotnet     .NET 9 + EF Core
   fastapi    FastAPI + SQLAlchemy + Pydantic
   flask      Flask + SQLAlchemy + Marshmallow
-  hono       Hono + Zod + Multi-runtime
-  elysia     Elysia + TypeBox + Bun
 
 ${colors.bold('AI Targets:')}
   claude     Claude Code (.claude/rules/)
@@ -93,16 +96,19 @@ async function interactiveInit() {
     message: 'Select technologies:',
     instructions: '(Space to select, Enter to confirm)',
     choices: [
+      new Separator('── Frontend ──'),
       { name: 'Angular - Angular 21 + Nx + NgRx + Signals', value: 'angular' },
       { name: 'React - React 19 + Vite + Vitest', value: 'react' },
+      new Separator('── Fullstack ──'),
       { name: 'Next.js - Next.js 15 + React 19 + App Router', value: 'nextjs' },
+      new Separator('── Backend ──'),
       { name: 'NestJS - NestJS 11 + Prisma/TypeORM + Passport', value: 'nestjs' },
       { name: 'AdonisJS - AdonisJS 6 + Lucid ORM + VineJS', value: 'adonisjs' },
+      { name: 'Hono - Hono v4 + Zod + Multi-runtime', value: 'hono' },
+      { name: 'Elysia - Elysia v1.4 + TypeBox + Bun + Eden', value: 'elysia' },
       { name: '.NET - .NET 9 + ASP.NET Core + EF Core', value: 'dotnet' },
       { name: 'FastAPI - FastAPI + SQLAlchemy 2.0 + Pydantic v2', value: 'fastapi' },
       { name: 'Flask - Flask + SQLAlchemy 2.0 + Marshmallow', value: 'flask' },
-      { name: 'Hono - Hono v4 + Zod + Multi-runtime', value: 'hono' },
-      { name: 'Elysia - Elysia v1.4 + TypeBox + Bun + Eden', value: 'elysia' },
     ],
   });
 
