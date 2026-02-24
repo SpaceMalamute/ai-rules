@@ -19,16 +19,6 @@ paths:
 - Use query params for filtering: `/users?status=active&role=admin`
 - Non-CRUD actions as POST: `/orders/:id/cancel`
 
-## HTTP Methods
-
-| Method | Usage | Idempotent | Success Code |
-|--------|-------|------------|-------------|
-| GET | Read | Yes | 200 |
-| POST | Create | No | 201 |
-| PUT | Full replace | Yes | 200 |
-| PATCH | Partial update | No | 200 |
-| DELETE | Remove | Yes | 204 |
-
 ## Status Codes (non-obvious)
 
 | Code | When |

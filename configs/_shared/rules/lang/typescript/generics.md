@@ -33,17 +33,7 @@ paths:
 
 ## Utility Types
 
-| Need | Use |
-|------|-----|
-| Make all optional | `Partial<T>` |
-| Make all required | `Required<T>` |
-| Subset of keys | `Pick<T, K>` |
-| Exclude keys | `Omit<T, K>` |
-| Map values | `Record<K, V>` |
-| Extract from union | `Extract<U, T>` |
-| Remove from union | `Exclude<U, T>` |
-| Unwrap promise | `Awaited<T>` |
-| Function return | `ReturnType<T>` |
+Prefer built-in utility types (`Partial`, `Pick`, `Omit`, `Record`, `Extract`, `Exclude`) over manual type manipulation.
 
 ## Anti-patterns
 

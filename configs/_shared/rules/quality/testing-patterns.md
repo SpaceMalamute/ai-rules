@@ -16,11 +16,9 @@ paths:
 
 # Testing Principles
 
-## Test Structure (AAA Pattern)
+## Test Structure
 
-1. **Arrange** - Set up test data and dependencies
-2. **Act** - Execute the code under test
-3. **Assert** - Verify the expected outcome
+Follow AAA (Arrange-Act-Assert) structure.
 
 ## Naming Conventions
 

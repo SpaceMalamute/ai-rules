@@ -25,13 +25,7 @@ Use modern syntax (Python 3.10+):
 
 ## Naming Conventions
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| Modules | snake_case | `user_service.py` |
-| Classes | PascalCase | `UserRepository` |
-| Functions | snake_case | `get_user_by_id` |
-| Constants | UPPER_SNAKE | `MAX_RETRY_COUNT` |
-| Private | _prefix | `_validate_input` |
+Follow PEP 8 naming conventions.
 
 ## Code Style
 

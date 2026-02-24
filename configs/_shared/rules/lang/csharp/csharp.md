@@ -15,16 +15,7 @@ paths:
 
 ## Naming Conventions
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Classes | PascalCase | `UserService` |
-| Interfaces | IPascalCase | `IUserRepository` |
-| Methods | PascalCase | `GetUserById` |
-| Properties | PascalCase | `FirstName` |
-| Private fields | _camelCase | `_userRepository` |
-| Local variables | camelCase | `currentUser` |
-| Constants | PascalCase | `MaxRetryCount` |
-| Async methods | Suffix `Async` | `GetUserAsync` |
+Follow .NET naming conventions (PascalCase public, _camelCase private fields).
 
 ## Modern C# Features (Prefer These)
 
