@@ -10,100 +10,37 @@ paths:
 
 # Software Engineering Principles
 
-## YAGNI — Don't Build for Hypothetical Futures
+## YAGNI — Do Not Build for Hypothetical Futures
 
-```typescript
-// BAD - Premature abstraction
-class AbstractDataProcessor<T, R, C extends Config> {
-  // 200 lines of "flexible" code no one uses
-}
-
-// GOOD - Concrete implementation
-function processUserData(users: User[]): ProcessedUser[] {
-  return users.map(u => ({ ...u, fullName: `${u.first} ${u.last}` }));
-}
-```
+- Implement only what is needed now, not what might be needed later
+- DO NOT create abstract base classes with one implementation
+- DO NOT add configuration for things that have only one value
+- Refactor when the need arises, not before
 
 ## KISS — Simplest Solution That Works
 
-```typescript
-// BAD - Over-engineered
-class StringUtils {
-  private static instance: StringUtils;
-  private constructor() {}
-  static getInstance(): StringUtils {
-    if (!this.instance) this.instance = new StringUtils();
-    return this.instance;
-  }
-  capitalize(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-}
-
-// GOOD - Simple function
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-```
+- Prefer a plain function over a singleton class
+- Prefer explicit code over clever abstractions
+- If it is hard to explain, it is too complex — simplify
 
 ## SoC — Separate Validation, Business Logic, Data Access
 
-```typescript
-// BAD - Mixed concerns
-async function handleUserRegistration(req: Request, res: Response) {
-  if (!req.body.email.includes('@')) {
-    return res.status(400).json({ error: 'Invalid email' });
-  }
-  const hashedPassword = await bcrypt.hash(req.body.password, 10);
-  const user = await db.query(
-    'INSERT INTO users (email, password) VALUES ($1, $2)',
-    [req.body.email, hashedPassword]
-  );
-  return res.json({ id: user.id, email: user.email });
-}
+- Validation belongs at the boundary (controller/handler)
+- Business logic belongs in services
+- Data access belongs in repositories
+- DO NOT mix HTTP concerns into service layer
 
-// GOOD - Separated concerns
-// validation.ts
-const userSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-});
+## DRY — But Duplication Beats Wrong Abstraction
 
-// user.service.ts
-class UserService {
-  async register(data: CreateUserDto): Promise<User> {
-    const hashedPassword = await this.hashPassword(data.password);
-    return this.userRepository.create({ ...data, password: hashedPassword });
-  }
-}
+- Extract shared code only when contexts are truly identical
+- Two similar functions with different domain contexts are not duplication
+- The Rule of Three: tolerate duplication until the third occurrence, then abstract
 
-// user.controller.ts
-async function register(req: Request, res: Response) {
-  const data = userSchema.parse(req.body);
-  const user = await userService.register(data);
-  return res.json(toUserResponse(user));
-}
-```
+## Decision Matrix
 
-## DRY — But Duplication > Wrong Abstraction
-
-```typescript
-// BAD - Premature DRY (wrong abstraction)
-function processEntity(entity: User | Product | Order, action: string) {
-  // 100 lines of if/else handling all cases
-}
-
-// GOOD - Some duplication is OK when contexts differ
-function processUser(user: User) { /* user-specific logic */ }
-function processProduct(product: Product) { /* product-specific logic */ }
-function processOrder(order: Order) { /* order-specific logic */ }
-```
-
-## Summary
-
-| Principle | Remember |
-|-----------|----------|
-| YAGNI | Build what you need now, not what you might need |
-| KISS | Simple > Clever. If it's hard to explain, simplify it |
-| SoC | Validation, business logic, data access = separate |
-| DRY | Avoid duplication, but not at the cost of clarity |
+| Principle | DO | DO NOT |
+|-----------|-----|---------|
+| YAGNI | Build what you need now | Add "just in case" features |
+| KISS | Write simple, readable code | Over-engineer with patterns |
+| SoC | Keep layers independent | Mix HTTP, business, and data logic |
+| DRY | Extract truly shared logic | Force unrelated code into one abstraction |

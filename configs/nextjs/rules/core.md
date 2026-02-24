@@ -7,111 +7,74 @@ alwaysApply: true
 
 ## Stack
 
-- Next.js 15+ (App Router)
+- Next.js 15+ (App Router only) with Turbopack
 - React 19+
 - TypeScript strict mode
 - Nx monorepo
 
-## Architecture - Nx
+## Rendering Model
 
-```
-apps/[app-name]/app/          # App Router
-  (routes)/                   # Route groups (not in URL)
-    users/
-      page.tsx                # /users
-      _components/            # Private, co-located
-  layout.tsx
-  error.tsx
-  loading.tsx
+- **PPR (Partial Prerendering)** — static shell + dynamic streaming holes
+- Enable `experimental: { ppr: true }` for Partial Prerendering
+- Enable `dynamicIO` in `next.config.ts` for opt-in caching/dynamic behavior
+- Functions using dynamic APIs (`cookies()`, `headers()`, `searchParams`) render dynamically; use `"use cache"` to opt specific functions/components into caching
+- Use `<Suspense>` to define dynamic holes within a static page
 
-libs/[domain]/
-  feature/                    # Feature logic
-  ui/                         # Presentational components
-  data-access/                # API, server actions
-  util/                       # Helpers
-```
+## Architecture — Nx
 
-### Folder Conventions
+| Folder | Purpose |
+|--------|---------|
+| `apps/[app]/app/` | App Router — routes, layouts, pages |
+| `apps/[app]/app/(group)/` | Route groups (not in URL) |
+| `apps/[app]/app/_components/` | Private co-located components |
+| `libs/[domain]/feature/` | Feature logic |
+| `libs/[domain]/ui/` | Presentational components |
+| `libs/[domain]/data-access/` | API, server actions |
+| `libs/[domain]/util/` | Helpers |
 
-| Pattern | Meaning |
-|---------|---------|
-| `_folder/` | Private - co-located, not a route |
-| `(folder)/` | Route group - organizational only |
-| `[param]/` | Dynamic segment |
-| `[...param]/` | Catch-all segment |
-
-## Core Principles
-
-### Server vs Client Components
+## Server vs Client Components
 
 | Server (default) | Client (`'use client'`) |
 |------------------|-------------------------|
-| Fetch data, access DB | useState, useEffect, hooks |
-| Use secrets/env vars | Event handlers (onClick) |
-| Static content | Browser APIs |
-| No hooks/events | Interactive UI |
+| Data fetching, DB access | useState, useEffect, hooks |
+| Secrets / env vars | Event handlers, browser APIs |
+| Heavy deps that stay server-side | Interactive UI "islands" |
 
-### Data Fetching
+DO push `'use client'` to the **leaf** — keep the boundary as small as possible.
 
-- **Read**: Server Components with `fetch()` or DB
-- **Mutations**: Server Actions with `'use server'`
-- **Revalidation**: `revalidatePath()` or `revalidateTag()`
+## React 19 Changes
 
-### React 19 Hooks
-
-- `useActionState` - Form state + pending
-- `useOptimistic` - Optimistic UI updates
-- `use()` - Unwrap promises/context
+- `ref` is a regular prop — DO NOT use `forwardRef`
+- `useActionState` replaces `useFormState` (deprecated)
+- `useOptimistic` for optimistic UI
+- `use()` to unwrap promises/context in client components
 
 ## Code Style
 
-- One component per file
-- Named exports for components
-- Default export only for `page.tsx`, `layout.tsx`
-- Files: `kebab-case.tsx`, Components: `PascalCase`
-- Props interface above component
+- One component per file, named export
+- Default export ONLY for `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`
+- Files: `kebab-case.tsx` — Components: `PascalCase` — Hooks: `useCamelCase`
+- Props interface defined above component
 
-### Naming
+## Caching (Next.js 15)
 
-| Element | Convention |
-|---------|------------|
-| Components | `PascalCase` |
-| Files | `kebab-case.tsx` |
-| Hooks | `useCamelCase` |
-| Server Actions | `camelCase` |
-| Route folders | `kebab-case/` |
+- All caching is **opt-in** (not opt-out like Next.js 14)
+- `"use cache"` directive + `cacheTag()` + `cacheLife()` for granular control
+- `revalidateTag()` for on-demand invalidation
 
-### Error Handling
+## Performance
 
-- `error.tsx` - Error boundary (must be client component)
-- `loading.tsx` - Suspense loading state
-- `not-found.tsx` - 404 page
+- Keep most UI as Server Components
+- `next/dynamic` for heavy client components
+- Always use `next/image` and `next/link`
+- DO NOT use `useEffect` for data fetching
 
 ## Commands
 
 ```bash
-nx serve [app]              # Dev server
+nx serve [app]              # Dev server (Turbopack)
 nx build [app] --configuration=production
 nx test [lib]               # Unit tests
 nx affected -t test         # Test affected
 nx e2e [app]-e2e            # E2E tests
 ```
-
-## Caching (Next.js 15)
-
-- Default: `staleTime=0` - always fresh data on navigation
-- Static routes cached, dynamic routes not cached
-- Route segment config:
-  - `export const dynamic = 'force-dynamic'` - SSR
-  - `export const revalidate = 60` - ISR (seconds)
-  - `export const dynamic = 'force-static'` - SSG
-- `"use cache"` directive for granular caching
-- `fetch(url, { next: { revalidate: 60 } })` - per-request
-
-## Performance
-
-- Keep most UI as Server Components
-- Add `'use client'` only for interactive "islands"
-- `next/dynamic` for heavy client components
-- Always use `next/image` and `next/link`
-- Never `useEffect` for data fetching

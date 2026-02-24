@@ -7,89 +7,62 @@ alwaysApply: true
 
 ## Stack
 
-- AdonisJS 6+
-- TypeScript strict mode
-- Node.js 20+
-- Japa (test framework)
-- Lucid ORM
+- AdonisJS 6+ with TypeScript strict mode
+- Node.js 20+, Lucid ORM, VineJS, Japa test runner
 
-## Architecture
+## Layer Responsibilities
 
-```
-├── app/
-│   ├── controllers/
-│   ├── models/
-│   ├── services/
-│   ├── validators/
-│   ├── middleware/
-│   ├── exceptions/
-│   └── mails/
-├── config/
-├── database/
-│   ├── migrations/
-│   ├── seeders/
-│   └── factories/
-├── resources/
-│   └── views/
-├── start/
-│   ├── routes.ts
-│   ├── kernel.ts
-│   └── events.ts
-├── tests/
-└── adonisrc.ts
-```
+| Layer | Responsibility | Anti-pattern |
+|-------|---------------|-------------|
+| Controller | HTTP handling only, delegates to services | Business logic in controllers |
+| Service | Business logic, orchestration | Direct HTTP access (`request`, `response`) |
+| Model | Data structure, relationships, hooks | Query logic outside model/service |
+| Validator | Input validation via VineJS | Manual `if` checks in controllers |
+| Middleware | Cross-cutting concerns (auth, logging) | Business logic in middleware |
+
+## Dependency Injection
+
+- Use `@inject()` on classes for constructor-based DI via the IoC container
+- Use `@inject()` on individual methods for method-level DI when constructor DI is not appropriate
+- NEVER instantiate services manually (`new Service()`) -- breaks testability
+
+## Naming Conventions
+
+| Artifact | Convention | Example |
+|----------|-----------|---------|
+| Controller | PascalCase, plural | `UsersController` |
+| Model | PascalCase, singular | `User` |
+| Validator | Action + Model + `Validator` | `CreateUserValidator` |
+| Service | Model + `Service` | `UserService` |
+| Middleware | Purpose + `Middleware` | `AdminMiddleware` |
+| Migration | `TIMESTAMP_verb_table_table` | `1234_create_users_table` |
 
 ## Request Lifecycle
 
-```
-Request → Global Middleware → Route Middleware → Controller → Response
-```
+Request --> Server Middleware --> Router Middleware --> Route Middleware --> Controller --> Response
 
-## Core Principles
+## Routing
 
-### Layer Responsibilities
+- Use lazy controller imports: `const UsersController = () => import('#controllers/users_controller')`
+- Use `router.resource()` for CRUD, `.apiOnly()` for API-only resources
+- Group routes with shared middleware via `router.group().use()`
 
-| Layer | Responsibility |
-|-------|---------------|
-| Controller | HTTP handling, delegates to services |
-| Service | Business logic |
-| Model | Data structure, relationships, hooks |
-| Validator | Input validation with VineJS |
+## Error Handling
 
-### Naming Conventions
-
-- Controllers: `UsersController` (plural)
-- Models: `User` (singular)
-- Validators: `CreateUserValidator`
-- Migrations: `TIMESTAMP_create_users_table`
-
-### Dependency Injection
-
-Use the IoC container:
-```typescript
-@inject()
-export default class UsersController {
-  constructor(private userService: UserService) {}
-}
-```
+- Extend `Exception` from `@adonisjs/core/exceptions` for domain errors
+- Set `static status` and `static code` on custom exceptions
+- Let AdonisJS exception handler convert exceptions to HTTP responses
 
 ## Commands
 
 ```bash
-node ace serve --watch     # Dev server
-node ace build             # Production build
-node ace test              # Run tests
-node ace make:controller   # Generate controller
-node ace make:model        # Generate model
-node ace make:validator    # Generate validator
-node ace make:service      # Generate service
-node ace migration:run     # Run migrations
+node ace serve --watch          # Dev server
+node ace build                  # Production build
+node ace test                   # Run tests
+node ace make:controller        # Generate artifacts
+node ace make:model
+node ace make:service
+node ace make:validator
+node ace migration:run
 node ace migration:rollback
 ```
-
-## Code Style
-
-- Use `@inject()` decorator for DI
-- Async methods return `Promise<T>`
-- Use `HttpContext` for request/response
-- Validators use VineJS schema

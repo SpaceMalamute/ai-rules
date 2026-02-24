@@ -9,162 +9,46 @@ paths:
 
 # Elysia Validation
 
-## TypeBox Schema (Elysia.t)
+## TypeBox is Native
 
-### GOOD
+Use `t` from `elysia` (re-exported TypeBox) — do NOT use Zod or other validators as they break Elysia's type inference pipeline. Standard Schema support exists but loses Eden type narrowing.
 
-```typescript
-import { Elysia, t } from 'elysia'
+## Validation Targets
 
-const app = new Elysia()
-  .post('/users', ({ body }) => createUser(body), {
-    body: t.Object({
-      username: t.String({ minLength: 3 }),
-      email: t.String({ format: 'email' }),
-      age: t.Optional(t.Number({ minimum: 0 })),
-    }),
-    response: {
-      200: t.Object({
-        id: t.String(),
-        username: t.String(),
-      }),
-      400: t.Object({
-        error: t.String(),
-      }),
-    },
-  })
-```
+| Target | Purpose | Key Types |
+|--------|---------|-----------|
+| `body` | Request body | `t.Object()`, `t.Array()` |
+| `query` | Query string | `t.Object()` with `t.Optional()`, use `t.Numeric()` for number coercion |
+| `params` | Path parameters | `t.Object()`, use `t.Numeric()` for numeric IDs |
+| `headers` | Request headers | `t.Object()` for required headers like API keys |
+| `response` | Response per status | `{ 200: t.Object(...), 404: t.Object(...) }` |
 
-### BAD
-
-```typescript
-// BAD: Manual validation instead of schema
-app.post('/users', ({ body }) => {
-  if (!body.username || body.username.length < 3) {
-    throw new Error('Invalid username')
-  }
-  return createUser(body)
-})
-```
-
-## Multi-Target Validation
-
-### GOOD
-
-```typescript
-app.get('/search', ({ query }) => search(query), {
-  query: t.Object({
-    term: t.String(),
-    page: t.Optional(t.Numeric({ default: 1 })),
-    limit: t.Optional(t.Numeric({ default: 20 })),
-  }),
-})
-
-app.get('/users/:id', ({ params: { id } }) => getUser(id), {
-  params: t.Object({
-    id: t.Numeric(),
-  }),
-})
-
-app.get('/api/data', ({ headers }) => getData(headers), {
-  headers: t.Object({
-    'x-api-key': t.String(),
-  }),
-})
-```
+Always define `response` schemas — they drive OpenAPI docs and enable typed error responses with `status()`.
 
 ## Reference Models
 
-### GOOD
+Register reusable schemas with `.model()` and reference by string name in route config:
 
 ```typescript
-// Define reusable models once
-const app = new Elysia()
-  .model({
-    'user.create': t.Object({
-      username: t.String(),
-      email: t.String({ format: 'email' }),
-      password: t.String({ minLength: 8 }),
-    }),
-    'user.response': t.Object({
-      id: t.String(),
-      username: t.String(),
-      email: t.String(),
-    }),
-  })
-  .post('/users', ({ body }) => createUser(body), {
-    body: 'user.create',
-    response: { 200: 'user.response' },
-  })
+.model({ 'user.create': t.Object({...}), 'user.response': t.Object({...}) })
+.post('/users', handler, { body: 'user.create', response: { 200: 'user.response' } })
 ```
 
-## Extracting Types from Schemas
+## Extracting TypeScript Types
 
-### GOOD
-
-```typescript
-// src/modules/users/model.ts
-import { t } from 'elysia'
-
-export const createUserSchema = t.Object({
-  username: t.String(),
-  email: t.String({ format: 'email' }),
-})
-
-// Extract TypeScript type from schema
-export type CreateUser = typeof createUserSchema.static
-// { username: string; email: string }
-```
+Use `typeof schema.static` to derive TS types from TypeBox schemas — single source of truth for runtime and compile-time.
 
 ## Custom Error Messages
 
-### GOOD
-
-```typescript
-app.post('/register', ({ body }) => register(body), {
-  body: t.Object({
-    email: t.String({
-      format: 'email',
-      error: 'Please provide a valid email address',
-    }),
-    password: t.String({
-      minLength: 8,
-      error: 'Password must be at least 8 characters',
-    }),
-  }),
-})
-```
+Pass `error` option to any TypeBox type: `t.String({ format: 'email', error: 'Invalid email' })`.
 
 ## File Uploads
 
-### GOOD
+Use `t.File()` for single and `t.Files()` for multiple uploads with `type` and `maxSize` constraints.
 
-```typescript
-app.post('/upload', ({ body: { file } }) => saveFile(file), {
-  body: t.Object({
-    file: t.File({ type: 'image/*', maxSize: '5m' }),
-  }),
-})
+## Anti-Patterns
 
-// Multiple files
-app.post('/gallery', ({ body: { images } }) => saveImages(images), {
-  body: t.Object({
-    images: t.Files({ type: 'image/*' }),
-  }),
-})
-```
-
-## Standard Schema (Zod, Valibot)
-
-### GOOD
-
-```typescript
-import { z } from 'zod'
-
-// Elysia supports Standard Schema-compliant libraries
-app.get('/users/:id', ({ params: { id } }) => getUser(id), {
-  params: z.object({
-    id: z.coerce.number(),
-  }),
-})
-```
+- Do NOT validate manually in handlers — use schemas; they integrate with OpenAPI and Eden
+- Do NOT use Zod as primary validator — breaks Elysia's type inference; TypeBox is zero-cost since it's built-in
+- Do NOT skip `response` schemas — loses typed error handling and OpenAPI documentation
+- Do NOT duplicate schemas across routes — use `.model()` or `guard()` to share them

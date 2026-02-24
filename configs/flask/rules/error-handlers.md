@@ -6,274 +6,53 @@ paths:
 
 # Flask Error Handling
 
-## HTTP Error Handlers
+## Error Handler Registration
 
-```python
-from flask import jsonify, render_template
-from werkzeug.exceptions import HTTPException
+Register all error handlers in a dedicated `register_error_handlers(app)` function called from `create_app()`. Keep handlers out of route files.
 
-# JSON API error handler
-@app.errorhandler(HTTPException)
-def handle_http_exception(error):
-    return jsonify({
-        "error": error.name,
-        "message": error.description,
-        "status_code": error.code,
-    }), error.code
+## Handler Priority
 
-# Specific error handlers
-@app.errorhandler(404)
-def not_found(error):
-    if request.accept_mimetypes.accept_json:
-        return jsonify({"error": "Not found"}), 404
-    return render_template("errors/404.html"), 404
+| Handler | Catches | Response |
+|---|---|---|
+| `@app.errorhandler(MarshmallowValidationError)` | Schema validation failures | 400 + `{"error": "...", "details": error.messages}` |
+| `@app.errorhandler(AppException)` | Custom domain exceptions | Dynamic status + `error.to_dict()` |
+| `@app.errorhandler(IntegrityError)` | DB constraint violations | 409 for unique, 400 otherwise — always `db.session.rollback()` |
+| `@app.errorhandler(HTTPException)` | Werkzeug HTTP errors | Error code + `{"error": name, "message": description}` |
+| `@app.errorhandler(Exception)` | Unhandled exceptions | 500 + generic message (log full traceback) |
 
-@app.errorhandler(500)
-def internal_error(error):
-    db.session.rollback()  # Rollback failed transaction
-    return jsonify({"error": "Internal server error"}), 500
+## Custom Exception Hierarchy
 
-@app.errorhandler(429)
-def rate_limit_exceeded(error):
-    return jsonify({
-        "error": "Rate limit exceeded",
-        "retry_after": error.description,
-    }), 429
-```
+Define a base `AppException` with `status_code`, `error_code`, and `message`. Subclass for each domain error:
 
-## Custom Exception Classes
+| Exception | Status | Error Code |
+|---|---|---|
+| `NotFoundError` | 404 | `NOT_FOUND` |
+| `ValidationError` | 400 | `VALIDATION_ERROR` |
+| `UnauthorizedError` | 401 | `UNAUTHORIZED` |
+| `ForbiddenError` | 403 | `FORBIDDEN` |
+| `ConflictError` | 409 | `CONFLICT` |
 
-```python
-class AppException(Exception):
-    """Base exception for application errors."""
-    status_code = 500
-    error_code = "INTERNAL_ERROR"
-    message = "An unexpected error occurred"
+Raise these from services — the global handler converts them to JSON responses automatically.
 
-    def __init__(self, message: str = None, payload: dict = None):
-        super().__init__()
-        self.message = message or self.message
-        self.payload = payload
+## Consistent Response Format
 
-    def to_dict(self) -> dict:
-        rv = {
-            "error": self.error_code,
-            "message": self.message,
-        }
-        if self.payload:
-            rv["details"] = self.payload
-        return rv
-
-class NotFoundError(AppException):
-    status_code = 404
-    error_code = "NOT_FOUND"
-    message = "Resource not found"
-
-class ValidationError(AppException):
-    status_code = 400
-    error_code = "VALIDATION_ERROR"
-    message = "Validation failed"
-
-class UnauthorizedError(AppException):
-    status_code = 401
-    error_code = "UNAUTHORIZED"
-    message = "Authentication required"
-
-class ForbiddenError(AppException):
-    status_code = 403
-    error_code = "FORBIDDEN"
-    message = "Access denied"
-
-class ConflictError(AppException):
-    status_code = 409
-    error_code = "CONFLICT"
-    message = "Resource already exists"
-
-# Register handler
-@app.errorhandler(AppException)
-def handle_app_exception(error):
-    response = jsonify(error.to_dict())
-    response.status_code = error.status_code
-    return response
-
-# Usage
-@users_bp.route("/<int:user_id>")
-def get_user(user_id: int):
-    user = User.query.get(user_id)
-    if not user:
-        raise NotFoundError(f"User {user_id} not found")
-    return jsonify(UserSchema().dump(user))
-```
-
-## Marshmallow Validation Errors
-
-```python
-from marshmallow import ValidationError as MarshmallowValidationError
-
-@app.errorhandler(MarshmallowValidationError)
-def handle_validation_error(error):
-    return jsonify({
-        "error": "VALIDATION_ERROR",
-        "message": "Input validation failed",
-        "details": error.messages,
-    }), 400
-
-# Usage
-@users_bp.route("/", methods=["POST"])
-def create_user():
-    schema = UserCreateSchema()
-    data = schema.load(request.get_json())  # Raises ValidationError if invalid
-    user = UserService.create(data)
-    return jsonify(UserSchema().dump(user)), 201
-```
-
-## SQLAlchemy Errors
-
-```python
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-
-@app.errorhandler(IntegrityError)
-def handle_integrity_error(error):
-    db.session.rollback()
-
-    # Parse constraint violation
-    if "unique constraint" in str(error.orig).lower():
-        return jsonify({
-            "error": "DUPLICATE_ENTRY",
-            "message": "A record with this value already exists",
-        }), 409
-
-    return jsonify({
-        "error": "DATABASE_ERROR",
-        "message": "Database constraint violation",
-    }), 400
-
-@app.errorhandler(SQLAlchemyError)
-def handle_db_error(error):
-    db.session.rollback()
-    app.logger.error(f"Database error: {error}")
-    return jsonify({
-        "error": "DATABASE_ERROR",
-        "message": "A database error occurred",
-    }), 500
-```
-
-## Logging Errors
-
-```python
-import logging
-import traceback
-
-@app.errorhandler(Exception)
-def handle_unexpected_error(error):
-    # Log full traceback
-    app.logger.error(
-        "Unhandled exception",
-        extra={
-            "error": str(error),
-            "traceback": traceback.format_exc(),
-            "path": request.path,
-            "method": request.method,
-            "user_id": g.get("user_id"),
-        },
-    )
-
-    # Return generic error to client
-    if app.debug:
-        return jsonify({
-            "error": "INTERNAL_ERROR",
-            "message": str(error),
-            "traceback": traceback.format_exc(),
-        }), 500
-
-    return jsonify({
-        "error": "INTERNAL_ERROR",
-        "message": "An unexpected error occurred",
-    }), 500
-```
+All error responses MUST follow the same structure: `{"error": "<CODE>", "message": "<human-readable>"}` with optional `"details"` for validation errors and `"request_id"` from `g.request_id`.
 
 ## Blueprint Error Handlers
 
-```python
-users_bp = Blueprint("users", __name__)
+Use `@bp.errorhandler(...)` for domain-specific error messages. App-level handlers are the fallback. Blueprint handlers only catch errors raised within that blueprint.
 
-# Only handles errors from this blueprint
-@users_bp.errorhandler(404)
-def user_not_found(error):
-    return jsonify({
-        "error": "USER_NOT_FOUND",
-        "message": "The requested user was not found",
-    }), 404
+## SQLAlchemy Error Handling
 
-# App-level handler is fallback
-@app.errorhandler(404)
-def generic_not_found(error):
-    return jsonify({
-        "error": "NOT_FOUND",
-        "message": "Resource not found",
-    }), 404
-```
+Always `db.session.rollback()` in `IntegrityError` and `SQLAlchemyError` handlers. Parse `error.orig` to distinguish unique constraint violations (409) from other DB errors (400/500).
 
-## Error Response Format
+## Logging
 
-```python
-from dataclasses import dataclass
-from typing import Any
+Log unhandled exceptions with full traceback, request path, method, and user ID. In debug mode, include traceback in response. In production, return only generic message.
 
-@dataclass
-class ErrorResponse:
-    error: str
-    message: str
-    status_code: int
-    details: dict[str, Any] | None = None
-    request_id: str | None = None
+## Anti-Patterns
 
-    def to_dict(self) -> dict:
-        data = {
-            "error": self.error,
-            "message": self.message,
-        }
-        if self.details:
-            data["details"] = self.details
-        if self.request_id:
-            data["request_id"] = self.request_id
-        return data
-
-def error_response(
-    error: str,
-    message: str,
-    status_code: int,
-    details: dict = None,
-) -> tuple:
-    response = ErrorResponse(
-        error=error,
-        message=message,
-        status_code=status_code,
-        details=details,
-        request_id=g.get("request_id"),
-    )
-    return jsonify(response.to_dict()), status_code
-```
-
-## Abort with Custom Response
-
-```python
-from flask import abort
-
-@users_bp.route("/<int:user_id>")
-def get_user(user_id: int):
-    user = User.query.get(user_id)
-    if not user:
-        abort(404, description="User not found")
-    return jsonify(UserSchema().dump(user))
-
-# Or with custom response
-from werkzeug.exceptions import NotFound
-
-@users_bp.route("/<int:user_id>")
-def get_user(user_id: int):
-    user = User.query.get(user_id)
-    if not user:
-        raise NotFound(f"User with ID {user_id} not found")
-    return jsonify(UserSchema().dump(user))
-```
+- Catching `ValidationError` in every route — use global `errorhandler` instead
+- Missing `db.session.rollback()` in DB error handlers — leaves session in broken state
+- Returning stack traces in production — information leak
+- Inconsistent error response formats across endpoints — standardize with `AppException`

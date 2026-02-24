@@ -7,158 +7,44 @@ paths:
 
 # React Components
 
-## Component Definition
+## Definition
 
-### GOOD
+- Plain function declaration with typed props interface — never `React.FC`
+- Named exports only — no default exports
+- One component per file
+- Destructure props in function signature
 
-```tsx
-interface UserCardProps {
-  user: User;
-  onSelect?: (user: User) => void;
-}
+## Server Components Awareness
 
-export function UserCard({ user, onSelect }: UserCardProps) {
-  return (
-    <article onClick={() => onSelect?.(user)}>
-      <h2>{user.name}</h2>
-      <p>{user.email}</p>
-    </article>
-  );
-}
-```
-
-### BAD
-
-```tsx
-// Anonymous export
-export default function({ user, onSelect }) {
-  // ...
-}
-
-// Props not typed
-function UserCard(props) {
-  // ...
-}
-```
-
-## Composition Over Props
-
-### GOOD
-
-```tsx
-<Card>
-  <Card.Header>
-    <Title>Settings</Title>
-  </Card.Header>
-  <Card.Body>
-    <SettingsForm />
-  </Card.Body>
-</Card>
-```
-
-### BAD
-
-```tsx
-<Card
-  headerTitle="Settings"
-  headerIcon={<SettingsIcon />}
-  bodyContent={<SettingsForm />}
-  footerActions={[...]}
-/>
-```
-
-## Conditional Rendering
-
-### GOOD
-
-```tsx
-{isLoading && <Spinner />}
-{error && <ErrorMessage error={error} />}
-{data && <DataList items={data} />}
-```
-
-### BAD
-
-```tsx
-{isLoading ? <Spinner /> : error ? <ErrorMessage /> : data ? <DataList /> : null}
-```
-
-## Event Handlers
-
-### GOOD
-
-```tsx
-function handleSubmit(event: FormEvent<HTMLFormElement>) {
-  event.preventDefault();
-  // ...
-}
-
-<form onSubmit={handleSubmit}>
-```
-
-### BAD
-
-```tsx
-<form onSubmit={(e) => {
-  e.preventDefault();
-  // Long inline logic...
-}}>
-```
+- Components are Server Components by default in RSC frameworks
+- Add `"use client"` only when using: `useState`, `useEffect`, event handlers, browser APIs
+- Keep client boundaries as low as possible in the component tree
 
 ## Refs (React 19)
 
-### GOOD
+- Pass `ref` as a regular prop — `forwardRef` is no longer needed
+- Type with `ref?: React.Ref<HTMLElement>`
 
-```tsx
-// React 19: ref is a regular prop
-function Input({ ref, ...props }: InputProps & { ref?: Ref<HTMLInputElement> }) {
-  return <input ref={ref} {...props} />;
-}
-```
+## Composition
 
-### BAD
+- Prefer children/slots over config props — use compound components (`Card` + `Card.Header`) for complex UI
+- Use `children: ReactNode` for layout wrappers, named `ReactNode` props for multiple slots
+- Use render props (`renderItem`) only for generic list/iterator components
 
-```tsx
-// Outdated: forwardRef no longer needed in React 19
-const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
-  return <input ref={ref} {...props} />;
-});
-```
+## Conditional Rendering
 
-## Children Pattern
+- Use `&&` for simple conditions, early returns for complex branching
+- Do NOT nest ternaries — extract to separate components or variables
 
-### GOOD
+## Event Handlers
 
-```tsx
-interface LayoutProps {
-  children: ReactNode;
-  sidebar?: ReactNode;
-}
+- Extract handlers as named functions (`handleSubmit`) — no inline multi-line logic in JSX
+- Type event parameters explicitly (`FormEvent<HTMLFormElement>`)
 
-export function Layout({ children, sidebar }: LayoutProps) {
-  return (
-    <div className="layout">
-      {sidebar && <aside>{sidebar}</aside>}
-      <main>{children}</main>
-    </div>
-  );
-}
-```
+## Anti-Patterns
 
-## Render Props (When Needed)
-
-### GOOD
-
-```tsx
-interface ListProps<T> {
-  items: T[];
-  renderItem: (item: T, index: number) => ReactNode;
-}
-
-export function List<T>({ items, renderItem }: ListProps<T>) {
-  return <ul>{items.map((item, i) => renderItem(item, i))}</ul>;
-}
-
-// Usage
-<List items={users} renderItem={(user) => <UserCard user={user} />} />
-```
+- Do NOT use `forwardRef` — `ref` is a regular prop in React 19
+- Do NOT manually memoize with `React.memo` — React Compiler handles it
+- Do NOT pass many config props — use composition instead
+- Do NOT use anonymous default exports — makes debugging and refactoring harder
+- Do NOT use `index` as `key` for dynamic lists — use stable unique identifiers

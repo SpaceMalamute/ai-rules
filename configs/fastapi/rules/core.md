@@ -7,141 +7,57 @@ alwaysApply: true
 
 ## Stack
 
-- Python 3.12+
-- FastAPI 0.115+ (Pydantic v2 by default)
-- SQLAlchemy 2.0+ (async support)
-- Pydantic v2 for validation
-- pytest + httpx for testing
-- uv or poetry for dependencies
+- Python 3.12+ with async-first architecture
+- FastAPI 0.115+ (Pydantic v2 baseline)
+- SQLAlchemy 2.0+ async (`AsyncSession`, `expire_on_commit=False`)
+- Pydantic v2 for all validation and serialization
+- pytest + httpx `AsyncClient` for testing
+- uv (preferred) or poetry for dependency management
+- Alembic for migrations
 
 ## Architecture
 
-```
-src/app/
-├── main.py              # Entry point
-├── config.py            # Settings (pydantic-settings)
-├── database.py          # DB session, engine
-├── [domain]/            # Feature modules
-│   ├── router.py        # API endpoints
-│   ├── schemas.py       # Pydantic models (request/response)
-│   ├── models.py        # SQLAlchemy models
-│   ├── service.py       # Business logic
-│   ├── repository.py    # Data access
-│   └── dependencies.py  # Route dependencies
-├── core/                # Shared utilities
-│   ├── exceptions.py
-│   └── security.py
-└── common/
-    ├── models.py        # Base models
-    └── schemas.py       # Shared schemas
-```
+Every domain module follows: `router.py` > `service.py` > `repository.py` > `models.py` + `schemas.py`
 
-## FastAPI Patterns
+| Layer | Responsibility | Depends on |
+|-------|---------------|------------|
+| `router.py` | HTTP concerns, status codes, response models | service |
+| `service.py` | Business logic, orchestration | repository |
+| `repository.py` | Data access, queries | models |
+| `schemas.py` | Pydantic request/response models | - |
+| `models.py` | SQLAlchemy ORM models | - |
+| `dependencies.py` | Route-scoped DI (auth, pagination) | service |
 
-### Dependency Injection
+Shared code goes in `core/` (exceptions, security) and `common/` (base models, shared schemas).
 
-```python
-from typing import Annotated
-from fastapi import Depends
+## Async-First Mandate
 
-CurrentUser = Annotated[User, Depends(get_current_user)]
-DbSession = Annotated[AsyncSession, Depends(get_db)]
+- All route handlers MUST be `async def` -- never use sync `def` for endpoints
+- Use `AsyncSession` for all database operations
+- Use `httpx.AsyncClient` for outbound HTTP calls (never `requests`)
+- Use `aiofiles` for file I/O inside async contexts
 
-@router.get("/users/me")
-async def get_me(user: CurrentUser, db: DbSession) -> UserResponse:
-    return await user_service.get_profile(db, user.id)
-```
+## Key Conventions
 
-### Lifespan (not `on_event`)
+- Use `Annotated[T, Depends(dep)]` type aliases for all injected dependencies
+- Use lifespan context manager -- NEVER `@app.on_event("startup"/"shutdown")`
+- Settings via `pydantic-settings` `BaseSettings` with `.env` support
+- Custom domain exceptions with `@app.exception_handler` -- not bare `HTTPException` in services
+- `response_model` on every route that returns data; `response_model_exclude_unset=True` as default
 
-```python
-from contextlib import asynccontextmanager
+## Anti-patterns
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    app.state.db = await create_engine()
-    app.state.redis = await aioredis.from_url(settings.redis_url)
-    yield
-    # Shutdown
-    await app.state.db.dispose()
-    await app.state.redis.close()
-
-app = FastAPI(lifespan=lifespan)
-```
-
-### Response Models
-
-```python
-@router.get(
-    "/users/{user_id}",
-    response_model=UserResponse,
-    status_code=status.HTTP_200_OK,
-)
-async def get_user(user_id: int, db: DbSession) -> User:
-    user = await user_repo.get(db, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-```
-
-## Pydantic v2
-
-```python
-from pydantic import BaseModel, ConfigDict, Field, EmailStr
-
-class UserBase(BaseModel):
-    email: EmailStr
-    name: str = Field(min_length=1, max_length=100)
-
-class UserCreate(UserBase):
-    password: str = Field(min_length=8)
-
-class UserResponse(UserBase):
-    id: int
-    model_config = ConfigDict(from_attributes=True)
-```
-
-## SQLAlchemy 2.0
-
-```python
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
-
-class Base(DeclarativeBase):
-    pass
-
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(unique=True, index=True)
-    hashed_password: Mapped[str]
-    is_active: Mapped[bool] = mapped_column(default=True)
-```
-
-## Error Handling
-
-```python
-class AppException(Exception):
-    def __init__(self, status_code: int, detail: str):
-        self.status_code = status_code
-        self.detail = detail
-
-@app.exception_handler(AppException)
-async def app_exception_handler(request: Request, exc: AppException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.detail},
-    )
-```
+- NEVER put business logic in routers -- routers are thin HTTP adapters
+- NEVER use sync ORM calls in async context -- causes thread pool exhaustion
+- NEVER import `app` in modules to avoid circular imports -- pass dependencies via DI
+- NEVER use `*` wildcard in CORS origins in production
 
 ## Commands
 
 ```bash
-uvicorn app.main:app --reload    # Dev server
-pytest                            # Run tests
-pytest --cov=app                  # Coverage
-ruff check . && ruff format .    # Lint + format
-alembic upgrade head             # Run migrations
-alembic revision --autogenerate  # Generate migration
+uvicorn app.main:app --reload        # Dev server
+pytest --cov=app -x                  # Tests with coverage
+ruff check . && ruff format .        # Lint + format
+alembic upgrade head                 # Run migrations
+alembic revision --autogenerate -m   # Generate migration
 ```

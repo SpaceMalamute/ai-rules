@@ -9,272 +9,55 @@ paths:
 
 ## DTO Rules
 
-### Always Use class-validator
+- Every DTO property MUST have at least one class-validator decorator — undecorated properties are silently stripped by `whitelist`
+- DO use `@IsEmail()`, `@IsString()`, `@MinLength()`, `@IsUUID()`, `@IsEnum()`, `@IsInt()`, `@Min()`, `@Max()` etc.
+- DO use `@IsOptional()` for optional fields — it must come before other validators
+- DO use `@Type(() => Number)` from class-transformer for query params that need numeric conversion
 
-Every DTO property must have validation decorators.
+## Mapped Types for Variants
 
-```typescript
-import {
-  IsEmail,
-  IsString,
-  IsOptional,
-  MinLength,
-  MaxLength,
-  IsUUID,
-  IsEnum,
-  IsArray,
-  ValidateNested,
-  IsInt,
-  Min,
-  Max,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+| Helper | Purpose |
+|--------|---------|
+| `PartialType(Dto)` | All fields optional (for PATCH) |
+| `PickType(Dto, ['a', 'b'])` | Only selected fields |
+| `OmitType(Dto, ['password'])` | Exclude fields |
+| `IntersectionType(A, B)` | Merge two DTOs |
 
-export class CreateUserDto {
-  @IsEmail()
-  email: string;
+- Import from `@nestjs/mapped-types` (plain) or `@nestjs/swagger` (if using Swagger — preserves API metadata)
 
-  @IsString()
-  @MinLength(8)
-  @MaxLength(100)
-  password: string;
+## Nested Objects
 
-  @IsString()
-  @IsOptional()
-  @MaxLength(50)
-  name?: string;
+- DO use `@ValidateNested({ each: true })` + `@Type(() => ChildDto)` for nested arrays/objects
+- DO NOT forget `@Type()` — without it, class-transformer cannot instantiate the nested class
 
-  @IsEnum(UserRole)
-  @IsOptional()
-  role?: UserRole;
-}
-```
+## Transform Directives
 
-### Use Mapped Types for Variants
-
-```typescript
-import { PartialType, PickType, OmitType, IntersectionType } from '@nestjs/mapped-types';
-
-// All fields optional
-export class UpdateUserDto extends PartialType(CreateUserDto) {}
-
-// Only specific fields
-export class LoginDto extends PickType(CreateUserDto, ['email', 'password']) {}
-
-// Exclude fields
-export class PublicUserDto extends OmitType(CreateUserDto, ['password']) {}
-
-// Combine DTOs
-export class CreateUserWithAddressDto extends IntersectionType(
-  CreateUserDto,
-  CreateAddressDto,
-) {}
-```
-
-### Validate Nested Objects
-
-```typescript
-export class CreateOrderDto {
-  @IsUUID()
-  userId: string;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => OrderItemDto)
-  items: OrderItemDto[];
-
-  @ValidateNested()
-  @Type(() => AddressDto)
-  shippingAddress: AddressDto;
-}
-
-export class OrderItemDto {
-  @IsUUID()
-  productId: string;
-
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  quantity: number;
-}
-```
-
-### Transform Input Data
-
-```typescript
-import { Transform, Type } from 'class-transformer';
-
-export class QueryDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
-
-  @IsOptional()
-  @Transform(({ value }) => value?.toLowerCase().trim())
-  @IsString()
-  search?: string;
-
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  @IsBoolean()
-  active?: boolean;
-}
-```
+- DO use `@Transform(({ value }) => value?.toLowerCase().trim())` for normalizing string inputs
+- DO use `@Transform(({ value }) => value === 'true' || value === true)` for boolean query params
 
 ## Validation Groups
 
-Use groups for conditional validation:
-
-```typescript
-export class UserDto {
-  @IsUUID({ groups: ['update'] })
-  @IsOptional({ groups: ['create'] })
-  id?: string;
-
-  @IsEmail({ groups: ['create', 'update'] })
-  email: string;
-
-  @IsString({ groups: ['create'] })
-  @MinLength(8, { groups: ['create'] })
-  password: string;
-}
-
-// Controller usage
-@Post()
-create(
-  @Body(new ValidationPipe({ groups: ['create'] }))
-  dto: UserDto,
-) {}
-
-@Patch(':id')
-update(
-  @Body(new ValidationPipe({ groups: ['update'] }))
-  dto: UserDto,
-) {}
-```
+- Use `groups: ['create']` / `groups: ['update']` on decorators for conditional validation
+- Pass groups via `new ValidationPipe({ groups: ['create'] })` at method level
 
 ## Custom Validators
 
-```typescript
-import {
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
-  ValidationArguments,
-  registerDecorator,
-} from 'class-validator';
-
-@ValidatorConstraint({ async: true })
-export class IsUniqueEmailConstraint implements ValidatorConstraintInterface {
-  constructor(private readonly usersService: UsersService) {}
-
-  async validate(email: string): Promise<boolean> {
-    const user = await this.usersService.findByEmail(email);
-    return !user;
-  }
-
-  defaultMessage(args: ValidationArguments): string {
-    return 'Email already exists';
-  }
-}
-
-// Decorator factory
-export function IsUniqueEmail(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string) {
-    registerDecorator({
-      target: object.constructor,
-      propertyName,
-      options: validationOptions,
-      constraints: [],
-      validator: IsUniqueEmailConstraint,
-    });
-  };
-}
-
-// Usage
-export class CreateUserDto {
-  @IsEmail()
-  @IsUniqueEmail()
-  email: string;
-}
-```
-
-## API Documentation with Swagger
-
-Combine validation with OpenAPI documentation:
-
-```typescript
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-export class CreateUserDto {
-  @ApiProperty({
-    example: 'user@example.com',
-    description: 'User email address',
-  })
-  @IsEmail()
-  email: string;
-
-  @ApiProperty({
-    minLength: 8,
-    description: 'User password (min 8 characters)',
-  })
-  @IsString()
-  @MinLength(8)
-  password: string;
-
-  @ApiPropertyOptional({
-    example: 'John Doe',
-    maxLength: 50,
-  })
-  @IsString()
-  @IsOptional()
-  @MaxLength(50)
-  name?: string;
-}
-```
+- DO use `@ValidatorConstraint({ async: true })` + `registerDecorator()` for DB-dependent validation (e.g., unique email)
+- DO inject services into the constraint class via NestJS DI (register as provider)
 
 ## Response DTOs
 
-Use separate DTOs for responses to control exposed data:
+- DO use separate response DTOs with `@Expose()` / `@Exclude()` from class-transformer
+- DO use `ClassSerializerInterceptor` to auto-serialize response objects
+- DO NOT return raw entities from controllers — always map to a response DTO
 
-```typescript
-import { Exclude, Expose, Type } from 'class-transformer';
+## Swagger Integration
 
-export class UserResponseDto {
-  @Expose()
-  id: string;
+- DO combine `@ApiProperty()` / `@ApiPropertyOptional()` with class-validator decorators on the same DTO
+- This documents and validates in a single class — no duplication
 
-  @Expose()
-  email: string;
+## Anti-patterns
 
-  @Expose()
-  name: string;
-
-  @Exclude()
-  password: string;
-
-  @Expose()
-  @Type(() => Date)
-  createdAt: Date;
-
-  constructor(partial: Partial<UserResponseDto>) {
-    Object.assign(this, partial);
-  }
-}
-
-// Service usage with ClassSerializerInterceptor
-@UseInterceptors(ClassSerializerInterceptor)
-@Get(':id')
-async findOne(@Param('id') id: string): Promise<UserResponseDto> {
-  const user = await this.usersService.findOne(id);
-  return new UserResponseDto(user);
-}
-```
+- DO NOT create DTOs without validation decorators — they provide no protection
+- DO NOT validate in services what the DTO should enforce — keep validation at the boundary
+- DO NOT use `any` as a DTO type — defeats the purpose of typed validation

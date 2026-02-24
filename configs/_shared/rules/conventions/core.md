@@ -5,58 +5,54 @@ alwaysApply: true
 
 # Shared Conventions
 
-## Code Quality
+## Naming
 
-### Naming - Be Explicit
-
-- No cryptic names: No `c`, `x`, `tmp`, `data`
-- No magic numbers: Use named constants
+- Use explicit names: no `c`, `x`, `tmp`, `data` — name reveals intent
+- Use named constants for magic numbers
 - Small functions: < 30 lines, single responsibility
-- Max nesting: 3 levels, use early returns
-- No dead code: Delete, don't comment out
+- Max nesting: 3 levels — use early returns to flatten
 
-### Lint Disable - Only With Justification
+## Code Hygiene
 
-Never disable lint rules without an explicit reason and ticket reference.
+- DO NOT disable lint rules without a justification and ticket reference
+- DO NOT leave dead code — delete it, do not comment it out
+- DO NOT swallow errors silently — log with context (user ID, request ID), then rethrow or handle
 
 ## Error Handling
 
-- Never swallow errors silently
-- Log with context (user ID, request ID)
-- User-facing: clear, actionable messages
-- Internal: detailed logs, generic user message
+- User-facing errors: clear, actionable messages
+- Internal errors: detailed logs, generic user message
+- Never expose stack traces to end users
 
 ## Testing
 
 - Test behavior, not implementation
 - Descriptive names: `should return user when id is valid`
 - One assertion per test when practical
-- Mock external dependencies only
+- Mock external dependencies only — never mock the unit under test
 
 ## Security
 
-- **Never commit secrets** (use env vars)
-- **Validate all inputs** (never trust user data)
-- **Parameterized queries** (no string concatenation)
-- **Sanitize outputs** (prevent XSS)
+- Never commit secrets — use environment variables or secret managers
+- Validate all inputs — never trust user data
+- Use parameterized queries — no string concatenation for SQL
+- Sanitize outputs — prevent XSS
 
 ## Documentation
 
 - Self-documenting code first
 - Comments explain "why", not "what"
-- Keep comments up-to-date or delete them
+- Delete stale comments — outdated comments are worse than none
 
 ## Dependencies
 
 - Pin exact versions in lock files
-- Regular security audits (`npm audit`, `pip-audit`)
-- Prefer well-maintained packages with active communities
-- Minimize dependency count
+- Audit regularly (`npm audit`, `pip-audit`, `dotnet list package --vulnerable`)
+- Prefer well-maintained packages — minimize dependency count
 
 ## Performance
 
-- Measure before optimizing
-- Profile to find bottlenecks
+- Measure before optimizing — profile to find real bottlenecks
 - Cache expensive operations
 - Lazy load when possible
-- Avoid premature optimization
+- DO NOT optimize prematurely

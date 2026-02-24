@@ -7,310 +7,59 @@ paths:
 
 # NestJS Testing
 
-## Unit Tests
+## Test Runner
 
-### Test Services in Isolation
+- DO use Vitest as the test runner — faster than Jest, native ESM support
+- DO use `@golevelup/ts-vitest` for `createMock<T>()` — auto-mocks all methods of a class with `vi.fn()`
+- DO use Supertest for E2E HTTP assertions
 
-Mock all dependencies. Focus on business logic.
+## What to Test Where
 
-```typescript
-import { Test, TestingModule } from '@nestjs/testing';
-import { UsersService } from './users.service';
-import { UsersRepository } from './users.repository';
-import { NotFoundException } from '@nestjs/common';
+| Layer | Test Type | Mock Boundary |
+|-------|-----------|--------------|
+| Service | Unit | Mock repositories and external services |
+| Controller | Unit (optional) | Mock service — mostly covered by E2E |
+| Guard / Pipe | Unit | Mock `ExecutionContext` / input values |
+| Full API flow | E2E | Real modules, test DB, mock external APIs |
 
-describe('UsersService', () => {
-  let service: UsersService;
-  let repository: Mocked<UsersRepository>;
+## Unit Test Directives
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UsersService,
-        {
-          provide: UsersRepository,
-          useValue: {
-            findById: vi.fn(),
-            create: vi.fn(),
-            update: vi.fn(),
-            delete: vi.fn(),
-          },
-        },
-      ],
-    }).compile();
+- DO use `Test.createTestingModule()` to build the testing module with mocked providers
+- DO mock dependencies at the repository/adapter boundary — not deep internals
+- DO test business logic branches: happy path, not-found, forbidden, conflict
+- DO assert that the correct exception type is thrown (e.g., `rejects.toThrow(NotFoundException)`)
+- DO NOT test NestJS framework behavior (DI wiring, decorator metadata) — trust the framework
 
-    service = module.get<UsersService>(UsersService);
-    repository = module.get(UsersRepository);
-  });
-
-  describe('findOne', () => {
-    it('should return user when found', async () => {
-      const user = { id: '1', email: 'test@example.com' };
-      repository.findById.mockResolvedValue(user);
-
-      const result = await service.findOne('1');
-
-      expect(result).toEqual(user);
-      expect(repository.findById).toHaveBeenCalledWith('1');
-    });
-
-    it('should throw NotFoundException when user not found', async () => {
-      repository.findById.mockResolvedValue(null);
-
-      await expect(service.findOne('1')).rejects.toThrow(NotFoundException);
-    });
-  });
-});
-```
-
-### Test Controllers
-
-Test request handling, pipes, guards.
+## Mocking Pattern
 
 ```typescript
-import { Test, TestingModule } from '@nestjs/testing';
-import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
-
-describe('UsersController', () => {
-  let controller: UsersController;
-  let service: Mocked<UsersService>;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [UsersController],
-      providers: [
-        {
-          provide: UsersService,
-          useValue: {
-            findOne: vi.fn(),
-            create: vi.fn(),
-          },
-        },
-      ],
-    }).compile();
-
-    controller = module.get<UsersController>(UsersController);
-    service = module.get(UsersService);
-  });
-
-  describe('findOne', () => {
-    it('should return user from service', async () => {
-      const user = { id: '1', email: 'test@example.com' };
-      service.findOne.mockResolvedValue(user);
-
-      const result = await controller.findOne('1');
-
-      expect(result).toEqual(user);
-      expect(service.findOne).toHaveBeenCalledWith('1');
-    });
-  });
-});
+// With @golevelup/ts-vitest
+const mockRepo = createMock<UsersRepository>();
+mockRepo.findById.mockResolvedValue(someUser);
 ```
 
-### Mock Repository Pattern
+- For TypeORM: `{ provide: getRepositoryToken(Entity), useValue: createMock<Repository<Entity>>() }`
+- For Prisma: mock the model methods on `PrismaService` (`user.findUnique`, `user.create`, etc.)
 
-```typescript
-// Create reusable mock factory
-export const createMockRepository = <T = any>() => ({
-  find: vi.fn(),
-  findOne: vi.fn(),
-  create: vi.fn(),
-  save: vi.fn(),
-  update: vi.fn(),
-  delete: vi.fn(),
-  createQueryBuilder: vi.fn(() => ({
-    where: vi.fn().mockReturnThis(),
-    andWhere: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-    skip: vi.fn().mockReturnThis(),
-    take: vi.fn().mockReturnThis(),
-    getMany: vi.fn(),
-    getOne: vi.fn(),
-  })),
-});
+## E2E Test Directives
 
-// Usage
-const module = await Test.createTestingModule({
-  providers: [
-    UsersService,
-    {
-      provide: getRepositoryToken(User),
-      useValue: createMockRepository(),
-    },
-  ],
-}).compile();
-```
+- DO apply the same global pipes/filters/interceptors as production in `beforeAll`
+- DO use a dedicated test database — never run E2E against dev/prod
+- DO clean/reset the database between test suites (not between every test — too slow)
+- DO test auth flows: valid token, expired token, missing token, insufficient role
+- DO test validation: missing fields, invalid types, extra properties (should be rejected)
 
-## E2E Tests
+## Coverage Targets
 
-### Setup Test Application
+| Layer | Target |
+|-------|--------|
+| Services | 90%+ |
+| Controllers | 80%+ (prefer E2E coverage) |
+| Guards / Pipes | 80%+ |
+| E2E | All API endpoints, happy + error paths |
 
-```typescript
-// test/app.e2e-spec.ts
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+## Anti-patterns
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication;
-
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-
-    // Apply same pipes as production
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    await app.init();
-  });
-
-  afterAll(async () => {
-    await app.close();
-  });
-
-  describe('/users', () => {
-    it('POST /users - should create user', () => {
-      return request(app.getHttpServer())
-        .post('/users')
-        .send({
-          email: 'test@example.com',
-          password: 'password123',
-        })
-        .expect(201)
-        .expect((res) => {
-          expect(res.body).toHaveProperty('id');
-          expect(res.body.email).toBe('test@example.com');
-        });
-    });
-
-    it('POST /users - should reject invalid email', () => {
-      return request(app.getHttpServer())
-        .post('/users')
-        .send({
-          email: 'invalid-email',
-          password: 'password123',
-        })
-        .expect(400);
-    });
-
-    it('GET /users/:id - should return user', () => {
-      return request(app.getHttpServer())
-        .get('/users/existing-id')
-        .expect(200)
-        .expect((res) => {
-          expect(res.body).toHaveProperty('email');
-        });
-    });
-
-    it('GET /users/:id - should return 404 for unknown user', () => {
-      return request(app.getHttpServer())
-        .get('/users/unknown-id')
-        .expect(404);
-    });
-  });
-});
-```
-
-### Test with Authentication
-
-```typescript
-describe('Protected Routes (e2e)', () => {
-  let app: INestApplication;
-  let authToken: string;
-
-  beforeAll(async () => {
-    // ... setup app
-
-    // Get auth token
-    const response = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ email: 'test@example.com', password: 'password' });
-
-    authToken = response.body.accessToken;
-  });
-
-  it('GET /profile - should return user profile with token', () => {
-    return request(app.getHttpServer())
-      .get('/profile')
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(200);
-  });
-
-  it('GET /profile - should return 401 without token', () => {
-    return request(app.getHttpServer())
-      .get('/profile')
-      .expect(401);
-  });
-});
-```
-
-### Test Database Isolation
-
-Use a test database and clean between tests:
-
-```typescript
-import { DataSource } from 'typeorm';
-
-describe('Users E2E', () => {
-  let app: INestApplication;
-  let dataSource: DataSource;
-
-  beforeAll(async () => {
-    const module = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = module.createNestApplication();
-    await app.init();
-
-    dataSource = module.get(DataSource);
-  });
-
-  beforeEach(async () => {
-    // Clean database before each test
-    await dataSource.synchronize(true);
-  });
-
-  afterAll(async () => {
-    await dataSource.destroy();
-    await app.close();
-  });
-});
-```
-
-## Test Coverage Goals
-
-- **Services**: 90%+ (business logic)
-- **Controllers**: 80%+ (happy paths + error cases)
-- **Guards/Pipes**: 80%+
-- **E2E**: Cover all API endpoints
-
-## Testing Commands
-
-```bash
-# Unit tests
-npm run test
-
-# Watch mode
-npm run test:watch
-
-# Coverage report
-npm run test:cov
-
-# E2E tests
-npm run test:e2e
-
-# Single file
-npm run test -- users.service.spec.ts
-```
+- DO NOT test implementation details (e.g., checking which internal method was called) — test behavior
+- DO NOT share mutable state between tests — reset mocks in `beforeEach`
+- DO NOT skip E2E tests for "unit test coverage" — E2E catches integration bugs that units miss

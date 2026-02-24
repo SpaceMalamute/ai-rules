@@ -6,287 +6,50 @@ paths:
   - "**/app.config.ts"
 ---
 
-# Angular Routing (Angular 21)
+# Routing
 
 ## Route Configuration
 
-### Basic Routes
+- DO use `loadComponent` for lazy-loaded standalone components
+- DO use `loadChildren` for lazy-loaded feature route files
+- DO export feature routes as `export default [...] satisfies Routes`
+- DO add `withComponentInputBinding()` to `provideRouter()` for route param binding
 
-```typescript
-// app.routes.ts
-import { Routes } from '@angular/router';
+## Guards — Functional Only
 
-export const routes: Routes = [
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-  { path: 'dashboard', loadComponent: () => import('./dashboard/dashboard.component') },
-  { path: 'users', loadChildren: () => import('./users/users.routes') },
-  { path: '**', loadComponent: () => import('./not-found/not-found.component') },
-];
-```
-
-### Feature Routes with Lazy Loading
-
-```typescript
-// users/users.routes.ts
-import { Routes } from '@angular/router';
-import { authGuard } from '@app/core/guards/auth.guard';
-import { userResolver } from './resolvers/user.resolver';
-
-export default [
-  {
-    path: '',
-    loadComponent: () => import('./user-list/user-list.component'),
-    canActivate: [authGuard],
-  },
-  {
-    path: ':id',
-    loadComponent: () => import('./user-detail/user-detail.component'),
-    resolve: { user: userResolver },
-  },
-  {
-    path: ':id/edit',
-    loadComponent: () => import('./user-edit/user-edit.component'),
-    canActivate: [authGuard],
-    canDeactivate: [unsavedChangesGuard],
-  },
-] satisfies Routes;
-```
-
-## Guards (Functional)
-
-### Auth Guard
-
-```typescript
-// guards/auth.guard.ts
-import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '@app/core/services/auth.service';
-
-export const authGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
-
-  if (authService.isAuthenticated()) {
-    return true;
-  }
-
-  return router.createUrlTree(['/login'], {
-    queryParams: { returnUrl: router.url },
-  });
-};
-```
-
-### Role Guard
-
-```typescript
-// guards/role.guard.ts
-import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '@app/core/services/auth.service';
-
-export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
-  return () => {
-    const authService = inject(AuthService);
-    const router = inject(Router);
-    const userRole = authService.currentUser()?.role;
-
-    if (userRole && allowedRoles.includes(userRole)) {
-      return true;
-    }
-
-    return router.createUrlTree(['/forbidden']);
-  };
-};
-
-// Usage in routes
-{
-  path: 'admin',
-  loadComponent: () => import('./admin/admin.component'),
-  canActivate: [authGuard, roleGuard(['admin', 'superadmin'])],
-}
-```
-
-### Unsaved Changes Guard
-
-```typescript
-// guards/unsaved-changes.guard.ts
-import { CanDeactivateFn } from '@angular/router';
-
-export interface HasUnsavedChanges {
-  hasUnsavedChanges(): boolean;
-}
-
-export const unsavedChangesGuard: CanDeactivateFn<HasUnsavedChanges> = (component) => {
-  if (component.hasUnsavedChanges()) {
-    return confirm('You have unsaved changes. Do you really want to leave?');
-  }
-  return true;
-};
-```
+- DO use `CanActivateFn`, `CanDeactivateFn` — never class-based guards
+- DO use `inject()` inside guard functions for DI
+- DO return `UrlTree` for redirects (not `Router.navigate()` inside guards)
+- For parameterized guards, use factory: `roleGuard(['admin']): CanActivateFn`
 
 ## Resolvers
 
-```typescript
-// resolvers/user.resolver.ts
-import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
-import { catchError, EMPTY } from 'rxjs';
-import { UserService } from '../services/user.service';
-import { User } from '../models/user.model';
-
-export const userResolver: ResolveFn<User> = (route) => {
-  const userService = inject(UserService);
-  const router = inject(Router);
-  const userId = route.paramMap.get('id')!;
-
-  return userService.getById(userId).pipe(
-    catchError(() => {
-      router.navigate(['/users']);
-      return EMPTY;
-    })
-  );
-};
-
-// Usage in component
-@Component({ ... })
-export class UserDetailComponent {
-  private readonly route = inject(ActivatedRoute);
-  protected readonly user = toSignal(
-    this.route.data.pipe(map(data => data['user'] as User))
-  );
-}
-```
+- DO use `ResolveFn<T>` — never class-based resolvers
+- DO handle errors in resolvers (redirect on failure via `catchError` + `EMPTY`)
+- DO consume resolved data via `toSignal(this.route.data.pipe(map(...)))`
 
 ## Route Parameters
 
-```typescript
-@Component({ ... })
-export class UserDetailComponent {
-  private readonly route = inject(ActivatedRoute);
+- DO use `toSignal()` with `route.paramMap` / `route.queryParamMap` — never subscribe manually
+- DO use `withComponentInputBinding()` to bind route params directly to component inputs
 
-  // Signal-based params
-  protected readonly userId = toSignal(
-    this.route.paramMap.pipe(map(params => params.get('id')))
-  );
+## Navigation
 
-  // Query params
-  protected readonly tab = toSignal(
-    this.route.queryParamMap.pipe(map(params => params.get('tab') ?? 'profile'))
-  );
-}
-```
+- DO use relative navigation (`this.router.navigate(['edit'], { relativeTo: this.route })`)
+- DO NOT hardcode full URL paths in `navigateByUrl()`
 
-## Programmatic Navigation
+## Preloading
 
-```typescript
-@Component({ ... })
-export class UserListComponent {
-  private readonly router = inject(Router);
-
-  public navigateToUser(userId: string): void {
-    this.router.navigate(['/users', userId]);
-  }
-
-  public navigateWithQuery(): void {
-    this.router.navigate(['/users'], {
-      queryParams: { status: 'active', page: 1 },
-      queryParamsHandling: 'merge', // or 'preserve'
-    });
-  }
-
-  public navigateRelative(): void {
-    // From /users to /users/123
-    this.router.navigate(['123'], { relativeTo: this.route });
-  }
-}
-```
-
-## Route Layout with Named Outlets
-
-```typescript
-// routes
-{
-  path: 'dashboard',
-  component: DashboardLayoutComponent,
-  children: [
-    { path: '', loadComponent: () => import('./main/main.component') },
-    { path: '', outlet: 'sidebar', loadComponent: () => import('./sidebar/sidebar.component') },
-  ],
-}
-
-// template
-<router-outlet />
-<router-outlet name="sidebar" />
-```
+- DO configure preloading strategy in `provideRouter()` for better UX
+- Options: `PreloadAllModules`, or custom strategy for selective preloading
 
 ## Title & Meta
 
-```typescript
-// routes
-{
-  path: 'users',
-  loadComponent: () => import('./users/users.component'),
-  title: 'User Management',
-  data: {
-    meta: {
-      description: 'Manage user accounts',
-    },
-  },
-}
-
-// Title strategy (app.config.ts)
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideRouter(routes, withComponentInputBinding()),
-    {
-      provide: TitleStrategy,
-      useClass: CustomTitleStrategy,
-    },
-  ],
-};
-```
-
-## Preloading Strategies
-
-```typescript
-// app.config.ts
-import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideRouter(
-      routes,
-      withPreloading(PreloadAllModules), // or custom strategy
-      withComponentInputBinding(),
-      withRouterConfig({ onSameUrlNavigation: 'reload' }),
-    ),
-  ],
-};
-```
+- DO set `title` on route definitions
+- DO use custom `TitleStrategy` for app-wide title formatting
 
 ## Anti-patterns
 
-```typescript
-// BAD: Class-based guards (deprecated)
-@Injectable()
-export class AuthGuard implements CanActivate { ... }
-
-// GOOD: Functional guards
-export const authGuard: CanActivateFn = () => { ... };
-
-// BAD: Subscribing in component for route params
-ngOnInit() {
-  this.route.params.subscribe(params => this.id = params['id']);
-}
-
-// GOOD: Signal-based
-protected readonly id = toSignal(
-  this.route.paramMap.pipe(map(p => p.get('id')))
-);
-
-// BAD: Hardcoded paths
-this.router.navigateByUrl('/users/123/edit');
-
-// GOOD: Relative navigation or route constants
-this.router.navigate(['edit'], { relativeTo: this.route });
-```
+- DO prefer functional guards (`CanActivateFn`, `ResolveFn<T>`) over class-based — both are supported, but functional is simpler
+- DO NOT subscribe to route params in `ngOnInit` — use `toSignal()`
+- DO NOT use named outlets unless absolutely necessary — they add complexity

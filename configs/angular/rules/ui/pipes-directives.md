@@ -7,330 +7,45 @@ paths:
   - "**/directives/**"
 ---
 
-# Angular Pipes & Directives
+# Pipes & Directives
+
+## Template Control Flow (not pipes)
+
+- DO use `@if`, `@else if`, `@else` — never `*ngIf`
+- DO use `@for (item of items(); track item.id)` — never `*ngFor`
+- DO use `@switch` / `@case` / `@default` — never `[ngSwitch]`
+- These are built-in syntax since Angular 17 — no imports needed
 
 ## Custom Pipes
 
-### Pure Pipe (default, memoized)
-
-```typescript
-// pipes/time-ago.pipe.ts
-import { Pipe, PipeTransform } from '@angular/core';
-
-@Pipe({
-  name: 'timeAgo',
-  })
-export class TimeAgoPipe implements PipeTransform {
-  public transform(value: Date | string | number): string {
-    const date = new Date(value);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    if (seconds < 2592000) return `${Math.floor(seconds / 86400)} days ago`;
-
-    return date.toLocaleDateString();
-  }
-}
-
-// Usage: {{ createdAt | timeAgo }}
-```
-
-### Pipe with Parameters
-
-```typescript
-// pipes/truncate.pipe.ts
-@Pipe({
-  name: 'truncate',
-  })
-export class TruncatePipe implements PipeTransform {
-  public transform(
-    value: string,
-    limit: number = 100,
-    trail: string = '...'
-  ): string {
-    if (!value || value.length <= limit) {
-      return value;
-    }
-    return value.substring(0, limit).trim() + trail;
-  }
-}
-
-// Usage: {{ description | truncate:50:'…' }}
-```
-
-### Filter Pipe
-
-```typescript
-// pipes/filter.pipe.ts
-@Pipe({
-  name: 'filter',
-  })
-export class FilterPipe implements PipeTransform {
-  public transform<T>(
-    items: T[],
-    field: keyof T,
-    value: unknown
-  ): T[] {
-    if (!items || !field || value === undefined) {
-      return items;
-    }
-    return items.filter(item => item[field] === value);
-  }
-}
-
-// Usage: @for (user of users() | filter:'status':'active'; track user.id)
-```
-
-### Safe HTML Pipe
-
-```typescript
-// pipes/safe-html.pipe.ts
-import { Pipe, PipeTransform, inject } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-
-@Pipe({
-  name: 'safeHtml',
-  })
-export class SafeHtmlPipe implements PipeTransform {
-  private readonly sanitizer = inject(DomSanitizer);
-
-  public transform(value: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(value);
-  }
-}
-
-// Usage: <div [innerHTML]="content | safeHtml"></div>
-// ⚠️ Only use with trusted content!
-```
+- DO keep pipes pure (default) — impure pipes cause performance issues
+- DO NOT add `standalone: true` — it is the default
+- DO use `inject()` for DI inside pipes (e.g., `DomSanitizer` in `safeHtml` pipe)
+- DO accept parameters via `transform(value, ...args)` method
+- Common custom pipes: `timeAgo`, `truncate`, `filter`, `safeHtml`
 
 ## Custom Directives
 
-### Attribute Directive
+- DO use `input()` signal inputs — never `@Input()` decorator
+- DO use `output()` — never `@Output()` decorator
+- DO use `inject()` for DI — never constructor injection
+- DO use `takeUntilDestroyed()` for RxJS subscriptions in directives
 
-```typescript
-// directives/highlight.directive.ts
-import { Directive, ElementRef, HostListener, input, inject } from '@angular/core';
+### Attribute Directives
 
-@Directive({
-  selector: '[appHighlight]',
-  })
-export class HighlightDirective {
-  private readonly el = inject(ElementRef);
+- For DOM behavior (highlight, click-outside, auto-focus, debounce-input)
+- DO prefer `host: { '(event)': 'handler($event)' }` in @Component/@Directive metadata over @HostListener (which exists only for backwards compatibility)
+- Alternatively, use `fromEvent()` + `takeUntilDestroyed()` for event handling
 
-  public readonly appHighlight = input<string>('#ffff00');
-  public readonly defaultColor = input<string>('transparent');
+### Structural Directives
 
-  @HostListener('mouseenter')
-  public onMouseEnter(): void {
-    this.highlight(this.appHighlight() || '#ffff00');
-  }
-
-  @HostListener('mouseleave')
-  public onMouseLeave(): void {
-    this.highlight(this.defaultColor());
-  }
-
-  private highlight(color: string): void {
-    this.el.nativeElement.style.backgroundColor = color;
-  }
-}
-
-// Usage: <p appHighlight="#e0e0e0">Hover me</p>
-```
-
-### Click Outside Directive
-
-```typescript
-// directives/click-outside.directive.ts
-import { Directive, ElementRef, output, inject } from '@angular/core';
-import { fromEvent } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
-@Directive({
-  selector: '[appClickOutside]',
-  })
-export class ClickOutsideDirective {
-  private readonly el = inject(ElementRef);
-
-  public readonly appClickOutside = output<void>();
-
-  constructor() {
-    fromEvent<MouseEvent>(document, 'click')
-      .pipe(
-        filter(event => !this.el.nativeElement.contains(event.target)),
-        takeUntilDestroyed(),
-      )
-      .subscribe(() => this.appClickOutside.emit());
-  }
-}
-
-// Usage: <div appClickOutside (appClickOutside)="closeDropdown()">
-```
-
-### Auto Focus Directive
-
-```typescript
-// directives/auto-focus.directive.ts
-import { Directive, ElementRef, AfterViewInit, input, inject } from '@angular/core';
-
-@Directive({
-  selector: '[appAutoFocus]',
-  })
-export class AutoFocusDirective implements AfterViewInit {
-  private readonly el = inject(ElementRef);
-
-  public readonly appAutoFocus = input<boolean>(true);
-
-  public ngAfterViewInit(): void {
-    if (this.appAutoFocus()) {
-      setTimeout(() => this.el.nativeElement.focus(), 0);
-    }
-  }
-}
-
-// Usage: <input appAutoFocus />
-```
-
-### Structural Directive
-
-```typescript
-// directives/permission.directive.ts
-import { Directive, TemplateRef, ViewContainerRef, input, effect, inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
-
-@Directive({
-  selector: '[appHasPermission]',
-  })
-export class HasPermissionDirective {
-  private readonly templateRef = inject(TemplateRef<unknown>);
-  private readonly viewContainer = inject(ViewContainerRef);
-  private readonly authService = inject(AuthService);
-
-  public readonly appHasPermission = input.required<string | string[]>();
-
-  private hasView = false;
-
-  constructor() {
-    effect(() => {
-      const permissions = this.appHasPermission();
-      const permissionArray = Array.isArray(permissions) ? permissions : [permissions];
-      const hasPermission = this.authService.hasAnyPermission(permissionArray);
-
-      if (hasPermission && !this.hasView) {
-        this.viewContainer.createEmbeddedView(this.templateRef);
-        this.hasView = true;
-      } else if (!hasPermission && this.hasView) {
-        this.viewContainer.clear();
-        this.hasView = false;
-      }
-    });
-  }
-}
-
-// Usage: <button *appHasPermission="'users.create'">Create User</button>
-```
-
-### Debounce Input Directive
-
-```typescript
-// directives/debounce-input.directive.ts
-import { Directive, ElementRef, output, input, inject, OnInit, DestroyRef } from '@angular/core';
-import { fromEvent, debounceTime, distinctUntilChanged, map } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
-@Directive({
-  selector: 'input[appDebounce]',
-  })
-export class DebounceInputDirective implements OnInit {
-  private readonly el = inject(ElementRef<HTMLInputElement>);
-  private readonly destroyRef = inject(DestroyRef);
-
-  public readonly appDebounce = input<number>(300);
-  public readonly debounceValue = output<string>();
-
-  public ngOnInit(): void {
-    fromEvent<Event>(this.el.nativeElement, 'input')
-      .pipe(
-        map(event => (event.target as HTMLInputElement).value),
-        debounceTime(this.appDebounce()),
-        distinctUntilChanged(),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(value => this.debounceValue.emit(value));
-  }
-}
-
-// Usage: <input appDebounce [appDebounce]="500" (debounceValue)="onSearch($event)" />
-```
-
-## Composition
-
-```typescript
-// components/user-list.component.ts
-@Component({
-  selector: 'app-user-list',
-    imports: [
-    TimeAgoPipe,
-    TruncatePipe,
-    FilterPipe,
-    HighlightDirective,
-    HasPermissionDirective,
-  ],
-  template: `
-    @for (user of users() | filter:'status':'active'; track user.id) {
-      <div appHighlight="#f0f0f0">
-        <h3>{{ user.name }}</h3>
-        <p>{{ user.bio | truncate:100 }}</p>
-        <span>{{ user.createdAt | timeAgo }}</span>
-
-        <button *appHasPermission="'users.delete'">Delete</button>
-      </div>
-    }
-  `,
-})
-export class UserListComponent {
-  protected readonly users = input.required<User[]>();
-}
-```
+- For conditional rendering (permission-based, feature-flag)
+- DO inject `TemplateRef` and `ViewContainerRef`
+- DO use `effect()` to react to input signal changes
 
 ## Anti-patterns
 
-```typescript
-// BAD: Impure pipe for filtering (causes performance issues)
-@Pipe({ name: 'filter', pure: false })
-
-// GOOD: Use pure pipe (default) + signal for reactivity
-@Pipe({ name: 'filter' })
-// And update source data via signals
-
-
-// BAD: Direct DOM manipulation
-this.el.nativeElement.innerHTML = '<b>text</b>';
-
-// GOOD: Use Renderer2 or Angular bindings
-@HostBinding('innerHTML') content = '<b>text</b>';
-
-
-// BAD: Adding standalone: true (it's the default since Angular 19)
-@Pipe({ name: 'myPipe', standalone: true })
-
-// GOOD: Omit standalone (defaults to true)
-@Pipe({ name: 'myPipe' })
-
-
-// BAD: Using @Input() in directives
-@Directive({ selector: '[appHighlight]' })
-export class HighlightDirective {
-  @Input() appHighlight: string;  // Use input() instead
-}
-
-// GOOD: Use signal inputs
-@Directive({ selector: '[appHighlight]' })
-export class HighlightDirective {
-  public readonly appHighlight = input<string>();
-}
-```
+- DO NOT use `pure: false` on pipes — causes re-evaluation every CD cycle; update source data via signals instead
+- DO NOT manipulate DOM via `nativeElement.innerHTML` — use `Renderer2` or Angular bindings
+- DO NOT use `*ngIf`, `*ngFor`, `[ngSwitch]` — use built-in control flow (`@if`, `@for`, `@switch`)
+- DO NOT add `standalone: true` — it is the default since Angular 19

@@ -3,262 +3,62 @@ description: "Next.js server and client components"
 paths:
   - "**/apps/**/*.tsx"
   - "**/libs/**/*.tsx"
+  - "**/app/**/*.tsx"
+  - "**/src/**/*.tsx"
+  - "**/components/**/*.tsx"
 ---
 
-# Component Rules (Next.js 15 / React 19)
+# Components (Next.js 15 / React 19)
 
-## Server vs Client Components
+## Server vs Client Decision
 
-### Server Components (Default)
+| Need | Component Type |
+|------|---------------|
+| Data fetching, DB, secrets | Server (default — no directive) |
+| Hooks, event handlers, browser APIs | Client (`'use client'`) |
+| Static content, heavy deps | Server |
+| Interactive UI (forms, modals, toggles) | Client |
 
-No directive needed. Use for:
-- Data fetching
-- Database access
-- Accessing secrets/environment variables
-- Heavy dependencies that don't need to ship to client
+DO keep `'use client'` at the leaf level — push it down as far as possible.
+DO pass server-fetched data as props to client components — not the other way around.
 
-```tsx
-// app/users/page.tsx
-// This is a Server Component by default
-import { db } from '@/lib/db';
+## React 19 Changes
 
-export default async function UsersPage() {
-  const users = await db.user.findMany();
+- `ref` is a regular prop — DO NOT use `forwardRef` (deprecated pattern)
+- `use()` unwraps promises and context in client components
+- `useActionState` replaces `useFormState`
 
-  return (
-    <ul>
-      {users.map((user) => (
-        <li key={user.id}>{user.name}</li>
-      ))}
-    </ul>
-  );
-}
-```
+## Composition
 
-### Client Components
-
-Add `'use client'` at the top. Use for:
-- Interactivity (onClick, onChange, etc.)
-- React hooks (useState, useEffect, useContext)
-- Browser APIs (localStorage, window, etc.)
-
-```tsx
-'use client';
-
-import { useState } from 'react';
-
-export function Counter() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <button onClick={() => setCount(count + 1)}>
-      Count: {count}
-    </button>
-  );
-}
-```
-
-### Decision Tree
-
-```
-Need hooks or interactivity?
-├── YES → 'use client'
-└── NO → Server Component (default)
-         └── Fetching data? → async component
-```
-
-## Component Patterns
-
-### Props Interface
-
-Always define props interface above component:
-
-```tsx
-interface UserCardProps {
-  user: User;
-  isSelected?: boolean;
-  onSelect: (user: User) => void;
-}
-
-export function UserCard({ user, isSelected = false, onSelect }: UserCardProps) {
-  return (/* ... */);
-}
-```
-
-### Composition over Props
-
-```tsx
-// BAD - prop drilling
-<Card
-  title="User Profile"
-  subtitle="Details"
-  icon={<UserIcon />}
-  footer={<Button>Edit</Button>}
-/>
-
-// GOOD - composition
-<Card>
-  <CardHeader>
-    <UserIcon />
-    <CardTitle>User Profile</CardTitle>
-    <CardDescription>Details</CardDescription>
-  </CardHeader>
-  <CardFooter>
-    <Button>Edit</Button>
-  </CardFooter>
-</Card>
-```
-
-### Async Server Components
-
-```tsx
-// Server Component can be async
-export default async function UsersPage() {
-  const users = await getUsers(); // Direct await
-
-  return <UserList users={users} />;
-}
-```
-
-### Client Component with Server Data
-
-```tsx
-// page.tsx (Server)
-export default async function Page() {
-  const data = await fetchData();
-  return <InteractiveComponent initialData={data} />;
-}
-
-// interactive-component.tsx (Client)
-'use client';
-
-export function InteractiveComponent({ initialData }: Props) {
-  const [data, setData] = useState(initialData);
-  // Can now use hooks with server-fetched data
-}
-```
+DO use children/slots (composition) over many props — avoids prop drilling.
+DO define a `Props` interface above each component.
+DO use named exports for reusable components; default exports only for route files.
 
 ## File Organization
 
-### Co-located Components
+- Co-locate private components in `_components/` next to the page
+- Shared components in `libs/shared/ui/` with barrel exports
+- One component per file
 
-```
-app/
-  users/
-    page.tsx              # Route
-    _components/          # Private folder (underscore prefix)
-      user-list.tsx       # Only used in /users
-      user-card.tsx
-      user-form.tsx
-    actions.ts            # Server Actions
-    loading.tsx           # Loading UI
-    error.tsx             # Error UI
-```
+## Naming
 
-### Shared Components
+| Element | Convention |
+|---------|-----------|
+| Files | `kebab-case.tsx` |
+| Components | `PascalCase` |
+| Hooks | `useCamelCase` |
+| Event handlers | `handle` + Event (`handleSubmit`) |
 
-```
-libs/
-  shared/
-    ui/
-      button.tsx
-      input.tsx
-      card.tsx
-      index.ts            # Barrel export
-```
+## Error & Loading Boundaries
 
-## Naming Conventions
+- `error.tsx` — MUST be `'use client'`; receives `{ error, reset }` props
+- `loading.tsx` — automatic Suspense fallback for the route segment
+- `not-found.tsx` — triggered by `notFound()` calls
 
-```tsx
-// Component files: kebab-case
-user-card.tsx
-user-list.tsx
+## Anti-Patterns
 
-// Components: PascalCase
-export function UserCard() {}
-export function UserList() {}
-
-// Hooks: camelCase with 'use' prefix
-export function useUserData() {}
-
-// Event handlers: handle + Event
-const handleClick = () => {};
-const handleSubmit = () => {};
-const handleUserSelect = (user: User) => {};
-```
-
-## Exports
-
-```tsx
-// Named exports for reusable components
-export function Button() {}
-export function Input() {}
-
-// Default export ONLY for:
-// - page.tsx
-// - layout.tsx
-// - loading.tsx
-// - error.tsx
-// - not-found.tsx
-export default function Page() {}
-```
-
-## Avoid
-
-- `useEffect` for data fetching (use Server Components)
-- Default exports for library components
-- Inline styles (use CSS modules or Tailwind)
-- Anonymous components
-- Props spreading without type safety
-
-## Error and Loading UI
-
-### Error Boundary (error.tsx)
-
-```tsx
-'use client';
-
-interface ErrorProps {
-  error: Error & { digest?: string };
-  reset: () => void;
-}
-
-export default function Error({ error, reset }: ErrorProps) {
-  return (
-    <div className="error-container">
-      <h2>Something went wrong!</h2>
-      <p>{error.message}</p>
-      <button onClick={reset}>Try again</button>
-    </div>
-  );
-}
-```
-
-### Loading State (loading.tsx)
-
-```tsx
-export default function Loading() {
-  return (
-    <div className="loading-container">
-      <Spinner />
-      <p>Loading...</p>
-    </div>
-  );
-}
-```
-
-### Not Found (not-found.tsx)
-
-```tsx
-import Link from 'next/link';
-
-export default function NotFound() {
-  return (
-    <div>
-      <h2>Not Found</h2>
-      <p>Could not find the requested resource.</p>
-      <Link href="/">Return Home</Link>
-    </div>
-  );
-}
-```
+- DO NOT use `useEffect` for data fetching — use Server Components
+- DO NOT use default exports for library/shared components
+- DO NOT spread props without type safety
+- DO NOT use anonymous/unnamed components — hurts debugging
+- DO NOT add `'use client'` to a parent when only a child needs interactivity

@@ -4,220 +4,63 @@ paths:
   - "**/*.py"
 ---
 
-# FastAPI Security Patterns
+# FastAPI Security
 
-## OAuth2 Password Flow
+## Authentication Dependencies
 
-```python
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-
-@router.post("/token")
-async def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: DbSession,
-) -> Token:
-    user = await authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    access_token = create_access_token(data={"sub": str(user.id)})
-    return Token(access_token=access_token, token_type="bearer")
-```
-
-## JWT Authentication
-
-```python
-from jose import JWTError, jwt
-from datetime import datetime, timedelta, timezone
-
-SECRET_KEY = settings.secret_key
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-def create_access_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    db: DbSession,
-) -> User:
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-
-    user = await db.get(User, int(user_id))
-    if user is None:
-        raise credentials_exception
-
-    return user
-
-CurrentUser = Annotated[User, Depends(get_current_user)]
-```
-
-## API Key Authentication
-
-```python
-from fastapi.security import APIKeyHeader, APIKeyQuery
-
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
-api_key_query = APIKeyQuery(name="api_key", auto_error=False)
-
-async def get_api_key(
-    api_key_header: str | None = Depends(api_key_header),
-    api_key_query: str | None = Depends(api_key_query),
-) -> str:
-    api_key = api_key_header or api_key_query
-    if not api_key:
-        raise HTTPException(403, "API key required")
-
-    if not await verify_api_key(api_key):
-        raise HTTPException(403, "Invalid API key")
-
-    return api_key
-
-@router.get("/data", dependencies=[Depends(get_api_key)])
-async def get_data() -> dict:
-    ...
-```
+- Define `CurrentUser = Annotated[User, Depends(get_current_user)]` as the standard auth dependency
+- `get_current_user` decodes JWT, fetches user from DB, raises 401 on failure
+- Use `OAuth2PasswordBearer(tokenUrl="/auth/token")` as the token extractor
+- Always include `headers={"WWW-Authenticate": "Bearer"}` in 401 responses
 
 ## Role-Based Access Control
 
+Use parameterized dependencies for role/permission checks:
+
 ```python
-from enum import Enum
-from functools import wraps
-
-class Role(str, Enum):
-    USER = "user"
-    ADMIN = "admin"
-    MODERATOR = "moderator"
-
 def require_roles(*roles: Role):
     async def dependency(user: CurrentUser) -> User:
         if user.role not in roles:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Required roles: {', '.join(r.value for r in roles)}",
-            )
+            raise HTTPException(403, "Insufficient permissions")
         return user
     return dependency
 
 AdminOnly = Annotated[User, Depends(require_roles(Role.ADMIN))]
-ModeratorOrAdmin = Annotated[User, Depends(require_roles(Role.ADMIN, Role.MODERATOR))]
-
-@router.delete("/{user_id}")
-async def delete_user(user_id: int, admin: AdminOnly) -> None:
-    ...
 ```
 
-## Permission-Based Access
+## API Key Authentication
 
-```python
-class Permission(str, Enum):
-    READ_USERS = "read:users"
-    WRITE_USERS = "write:users"
-    DELETE_USERS = "delete:users"
+- Support both header (`X-API-Key`) and query param (`api_key`) via `APIKeyHeader` / `APIKeyQuery`
+- Combine with `auto_error=False` and a union dependency that checks both sources
+- Apply as router-level or app-level dependency
 
-def require_permissions(*permissions: Permission):
-    async def dependency(user: CurrentUser) -> User:
-        user_permissions = set(user.permissions)
-        required = set(permissions)
+## Password Handling
 
-        if not required.issubset(user_permissions):
-            missing = required - user_permissions
-            raise HTTPException(
-                status_code=403,
-                detail=f"Missing permissions: {', '.join(p.value for p in missing)}",
-            )
-        return user
-    return dependency
-
-CanDeleteUsers = Annotated[User, Depends(require_permissions(Permission.DELETE_USERS))]
-```
-
-## Password Hashing
-
-```python
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-async def authenticate_user(db: DbSession, email: str, password: str) -> User | None:
-    user = await db.scalar(select(User).where(User.email == email))
-    if not user:
-        return None
-    if not verify_password(password, user.hashed_password):
-        return None
-    return user
-```
+- Use `bcrypt` directly (`bcrypt.hashpw` / `bcrypt.checkpw`) or `pwdlib` for password hashing -- `passlib` is unmaintained
+- Hash on create, verify on login -- NEVER compare plaintext
+- NEVER log or return passwords in responses
 
 ## CORS Configuration
 
-```python
-from fastapi.middleware.cors import CORSMiddleware
+- Whitelist exact origins in `allow_origins` -- NEVER `["*"]` in production
+- Set `allow_credentials=True` only when using cookies
+- Restrict `allow_methods` to actual methods used
+- Use `expose_headers` for custom response headers the client needs
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,  # ["https://example.com"]
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
-    expose_headers=["X-Request-ID"],
-)
-```
+## Security Headers
 
-## Security Headers Middleware
-
-```python
-from starlette.middleware.base import BaseHTTPMiddleware
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        response = await call_next(request)
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        return response
-
-app.add_middleware(SecurityHeadersMiddleware)
-```
+Add via middleware: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, `X-XSS-Protection: 0` (modern browsers).
 
 ## Rate Limiting
 
-```python
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+- Use `slowapi` with `Limiter(key_func=get_remote_address)` for per-IP limiting
+- Apply per-route with `@limiter.limit("10/minute")` decorator
+- Return 429 with `Retry-After` header
 
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
+## Anti-patterns
 
-@router.get("/")
-@limiter.limit("10/minute")
-async def get_items(request: Request) -> list[Item]:
-    ...
-```
+- NEVER store JWT secret in code -- use environment variables via `pydantic-settings`
+- NEVER use `HS256` with a weak secret -- minimum 256-bit random key
+- NEVER skip token expiry (`exp` claim) -- always set reasonable TTL
+- NEVER trust client-provided user ID -- always derive from token
+- NEVER disable CORS in production -- configure it properly

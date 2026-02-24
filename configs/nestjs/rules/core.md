@@ -7,102 +7,68 @@ alwaysApply: true
 
 ## Stack
 
-- NestJS 11+
-- TypeScript strict mode
+- NestJS 11+ with TypeScript strict mode
 - Node.js 20+
-- Vitest + Supertest
-- Prisma or TypeORM
+- Vitest + Supertest for testing
+- Prisma (preferred) or TypeORM for data access
 
-## Architecture - Modular Monolith
+## Architecture — Modular Monolith
 
-```
-src/
-├── modules/
-│   ├── [feature]/
-│   │   ├── [feature].module.ts
-│   │   ├── [feature].controller.ts
-│   │   ├── [feature].service.ts
-│   │   ├── [feature].repository.ts
-│   │   ├── dto/
-│   │   └── entities/
-│   └── auth/
-│       ├── strategies/
-│       └── guards/
-├── common/
-│   ├── decorators/
-│   ├── filters/
-│   ├── guards/
-│   ├── interceptors/
-│   └── pipes/
-├── config/
-├── app.module.ts
-└── main.ts
-```
+- One module = one bounded domain context
+- Modules communicate only via exported services — never import internal providers
+- Use barrel exports (`index.ts`) per module for clean cross-module imports
+- Feature modules live under `src/modules/[feature]/`; shared utilities under `src/common/`
 
 ## Request Lifecycle
 
-```
-Request → Middleware → Guard → Interceptor (pre) → Pipe → Controller → Interceptor (post) → Response
-```
+Request → Middleware → Guard → Interceptor (pre) → Pipe → Controller → Interceptor (post) → Filter (on error) → Response
 
-## Core Principles
+## Layer Responsibilities
 
-### Module Design
+| Layer | Responsibility | Anti-pattern |
+|-------|---------------|-------------|
+| Controller | HTTP I/O only — parse, delegate, return | Business logic in controllers |
+| Service | All business logic, orchestration | Direct DB access from controllers |
+| Repository | Data access, query building | Business rules in repositories |
+| DTO | Input validation via class-validator | Undecorated DTO properties |
 
-- **Single Responsibility**: One module = one domain
-- **Clear Boundaries**: Communicate via exported services only
-- **Barrel Exports**: Use `index.ts` for clean imports
+## Exception Handling
 
-### Layer Responsibilities
+- DO use built-in NestJS HTTP exceptions (`NotFoundException`, `ConflictException`, etc.)
+- DO use `IntrinsicException` (NestJS 11) as a base class for exceptions that should bypass automatic logging by base exception filters — useful for expected application errors
+- DO create domain-specific exception classes extending `HttpException` for business rules
+- DO NOT throw generic `Error` — always use typed exceptions
 
-| Layer | Responsibility |
-|-------|---------------|
-| Controller | HTTP only, delegates to service |
-| Service | All business logic |
-| Repository | Data access only |
-| DTO | Validation with class-validator |
+## Validation (Global)
 
-### Exception Handling
+Enable `ValidationPipe` globally in `main.ts`: `whitelist: true`, `forbidNonWhitelisted: true`, `transform: true`.
 
-Use built-in NestJS exceptions:
-- `NotFoundException` - 404
-- `BadRequestException` - 400
-- `UnauthorizedException` - 401
-- `ForbiddenException` - 403
-- `ConflictException` - 409
+## Environment Configuration
 
-### Validation (Global)
-
-Enable global `ValidationPipe` in main.ts with:
-- `whitelist: true` - Strip non-whitelisted properties
-- `forbidNonWhitelisted: true` - Throw on extra properties
-- `transform: true` - Auto-transform to DTO types
-
-### DTOs
-
-- Always use class-validator decorators
-- `PartialType`, `PickType`, `OmitType` for variants
-- Combine with Swagger decorators
+- DO validate all env vars at startup with a Zod schema via `ConfigModule.forRoot({ validate })`
+- DO NOT access `process.env` directly in services — always use typed `ConfigService`
+- DO use `configService.getOrThrow()` for required values
 
 ## Authentication
 
-- Passport.js + JWT strategy
-- Global `JwtAuthGuard` with `@Public()` decorator for exceptions
-- `@CurrentUser()` decorator for accessing user
+- Passport.js + JWT strategy as default
+- Global `JwtAuthGuard` via `APP_GUARD` with `@Public()` decorator for opt-out
+- `@CurrentUser()` param decorator for accessing authenticated user
+
+## Code Style
+
+- Constructor injection with `readonly` for all injected dependencies
+- DO NOT use property injection (`@Inject()` on fields) — harder to test
+- Async methods return `Promise<T>` with explicit return types
+- Use built-in pipes for params: `ParseUUIDPipe`, `ParseIntPipe`, `ParseEnumPipe`
+- Use `PartialType`, `PickType`, `OmitType` from `@nestjs/mapped-types` for DTO variants
 
 ## Commands
 
 ```bash
 npm run start:dev       # Dev with watch
 npm run build           # Production build
-npm run test            # Unit tests
+npm run test            # Unit tests (Vitest)
 npm run test:e2e        # E2E tests
 npm run test:cov        # Coverage
 ```
-
-## Code Style
-
-- Constructor injection (not property injection)
-- `readonly` for injected dependencies
-- Async methods return `Promise<T>`
-- Use `ParseUUIDPipe`, `ParseIntPipe` for params

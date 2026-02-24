@@ -6,166 +6,60 @@ paths:
 
 # AdonisJS Testing (Japa)
 
-## Test Structure
+## Test Runner
 
-```
-tests/
-├── bootstrap.ts      # Test setup
-├── unit/
-│   └── services/
-├── functional/
-│   └── controllers/
-└── integration/
-```
+- Japa is the native AdonisJS test runner -- do NOT use Jest or Mocha
+- Run tests: `node ace test`, filter: `--files="tests/functional/**"`, watch: `--watch`
+- Tag tests with `@slow`, `@regression` and filter with `--tags`
 
-## Unit Test
+## Test Organization
+
+| Directory | Purpose | Client |
+|-----------|---------|--------|
+| `tests/unit/` | Services, utilities, pure logic | Direct instantiation |
+| `tests/functional/` | HTTP endpoints, request/response | `apiClient` |
+| `tests/e2e/` | Full browser flows | `browserClient` (Playwright) |
+
+## HTTP Tests (apiClient)
+
+- Use `client.get()`, `client.post()`, etc. for endpoint testing
+- Chain `.json({})` for request body, `.header()` for headers
+- Authenticate with `.loginAs(user)` -- no manual token management
+- Assert with `response.assertStatus()`, `response.assertBodyContains()`
+
+## Database Isolation
+
+- Use global transactions for per-test isolation:
 
 ```typescript
-import { test } from '@japa/runner'
-import UserService from '#services/user_service'
-
-test.group('UserService', () => {
-  test('creates a user with valid data', async ({ assert }) => {
-    const service = new UserService()
-    const user = await service.create({
-      email: 'test@example.com',
-      password: 'password123',
-    })
-
-    assert.exists(user.id)
-    assert.equal(user.email, 'test@example.com')
-  })
+group.each.setup(async () => {
+  await Database.beginGlobalTransaction()
+  return () => Database.rollbackGlobalTransaction()
 })
 ```
 
-## Functional Test (HTTP)
+## Factories
 
-```typescript
-import { test } from '@japa/runner'
-import { UserFactory } from '#database/factories/user_factory'
-
-test.group('Users Controller', (group) => {
-  group.each.setup(async () => {
-    // Runs before each test
-    await Database.beginGlobalTransaction()
-    return () => Database.rollbackGlobalTransaction()
-  })
-
-  test('list all users', async ({ client, assert }) => {
-    await UserFactory.createMany(3)
-
-    const response = await client.get('/users')
-
-    response.assertStatus(200)
-    assert.lengthOf(response.body(), 3)
-  })
-
-  test('create a user', async ({ client }) => {
-    const response = await client.post('/users').json({
-      email: 'new@example.com',
-      password: 'password123',
-      name: 'New User',
-    })
-
-    response.assertStatus(201)
-    response.assertBodyContains({ email: 'new@example.com' })
-  })
-
-  test('requires authentication', async ({ client }) => {
-    const response = await client.get('/profile')
-    response.assertStatus(401)
-  })
-})
-```
-
-## Authenticated Requests
-
-```typescript
-test('authenticated user can view profile', async ({ client }) => {
-  const user = await UserFactory.create()
-
-  const response = await client
-    .get('/profile')
-    .loginAs(user)
-
-  response.assertStatus(200)
-  response.assertBodyContains({ id: user.id })
-})
-```
-
-## Database Helpers
-
-```typescript
-import Database from '@adonisjs/lucid/services/db'
-import { test } from '@japa/runner'
-
-test.group('Database tests', (group) => {
-  // Transaction per test (auto rollback)
-  group.each.setup(async () => {
-    await Database.beginGlobalTransaction()
-    return () => Database.rollbackGlobalTransaction()
-  })
-
-  // Or truncate tables
-  group.each.setup(async () => {
-    await Database.truncate('users')
-  })
-})
-```
-
-## Assertions
-
-```typescript
-test('response assertions', async ({ client, assert }) => {
-  const response = await client.get('/users/1')
-
-  // Status
-  response.assertStatus(200)
-  response.assertStatus(201)
-  response.assertStatus(404)
-
-  // Body
-  response.assertBody({ id: 1, name: 'John' })
-  response.assertBodyContains({ name: 'John' })
-
-  // Headers
-  response.assertHeader('content-type', 'application/json')
-
-  // Custom assertions
-  assert.equal(response.body().email, 'test@example.com')
-  assert.lengthOf(response.body().users, 3)
-  assert.isTrue(response.body().isActive)
-})
-```
+- Use Lucid model factories for test data: `UserFactory.create()`, `UserFactory.createMany(5)`
+- Build relationships: `UserFactory.with('posts', 3).create()`
+- Override attributes: `UserFactory.merge({ email: 'specific@test.com' }).create()`
 
 ## Mocking
 
-```typescript
-import { test } from '@japa/runner'
-import mail from '@adonisjs/mail/services/main'
+- Use `mail.fake()` / `mail.restore()` for email assertions
+- Use `emitter.fake()` for event assertions
+- Prefer DI-based test doubles over global mocking
 
-test('sends welcome email on registration', async ({ client, assert }) => {
-  const { mails } = mail.fake()
+## Assertions
 
-  await client.post('/auth/register').json({
-    email: 'test@example.com',
-    password: 'password123',
-  })
+- `response.assertStatus(code)` -- HTTP status
+- `response.assertBody(obj)` -- exact body match
+- `response.assertBodyContains(partial)` -- partial body match
+- `assert.exists()`, `assert.equal()`, `assert.lengthOf()` -- Japa built-ins
 
-  assert.lengthOf(mails.sent, 1)
-  mails.assertSent(WelcomeMail, (mail) => {
-    return mail.to[0].address === 'test@example.com'
-  })
+## Anti-patterns
 
-  mail.restore()
-})
-```
-
-## Running Tests
-
-```bash
-node ace test              # All tests
-node ace test --files="tests/functional/**"
-node ace test --tags="@slow"
-node ace test --watch      # Watch mode
-```
+- Do NOT use `beginGlobalTransaction` AND `truncate` in the same group -- pick one strategy
+- Do NOT test implementation details -- test behavior through public API
+- Do NOT skip `group.each.setup` for database tests -- leads to test pollution
+- Do NOT mock Lucid models directly -- use factories and real database queries

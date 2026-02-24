@@ -12,160 +12,47 @@ paths:
 
 Use modern syntax (Python 3.10+):
 
-```python
-# GOOD
-def get_user(user_id: int) -> User | None: ...
-def process(items: list[str]) -> dict[str, int]: ...
+- `list[str]` not `List[str]`, `dict[str, int]` not `Dict[str, int]`
+- `str | None` not `Optional[str]`, `int | str` not `Union[int, str]`
+- Use `Annotated[T, metadata]` for dependency injection and field metadata
+- Ban `# type: ignore` without a specific error code and justification
 
-# BAD - old syntax
-def get_user(user_id: int) -> Optional[User]: ...
-def process(items: List[str]) -> Dict[str, int]: ...
-```
+## Modern Python (3.11+)
 
-Use `Annotated` for metadata:
-
-```python
-from typing import Annotated
-from fastapi import Depends
-
-CurrentUser = Annotated[User, Depends(get_current_user)]
-```
+- Use `asyncio.TaskGroup` for structured concurrent tasks — replaces manual `gather` patterns
+- Use `tomllib` for TOML/config parsing — it is in the stdlib
+- Use `ExceptionGroup` and `except*` for handling multiple concurrent errors
 
 ## Naming Conventions
 
-| Element    | Convention    | Example              |
-|------------|---------------|----------------------|
-| Modules    | snake_case    | `user_service.py`    |
-| Classes    | PascalCase    | `UserRepository`     |
-| Functions  | snake_case    | `get_user_by_id`     |
-| Constants  | UPPER_SNAKE   | `MAX_RETRY_COUNT`    |
-| Private    | _prefix       | `_validate_input`    |
-| Protected  | _prefix       | `_internal_method`   |
+| Element | Convention | Example |
+|---------|-----------|---------|
+| Modules | snake_case | `user_service.py` |
+| Classes | PascalCase | `UserRepository` |
+| Functions | snake_case | `get_user_by_id` |
+| Constants | UPPER_SNAKE | `MAX_RETRY_COUNT` |
+| Private | _prefix | `_validate_input` |
 
 ## Async/Await
 
-```python
-# GOOD - async for I/O
-async def fetch_user(user_id: int) -> User:
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"/users/{user_id}")
-        return User(**response.json())
-
-# BAD - sync I/O in async context
-async def fetch_user(user_id: int) -> User:
-    response = requests.get(f"/users/{user_id}")  # Blocks event loop!
-    return User(**response.json())
-```
-
-Async library choices:
-- HTTP: `httpx` (not `requests`)
-- PostgreSQL: `asyncpg` (not `psycopg2`)
-- Redis: `redis.asyncio` (not sync `redis`)
+- Use `async def` for all I/O operations
+- Async lib choices: `httpx` (HTTP), `asyncpg` (PostgreSQL), `redis.asyncio` (Redis)
+- DO NOT use `requests`, `psycopg2`, or sync `redis` in async code — blocks event loop
 
 ## Code Style
 
-```bash
-# Tools
-ruff check .          # Linting
-ruff format .         # Formatting (Black-compatible)
-mypy --strict .       # Type checking
-```
+- Use `ruff check .` for linting, `ruff format .` for formatting
+- Use `mypy --strict .` for type checking
+- Configure in `pyproject.toml` with `target-version = "py312"` and strict ruff rules
 
-Configuration in `pyproject.toml`:
+## Docstrings
 
-```toml
-[tool.ruff]
-line-length = 88
-target-version = "py312"
+- Use Google style: `Args:`, `Returns:`, `Raises:` sections
+- Document public APIs — skip private internals unless behavior is non-obvious
 
-[tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "A", "C4", "PT", "RUF"]
+## Anti-patterns
 
-[tool.mypy]
-python_version = "3.12"
-strict = true
-```
-
-## Avoid
-
-```python
-# BAD - type: ignore without reason
-result = some_call()  # type: ignore
-
-# GOOD - explain why
-result = some_call()  # type: ignore[arg-type]  # Library typing issue, see #123
-
-# BAD - mutable default argument
-def append_to(item, target=[]):  # Shared across calls!
-    target.append(item)
-    return target
-
-# GOOD - use None
-def append_to(item, target: list | None = None):
-    if target is None:
-        target = []
-    target.append(item)
-    return target
-
-# BAD - global state
-_cache = {}
-def get_cached(key): ...
-
-# GOOD - class or function parameter
-class Cache:
-    def __init__(self):
-        self._data = {}
-```
-
-## Docstrings (Google Style)
-
-```python
-def calculate_total(
-    items: list[Item],
-    discount: float = 0.0,
-) -> Decimal:
-    """Calculate the total price of items with optional discount.
-
-    Args:
-        items: List of items to calculate.
-        discount: Discount percentage (0.0 to 1.0).
-
-    Returns:
-        Total price after discount.
-
-    Raises:
-        ValueError: If discount is not between 0 and 1.
-    """
-```
-
-## Testing
-
-```python
-import pytest
-from httpx import AsyncClient
-
-@pytest.mark.asyncio
-async def test_get_user_returns_user_when_exists(
-    client: AsyncClient,
-    user_factory: UserFactory,
-):
-    # Arrange
-    user = await user_factory.create()
-
-    # Act
-    response = await client.get(f"/users/{user.id}")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json()["id"] == user.id
-```
-
-Use fixtures for setup:
-
-```python
-@pytest.fixture
-async def db_session():
-    async with async_session() as session:
-        yield session
-        await session.rollback()
-```
+- DO NOT use mutable default arguments (`def f(items=[])`) — use `None` and initialize inside
+- DO NOT use global mutable state — encapsulate in classes or pass as parameters
+- DO NOT use `# type: ignore` without specifying the error code and reason
+- DO NOT use `from typing import Optional, List, Dict` — use builtin `list`, `dict`, `X | None`

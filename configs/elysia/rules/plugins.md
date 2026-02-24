@@ -9,148 +9,43 @@ paths:
 
 # Elysia Plugins
 
-## Instance Plugin
+## Plugin Creation Rules
 
-### GOOD
+- Always set `name` property — Elysia deduplicates plugins by name; unnamed plugins register multiple times
+- Use instance plugins (`new Elysia()`) for stateful plugins with lifecycle hooks
+- Use functional plugins (`(app: Elysia) => app.derive(...)`) for simple transformations
+- Configurable plugins: factory function returning a named Elysia instance
 
-```typescript
-import { Elysia } from 'elysia'
+## Scope Propagation
 
-// Name plugins for deduplication
-const authPlugin = new Elysia({ name: 'auth' })
-  .derive({ as: 'scoped' }, ({ headers }) => {
-    const token = headers.authorization?.replace('Bearer ', '')
-    return { token }
-  })
+| Scope | Visibility | Use Case |
+|-------|-----------|----------|
+| `local` (default) | Current instance + children only | Module-internal hooks |
+| `scoped` | Propagates to direct parent | Plugins that need one-level-up access |
+| `global` | Propagates to all ancestors | Cross-cutting concerns (logging, auth) |
 
-const app = new Elysia()
-  .use(authPlugin)
-  .get('/profile', ({ token }) => getProfile(token))
-```
+Set scope via `as` option: `.derive({ as: 'scoped' }, ...)` or chain `.as('global')` on the plugin instance.
 
-### BAD
+## derive vs resolve vs decorate vs state
 
-```typescript
-// BAD: No name — duplicates if .use()'d multiple times
-const plugin = new Elysia()
-  .derive(() => ({ value: 'hi' }))
-```
+| Primitive | When it runs | Per-request? | Use for |
+|-----------|-------------|-------------|---------|
+| `decorate` | Once at setup | No | Static utilities (logger, db client) |
+| `state` | Once at setup | No (shared) | Mutable stores (counters, caches) |
+| `derive` | Every request, before validation | Yes | Parse headers, extract tokens |
+| `resolve` | Every request, after validation | Yes | Computed props from validated data (user from token) |
 
-## Functional Plugin
+## Anti-Patterns
 
-### GOOD
-
-```typescript
-const rateLimitPlugin = (app: Elysia) =>
-  app.derive({ as: 'scoped' }, () => ({
-    rateLimit: createRateLimiter(),
-  }))
-```
-
-## Scoping
-
-### GOOD
-
-```typescript
-// local (default) — only current instance and children
-new Elysia()
-  .derive(() => ({ localOnly: true }))
-
-// scoped — propagates to parent (one level up)
-new Elysia()
-  .derive({ as: 'scoped' }, () => ({ visibleToParent: true }))
-
-// global — propagates to all ancestors
-new Elysia()
-  .derive({ as: 'global' }, () => ({ visibleEverywhere: true }))
-```
-
-## Derive vs Resolve vs Decorate vs State
-
-### GOOD
-
-```typescript
-const app = new Elysia()
-  // decorate: static utilities, available immediately (no per-request cost)
-  .decorate('logger', new Logger())
-
-  // state: mutable store, shared across requests
-  .state('requestCount', 0)
-
-  // derive: runs before validation, adds per-request properties
-  .derive(({ headers }) => ({
-    bearerToken: headers.authorization?.replace('Bearer ', ''),
-  }))
-
-  // resolve: runs after validation, adds per-request properties
-  .resolve(({ bearerToken }) => ({
-    user: verifyToken(bearerToken),
-  }))
-
-  .get('/profile', ({ user, logger, store }) => {
-    store.requestCount++
-    logger.info(`User ${user.id} accessed profile`)
-    return user
-  })
-```
-
-### BAD
-
-```typescript
-// BAD: Using derive for static values (use decorate instead)
-app.derive(() => ({ db: new Database() }))
-
-// BAD: Using decorate for per-request values (use derive/resolve instead)
-app.decorate('user', getCurrentUser()) // Same user for all requests
-```
+- Do NOT create plugins without `name` — causes silent duplicate registration on multiple `.use()` calls
+- Do NOT use `derive` for static values like DB connections — instantiates per request for no reason
+- Do NOT use `decorate` for per-request values — same value shared across all requests
+- Do NOT register global hooks inside deeply nested plugins without intent — pollutes the entire app
 
 ## Lazy Loading
 
-### GOOD
-
-```typescript
-// Defer plugin loading for faster startup
-const app = new Elysia()
-  .use(import('./modules/users'))
-  .use(import('./modules/posts'))
-```
-
-## Plugin with Configuration
-
-### GOOD
-
-```typescript
-interface CorsConfig {
-  origin: string | string[]
-  credentials?: boolean
-}
-
-const corsPlugin = (config: CorsConfig) =>
-  new Elysia({ name: 'cors' })
-    .onRequest(({ set }) => {
-      set.headers['Access-Control-Allow-Origin'] = Array.isArray(config.origin)
-        ? config.origin.join(',')
-        : config.origin
-    })
-
-// Usage
-app.use(corsPlugin({ origin: 'https://example.com', credentials: true }))
-```
+Use dynamic imports for faster startup: `.use(import('./modules/users'))`
 
 ## Official Plugins
 
-```typescript
-// Common official plugins
-import { cors } from '@elysiajs/cors'
-import { jwt } from '@elysiajs/jwt'
-import { bearer } from '@elysiajs/bearer'
-import { swagger } from '@elysiajs/swagger'
-import { staticPlugin } from '@elysiajs/static'
-import { html } from '@elysiajs/html'
-import { cron } from '@elysiajs/cron'
-
-const app = new Elysia()
-  .use(cors())
-  .use(swagger())
-  .use(jwt({ name: 'jwt', secret: process.env.JWT_SECRET! }))
-```
+Use `@elysiajs/cors`, `@elysiajs/jwt`, `@elysiajs/bearer`, `@elysiajs/swagger`, `@elysiajs/static` as needed. Always mount before route plugins.

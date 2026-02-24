@@ -4,197 +4,54 @@ paths:
   - "**/src/**/*.cs"
 ---
 
-# Clean Architecture Rules
+# Architecture Rules
 
-## Layer Dependencies
+## Clean Architecture (Default)
 
-```
-WebApi → Application → Domain
-WebApi → Infrastructure → Application → Domain
-```
+Strict dependency rule -- inner layers never reference outer layers:
 
-### Domain Layer (src/Domain/)
+| Layer | Allowed dependencies | Forbidden |
+|-------|---------------------|-----------|
+| Domain | None | EF Core, MediatR, any NuGet |
+| Application | Domain | Infrastructure, WebApi |
+| Infrastructure | Application, Domain | WebApi |
+| WebApi | Application, Infrastructure | -- |
 
-- **ZERO external dependencies** (no NuGet packages except primitives)
-- Contains: Entities, Value Objects, Enums, Domain Events, Interfaces
-- No references to other projects
+## Vertical Slice Architecture (Alternative)
 
-```csharp
-// Good - Domain entity
-namespace MyApp.Domain.Entities;
+Use Vertical Slices for smaller projects or bounded contexts where Clean Architecture adds unnecessary ceremony:
+- One folder per feature containing endpoint, handler, validator, and DTO
+- Still enforce domain logic isolation (no DB access in domain entities)
+- Choose one approach per bounded context -- do not mix within the same context
 
-public class User
-{
-    public Guid Id { get; private set; }
-    public string Email { get; private set; } = default!;
-    public string PasswordHash { get; private set; } = default!;
+## CQRS
 
-    private User() { } // EF Core
+- Commands (write): modify state, return minimal data (ID, void, or Result)
+- Queries (read): return data, never modify state
+- Separate read models (DTOs projected via `Select`) from write models (domain entities)
 
-    public static User Create(string email, string passwordHash)
-    {
-        return new User
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            PasswordHash = passwordHash
-        };
-    }
-}
-```
+## Domain Layer Constraints
 
-### Application Layer (src/Application/)
+- Entities use private setters and factory methods (`Create`, `Update`)
+- Expose collections as `IReadOnlyList<T>` backed by private `List<T>`
+- Domain events raised inside entity methods, dispatched after `SaveChanges`
+- Value Objects use `record` or override equality via `GetAtomicValues()`
 
-- References: Domain only
-- Contains: Commands, Queries, DTOs, Interfaces, Validators, Mappings
-- Allowed packages: MediatR, FluentValidation, AutoMapper
+## Application Layer Constraints
 
-```csharp
-// Command + Handler in same folder
-namespace MyApp.Application.Users.Commands.CreateUser;
+- One handler per command/query (Single Responsibility)
+- Colocate command + handler + validator in the same folder
+- Use `ISender` (not `IMediator`) for dispatching -- narrower interface
 
-public record CreateUserCommand(string Email, string Password) : IRequest<Guid>;
+## Infrastructure Layer Constraints
 
-public class CreateUserCommandHandler(
-    IUserRepository userRepository,
-    IPasswordHasher passwordHasher
-) : IRequestHandler<CreateUserCommand, Guid>
-{
-    public async Task<Guid> Handle(CreateUserCommand request, CancellationToken cancellationToken)
-    {
-        var hashedPassword = passwordHasher.Hash(request.Password);
-        var user = User.Create(request.Email, hashedPassword);
-        await userRepository.AddAsync(user, cancellationToken);
-        return user.Id;
-    }
-}
-```
+- All repository interfaces defined in Domain, implemented in Infrastructure
+- `DbContext` only in Infrastructure
+- External service wrappers implement interfaces from Application
 
-### Infrastructure Layer (src/Infrastructure/)
+## Anti-patterns
 
-- References: Application, Domain
-- Contains: DbContext, Repositories, External Services, Configurations
-- Implements interfaces defined in Application/Domain
-
-```csharp
-// Repository implementation
-namespace MyApp.Infrastructure.Repositories;
-
-public class UserRepository(ApplicationDbContext context) : IUserRepository
-{
-    public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await context.Users.FindAsync([id], cancellationToken);
-    }
-
-    public async Task AddAsync(User user, CancellationToken cancellationToken = default)
-    {
-        await context.Users.AddAsync(user, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
-    }
-}
-```
-
-### Presentation Layer (src/WebApi/)
-
-- References: Application, Infrastructure
-- Contains: Controllers/Endpoints, Middleware, Filters
-- Only layer that knows about HTTP
-
-## CQRS Pattern
-
-### Commands (Write Operations)
-
-```csharp
-// Commands modify state, return minimal data (ID or void)
-public record CreateUserCommand(string Email, string Password) : IRequest<Guid>;
-public record UpdateUserCommand(Guid Id, string Name) : IRequest;
-public record DeleteUserCommand(Guid Id) : IRequest;
-```
-
-### Queries (Read Operations)
-
-```csharp
-// Queries return data, never modify state
-public record GetUserQuery(Guid Id) : IRequest<UserDto?>;
-public record GetUsersQuery(int Page, int PageSize) : IRequest<PaginatedList<UserDto>>;
-```
-
-### Validation
-
-```csharp
-// Validator in same folder as command
-public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
-{
-    public CreateUserCommandValidator(IUserRepository userRepository)
-    {
-        RuleFor(x => x.Email)
-            .NotEmpty()
-            .EmailAddress()
-            .MustAsync(async (email, ct) => !await userRepository.ExistsAsync(email, ct))
-            .WithMessage("Email already exists");
-
-        RuleFor(x => x.Password)
-            .NotEmpty()
-            .MinimumLength(8)
-            .Matches("[A-Z]").WithMessage("Must contain uppercase")
-            .Matches("[a-z]").WithMessage("Must contain lowercase")
-            .Matches("[0-9]").WithMessage("Must contain digit");
-    }
-}
-```
-
-## Value Objects
-
-```csharp
-// Immutable, equality by value
-public record Email
-{
-    public string Value { get; }
-
-    public Email(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("Email cannot be empty");
-
-        if (!value.Contains('@'))
-            throw new ArgumentException("Invalid email format");
-
-        Value = value.ToLowerInvariant();
-    }
-
-    public static implicit operator string(Email email) => email.Value;
-}
-```
-
-## Domain Events
-
-```csharp
-// Domain event
-public record UserCreatedEvent(Guid UserId, string Email) : INotification;
-
-// In entity
-public class User
-{
-    private readonly List<INotification> _domainEvents = [];
-    public IReadOnlyCollection<INotification> DomainEvents => _domainEvents.AsReadOnly();
-
-    public static User Create(string email, string passwordHash)
-    {
-        var user = new User { Id = Guid.NewGuid(), Email = email, PasswordHash = passwordHash };
-        user._domainEvents.Add(new UserCreatedEvent(user.Id, user.Email));
-        return user;
-    }
-
-    public void ClearDomainEvents() => _domainEvents.Clear();
-}
-
-// Handler
-public class UserCreatedEventHandler(IEmailService emailService) : INotificationHandler<UserCreatedEvent>
-{
-    public async Task Handle(UserCreatedEvent notification, CancellationToken cancellationToken)
-    {
-        await emailService.SendWelcomeEmailAsync(notification.Email, cancellationToken);
-    }
-}
-```
+- DO NOT reference `Infrastructure` from `Application` -- invert with interfaces
+- DO NOT expose `IQueryable` from repositories -- it leaks persistence concerns
+- DO NOT put domain logic in handlers -- push it into entities/domain services
+- DO NOT create a "Common" or "Shared" project that everything references -- it becomes a dumping ground

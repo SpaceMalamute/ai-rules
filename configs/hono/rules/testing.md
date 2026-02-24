@@ -9,187 +9,42 @@ paths:
 
 # Hono Testing
 
-## app.request() — Simple Direct Testing
+## Two Testing Approaches
 
-### GOOD
+| Approach          | When to use                                    | Type safety |
+|-------------------|------------------------------------------------|-------------|
+| `app.request()`   | Simple tests, non-chained routes, raw requests | None        |
+| `testClient(app)` | Chained routes, RPC-style type-safe testing    | Full        |
 
-```typescript
-import { describe, it, expect } from 'vitest'
-import app from '../src/index'
+## testClient() (Preferred)
 
-describe('GET /posts', () => {
-  it('should return posts list', async () => {
-    const res = await app.request('/posts')
+- Import from `hono/testing` — provides type-safe testing mirroring the RPC client:
+  `const client = testClient(app)`
+- Mirrors `hc` client API: `client.posts.$get()`, `client.posts.$post({ json: data })`
+- Requires chained route definitions on the app instance (same requirement as RPC)
+- No HTTP server needed — tests run in-process against the app instance
 
-    expect(res.status).toBe(200)
+## app.request()
 
-    const body = await res.json()
-    expect(body).toBeInstanceOf(Array)
-  })
-})
-
-describe('POST /posts', () => {
-  it('should create a post', async () => {
-    const res = await app.request('/posts', {
-      method: 'POST',
-      body: JSON.stringify({ title: 'Hello', body: 'World' }),
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    expect(res.status).toBe(201)
-
-    const body = await res.json()
-    expect(body).toHaveProperty('title', 'Hello')
-  })
-
-  it('should reject invalid data', async () => {
-    const res = await app.request('/posts', {
-      method: 'POST',
-      body: JSON.stringify({}),
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    expect(res.status).toBe(400)
-  })
-})
-```
-
-## Mock Environment Bindings
-
-### GOOD
-
-```typescript
-// Third argument to app.request() provides env bindings
-it('should use env bindings', async () => {
-  const res = await app.request('/', {}, {
-    DB: mockDatabase,
-    API_KEY: 'test-key',
-  })
-
-  expect(res.status).toBe(200)
-})
-```
-
-## testClient() — Type-Safe Testing
-
-### GOOD
-
-```typescript
-import { describe, it, expect } from 'vitest'
-import { testClient } from 'hono/testing'
-import app from '../src/routes/posts'
-
-describe('Posts API', () => {
-  const client = testClient(app)
-
-  it('should list posts', async () => {
-    const res = await client.posts.$get()
-
-    expect(res.status).toBe(200)
-
-    const body = await res.json()
-    expect(body).toBeInstanceOf(Array)
-  })
-
-  it('should create a post', async () => {
-    const res = await client.posts.$post({
-      json: { title: 'Test', body: 'Content' },
-    })
-
-    expect(res.status).toBe(201)
-  })
-
-  it('should search with query params', async () => {
-    const res = await client.posts.$get({
-      query: { search: 'hono', page: '1' },
-    })
-
-    expect(res.status).toBe(200)
-  })
-})
-```
-
-### BAD
-
-```typescript
-// BAD: testClient() won't infer types if routes aren't chained
-const app = new Hono()
-app.get('/posts', handler) // Not chained — use app.request() instead
-
-// BAD: Typing response manually when testClient provides types
-const res = await client.posts.$get()
-const body: Post[] = await res.json() // Unnecessary — already typed via RPC inference
-```
-
-## Testing with Headers
-
-### GOOD
-
-```typescript
-it('should authenticate with bearer token', async () => {
-  const res = await app.request('/api/profile', {
-    headers: { Authorization: 'Bearer valid-token' },
-  })
-
-  expect(res.status).toBe(200)
-})
-
-it('should reject without auth', async () => {
-  const res = await app.request('/api/profile')
-
-  expect(res.status).toBe(401)
-})
-```
+- Direct request testing: `await app.request('/path', { method, body, headers })`
+- Third argument provides mock env bindings: `app.request('/', {}, { DB: mockDb, API_KEY: 'test' })`
+- Use for routes that aren't chained or when testing raw HTTP behavior
 
 ## Testing Middleware
 
-### GOOD
+- Create a minimal Hono app in the test with the middleware applied and a dummy route
+- Test both the happy path (middleware passes) and rejection (middleware blocks)
+- Use `app.request()` with appropriate headers/bindings
 
-```typescript
-import { Hono } from 'hono'
-import { authMiddleware } from '../src/middleware/auth'
+## Test Organization
 
-describe('authMiddleware', () => {
-  const app = new Hono()
-  app.use(authMiddleware)
-  app.get('/test', (c) => c.json({ user: c.get('user') }))
+- Test file per route module — matches `src/routes/posts.ts` with `test/posts.test.ts`
+- Group by resource and HTTP method using `describe` blocks
+- Test validation rejections (400), auth failures (401/403), not found (404), and success cases
 
-  it('should set user on valid token', async () => {
-    const res = await app.request('/test', {
-      headers: { Authorization: 'Bearer valid-token' },
-    })
+## Anti-patterns
 
-    expect(res.status).toBe(200)
-
-    const body = await res.json()
-    expect(body.user).toBeDefined()
-  })
-
-  it('should return 401 on missing token', async () => {
-    const res = await app.request('/test')
-
-    expect(res.status).toBe(401)
-  })
-})
-```
-
-## Testing Error Handling
-
-### GOOD
-
-```typescript
-it('should return 404 for unknown routes', async () => {
-  const res = await app.request('/nonexistent')
-
-  expect(res.status).toBe(404)
-})
-
-it('should handle server errors gracefully', async () => {
-  const res = await app.request('/api/failing-endpoint')
-
-  expect(res.status).toBe(500)
-
-  const body = await res.json()
-  expect(body).toHaveProperty('error')
-})
-```
+- Do NOT spin up an HTTP server for tests — use `app.request()` or `testClient()` directly
+- Do NOT manually type `testClient()` responses — types are inferred from the route chain
+- Do NOT use `testClient()` with non-chained routes — it won't infer types, use `app.request()` instead
+- Do NOT skip testing error paths — always test validation failures and auth rejections

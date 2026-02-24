@@ -9,136 +9,35 @@ paths:
 
 # Elysia Eden Treaty
 
-## Server-Side Type Export
+## Setup
 
-### GOOD
-
-```typescript
-// src/index.ts
-import { Elysia, t } from 'elysia'
-import { users } from './modules/users'
-import { posts } from './modules/posts'
-
-// Chain .use() for type inference
-const app = new Elysia()
-  .use(users)
-  .use(posts)
-  .listen(3000)
-
-// Export type for Eden client
-export type App = typeof app
-```
-
-### BAD
-
-```typescript
-// BAD: Non-chained usage loses type information
-const app = new Elysia()
-app.use(users)
-app.use(posts)
-
-export type App = typeof app // Eden won't see routes
-```
-
-## Client-Side Usage
-
-### GOOD
-
-```typescript
-// src/client.ts
-import { treaty } from '@elysiajs/eden'
-import type { App } from './index'
-
-const api = treaty<App>('http://localhost:3000')
-
-// Fully typed — knows routes and their methods
-const { data: posts, error } = await api.posts.get()
-
-// POST with typed body
-const { data: created } = await api.posts.post({
-  title: 'New Post',
-  content: 'Hello world',
-})
-
-// Dynamic params via function call
-const { data: user } = await api.users({ id: '123' }).get()
-```
+- Use Eden Treaty v2 (`treaty` from `@elysiajs/eden`) as the default client
+- Export app type: `export type App = typeof app` — requires method chaining to capture all routes
+- Client-side: `const api = treaty<App>('http://localhost:3000')`
+- Testing: pass app instance directly — `const api = treaty(app)` — no URL, no server needed
 
 ## Path Mapping
 
-### GOOD
+Server routes map to chained property access on the client:
 
-```typescript
-// Server routes map to client object paths:
-// GET  /posts          → api.posts.get()
-// POST /posts          → api.posts.post({ ... })
-// GET  /posts/:id      → api.posts({ id: '1' }).get()
-// PUT  /users/:id      → api.users({ id: '1' }).put({ ... })
-// GET  /api/v1/health  → api.api.v1.health.get()
-```
+| Server Route | Eden Client Call |
+|-------------|-----------------|
+| `GET /posts` | `api.posts.get()` |
+| `POST /posts` | `api.posts.post({ ... })` |
+| `GET /posts/:id` | `api.posts({ id: '1' }).get()` |
+| `PUT /users/:id` | `api.users({ id: '1' }).put({ ... })` |
+| `GET /api/v1/health` | `api.api.v1.health.get()` |
 
-## Error Handling
+## Response Handling
 
-### GOOD
+Every Eden call returns `{ data, error, status }`:
+- `error` is typed based on response schemas — use `error.status` for narrowing
+- When `error` is null, `data` is the typed success response
+- Define response schemas on the server to get typed error discrimination on the client
 
-```typescript
-const { data, error, status } = await api.posts.get()
+## Anti-Patterns
 
-// error is typed based on response schema
-if (error) {
-  switch (error.status) {
-    case 400:
-      console.error('Validation error:', error.value)
-      break
-    case 401:
-      console.error('Unauthorized')
-      break
-    default:
-      console.error('Unknown error:', error.value)
-  }
-  return
-}
-
-// data is typed and non-null here
-console.log(data)
-```
-
-## Eden Fetch (Alternative Syntax)
-
-### GOOD
-
-```typescript
-import { edenFetch } from '@elysiajs/eden'
-import type { App } from './index'
-
-const fetch = edenFetch<App>('http://localhost:3000')
-
-// fetch-like syntax with type safety
-const { data } = await fetch('/posts/:id', {
-  params: { id: '123' },
-})
-```
-
-## Using with React / Frontend
-
-### GOOD
-
-```typescript
-// hooks/useApi.ts
-import { treaty } from '@elysiajs/eden'
-import type { App } from '@server/index'
-
-export const api = treaty<App>('http://localhost:3000')
-
-// In component
-const Posts = () => {
-  const [posts, setPosts] = useState<typeof api.posts.get extends
-    (...args: any) => Promise<{ data: infer T }> ? T : never>([])
-
-  useEffect(() => {
-    api.posts.get().then(({ data }) => {
-      if (data) setPosts(data)
-    })
-  }, [])
-}
-```
+- Do NOT break method chains on the server — `export type App = typeof app` will miss routes registered as separate statements
+- Do NOT use Eden Fetch for new code — Treaty v2 has better ergonomics and type inference
+- Do NOT pass URLs in tests — pass the app instance directly to `treaty()` for zero-network-overhead testing
+- Do NOT forget to export `App` type — Eden client has no type information without it

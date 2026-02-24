@@ -8,182 +8,70 @@ paths:
   - "**/*.java"
 ---
 
-# Security Rules (OWASP Top 10)
+# Security Rules (OWASP Top 10 2025)
 
-## 1. Injection Prevention
+## A01:2025 — Broken Access Control
 
-### SQL Injection
-```typescript
-// Bad - string concatenation
-const query = `SELECT * FROM users WHERE id = ${userId}`;
+- Always verify resource ownership — never trust client-provided IDs alone
+- Check authorization at every endpoint — not just at the route level
+- Deny by default — explicitly grant access, never assume it
+- Use anti-CSRF tokens for all state-changing operations
+- Set cookies: `httpOnly: true`, `secure: true`, `sameSite: 'strict'`
 
-// Good - parameterized queries
-const query = 'SELECT * FROM users WHERE id = $1';
-await db.query(query, [userId]);
-```
+## A02:2025 — Security Misconfiguration
 
-### NoSQL Injection
-```typescript
-// Bad - user input directly in query
-db.users.find({ email: req.body.email });
+- Set: `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy`
+- Use `helmet` (Node.js), `django-csp` (Python), or equivalent middleware
+- DO NOT disable CORS for convenience — configure allowed origins explicitly
 
-// Good - validate and sanitize
-const email = validateEmail(req.body.email);
-db.users.find({ email });
-```
+## A03:2025 — Software Supply Chain Failures
 
-### Command Injection
-```typescript
-// Bad - user input in command
-exec(`ls ${userInput}`);
+- Audit dependencies regularly: `npm audit`, `pip-audit`, `dotnet list package --vulnerable`
+- Use lockfiles (`package-lock.json`, `poetry.lock`) — commit them
+- Remove unused dependencies — smaller surface area = fewer vulnerabilities
+- Pin exact versions in production — no `^` or `~` for critical deps
 
-// Good - use safe APIs or sanitize
-exec('ls', [sanitize(userInput)]);
-```
+## A04:2025 — Cryptographic Failures
 
-## 2. Authentication
+- Never store plain passwords — use bcrypt (cost 12+) or argon2id
+- Use TLS everywhere — no exceptions in production
+- Never log passwords, tokens, API keys, PII, or credit card numbers
+- DO NOT use MD5/SHA1 for passwords — use bcrypt/argon2id
 
-- Never store plain passwords - use bcrypt/argon2
-- Use secure session tokens (cryptographically random)
-- Implement account lockout after failed attempts
-- Use constant-time comparison for secrets
+## A05:2025 — Injection
 
-```typescript
-// Bad
-if (password === storedPassword) { }
+- ALL database queries must be parameterized — never concatenate user input
+- Use ORM/query builder exclusively — raw SQL only with parameterized queries
+- Sanitize user input before shell commands — prefer safe APIs over `exec()`
+- Never use `innerHTML` / `dangerouslySetInnerHTML` with user content — sanitize with DOMPurify
 
-// Good
-import { timingSafeEqual } from 'crypto';
-if (timingSafeEqual(Buffer.from(a), Buffer.from(b))) { }
-```
+## A06:2025 — Insecure Design
 
-## 3. Sensitive Data Exposure
+- Validate all inputs server-side — never trust client validation
+- Use allowlists over denylists — explicitly define what's accepted
+- Validate type, length, format, and range with schema validation (Zod, Pydantic, FluentValidation)
 
-### Never log sensitive data
-```typescript
-// Bad
-logger.info('User login', { email, password });
+## A07:2025 — Authentication Failures
 
-// Good
-logger.info('User login', { email, password: '[REDACTED]' });
-```
+- Use cryptographically random session tokens (min 128-bit entropy)
+- Implement account lockout after 5 failed attempts with exponential backoff
+- Use constant-time comparison for secrets (`timingSafeEqual`, `hmac.compare_digest`)
+- DO NOT store JWT in localStorage — use httpOnly cookies (XSS-proof)
 
-### Never commit secrets
-- Use environment variables
-- Add to `.gitignore`: `.env`, `*.pem`, `credentials.json`
-- Use secret managers in production
+## A08:2025 — Software or Data Integrity Failures
 
-### Mask in responses
-```typescript
-// Bad - return full credit card
-{ cardNumber: '4111111111111111' }
+- Mask sensitive data in API responses (`****1111` not full card number)
+- DO NOT skip auth checks on "internal" endpoints — zero trust
+- Use framework-provided escaping (React JSX, Angular template binding)
 
-// Good - mask sensitive parts
-{ cardNumber: '************1111' }
-```
+## A09:2025 — Security Logging & Alerting Failures
 
-## 4. XSS Prevention
+- Never expose stack traces to users — log internally, return generic message
+- Validate error responses don't leak internal paths, versions, or query details
+- DO NOT log secrets even accidentally — redact sensitive fields in serializers
 
-```typescript
-// Bad - innerHTML with user content
-element.innerHTML = userInput;
+## A10:2025 — Mishandling of Exceptional Conditions
 
-// Good - use safe methods
-element.textContent = userInput;
-
-// React/Angular - avoid dangerouslySetInnerHTML / [innerHTML]
-// If needed, sanitize first with DOMPurify
-```
-
-## 5. CSRF Protection
-
-- Use anti-CSRF tokens for state-changing operations
-- Validate `Origin` and `Referer` headers
-- Use `SameSite` cookie attribute
-
-```typescript
-// Set secure cookies
-res.cookie('session', token, {
-  httpOnly: true,
-  secure: true,
-  sameSite: 'strict',
-});
-```
-
-## 6. Access Control
-
-```typescript
-// Always check ownership
-async function getDocument(userId: string, docId: string) {
-  const doc = await db.documents.findById(docId);
-
-  // Bad - missing authorization check
-  return doc;
-
-  // Good - verify ownership
-  if (doc.ownerId !== userId) {
-    throw new ForbiddenError();
-  }
-  return doc;
-}
-```
-
-## 7. Security Headers
-
-```typescript
-// Essential headers
-{
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'Content-Security-Policy': "default-src 'self'",
-  'X-XSS-Protection': '1; mode=block',
-}
-```
-
-## 8. Input Validation
-
-- Validate all inputs on server side (never trust client)
-- Use allowlists over denylists
-- Validate type, length, format, range
-
-```typescript
-// Use schema validation
-const schema = z.object({
-  email: z.string().email().max(256),
-  age: z.number().int().min(0).max(150),
-  role: z.enum(['user', 'admin']),
-});
-```
-
-## 9. Error Handling
-
-```typescript
-// Bad - expose internal errors
-catch (error) {
-  res.status(500).json({ error: error.stack });
-}
-
-// Good - generic message, log internally
-catch (error) {
-  logger.error('Database error', { error });
-  res.status(500).json({ error: 'Internal server error' });
-}
-```
-
-## 10. Dependencies
-
-- Keep dependencies updated
-- Audit regularly: `npm audit`, `pip-audit`, `dotnet list package --vulnerable`
-- Remove unused dependencies
-- Pin versions in production
-
-## Quick Checklist
-
-Before committing, verify:
-- [ ] No secrets in code
-- [ ] User inputs validated and sanitized
-- [ ] SQL/NoSQL queries parameterized
-- [ ] Sensitive data not logged
-- [ ] Authorization checks in place
-- [ ] Error messages don't expose internals
+- Always catch at boundaries (middleware, error handler) — no unhandled rejections
+- Fail securely — errors must not bypass security controls or leave resources in an insecure state
+- Validate required configuration at startup — fail fast if missing

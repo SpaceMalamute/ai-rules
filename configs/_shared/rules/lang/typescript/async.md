@@ -9,146 +9,32 @@ paths:
 
 ## Parallel Execution
 
-```typescript
-// GOOD - parallel independent requests
-async function fetchDashboard(userId: string): Promise<Dashboard> {
-  const [user, posts, notifications] = await Promise.all([
-    fetchUser(userId),
-    fetchPosts(userId),
-    fetchNotifications(userId),
-  ]);
+- Use `Promise.all()` for independent concurrent operations — never sequential `await` for independent calls
+- Use `Promise.allSettled()` when partial failure is acceptable
+- Use batched `Promise.all()` with slicing for controlled concurrency on large arrays
 
-  return { user, posts, notifications };
-}
+## Cancellation
 
-// GOOD - parallel with error handling
-async function fetchAllUsers(ids: string[]): Promise<(User | null)[]> {
-  const results = await Promise.allSettled(
-    ids.map(id => fetchUser(id))
-  );
+- Use `AbortController` for cancellable operations (fetch, timers, long tasks)
+- Always pass `signal` through to underlying fetch calls
+- In React: abort on cleanup in `useEffect` — prevents state updates on unmounted components
 
-  return results.map(result =>
-    result.status === 'fulfilled' ? result.value : null
-  );
-}
+## Pitfalls
 
-// BAD - sequential when parallel is possible
-async function fetchDashboardSlow(userId: string) {
-  const user = await fetchUser(userId);
-  const posts = await fetchPosts(userId);         // Waits for user
-  const notifications = await fetchNotifications(userId); // Waits for posts
-  return { user, posts, notifications };
-}
+- DO NOT leave floating promises — every promise must be `await`ed or explicitly caught
+- DO NOT use `async` in constructors — use static factory method `static async create()`
+- DO NOT use `forEach` with async callbacks — it doesn't await; use `for...of` (sequential) or `Promise.all(map(...))` (parallel)
+- DO NOT catch errors without rethrowing or logging — silent swallowing hides bugs
 
-// GOOD - controlled concurrency
-async function fetchWithLimit<T>(
-  items: string[],
-  fetcher: (id: string) => Promise<T>,
-  limit = 5
-): Promise<T[]> {
-  const results: T[] = [];
+## Error Handling
 
-  for (let i = 0; i < items.length; i += limit) {
-    const batch = items.slice(i, i + limit);
-    const batchResults = await Promise.all(batch.map(fetcher));
-    results.push(...batchResults);
-  }
+- Catch at boundaries (controller, handler), not at every level
+- Type-narrow errors: `if (error instanceof SpecificError)` before accessing properties
+- Use `finally` for cleanup (clearTimeout, close connections)
 
-  return results;
-}
-```
+## Anti-patterns
 
-## AbortController & Cancellation
-
-```typescript
-// GOOD - cancellable fetch with timeout
-async function fetchWithTimeout<T>(
-  url: string,
-  timeoutMs: number
-): Promise<T> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    return await response.json();
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-// GOOD - pass signal for cancellation
-async function searchUsers(
-  query: string,
-  signal?: AbortSignal
-): Promise<User[]> {
-  const response = await fetch(`/api/users?q=${query}`, { signal });
-  return response.json();
-}
-
-// Usage in React — always abort on cleanup
-function useSearch(query: string) {
-  const [results, setResults] = useState<User[]>([]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    searchUsers(query, controller.signal)
-      .then(setResults)
-      .catch(error => {
-        if (error.name !== 'AbortError') {
-          console.error(error);
-        }
-      });
-
-    return () => controller.abort();
-  }, [query]);
-
-  return results;
-}
-```
-
-## Common Async Pitfalls
-
-```typescript
-// BAD - floating promise (no await, no catch)
-function handleClick() {
-  saveData(formData); // Promise ignored!
-}
-
-// GOOD - always await or catch
-async function handleClick() {
-  await saveData(formData);
-}
-
-// BAD - async in constructor (can't await)
-class UserService {
-  constructor() {
-    this.init(); // floating promise!
-  }
-  async init() { /* ... */ }
-}
-
-// GOOD - factory pattern
-class UserService {
-  static async create(): Promise<UserService> {
-    const service = new UserService();
-    await service.init();
-    return service;
-  }
-  private async init() { /* ... */ }
-}
-
-// BAD - forEach with async (doesn't await)
-items.forEach(async (item) => {
-  await processItem(item); // Runs all in parallel, unhandled!
-});
-
-// GOOD - for...of for sequential
-for (const item of items) {
-  await processItem(item);
-}
-
-// GOOD - Promise.all for parallel
-await Promise.all(items.map(item => processItem(item)));
-```
+- Sequential awaits for independent operations — wastes time proportional to call count
+- Missing `AbortController` cleanup in UI — causes memory leaks and stale state updates
+- `catch(() => {})` — silent error swallowing, always log minimum context
+- Mixing `.then()` chains with `async/await` — pick one style per function

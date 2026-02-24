@@ -7,203 +7,44 @@ paths:
 
 # React Hooks
 
-## Custom Hook Structure
+## React 19 Hooks
 
-### GOOD
+### useActionState (replaces deprecated useFormState)
 
-```tsx
-export function useUsers(filters?: UserFilters) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+- Returns `[state, formAction, isPending]` — use for form submissions with pending/error state
+- Action signature: `async (prevState, formData) => newState`
+- Wire to `<form action={formAction}>` for progressive enhancement
 
-  useEffect(() => {
-    let cancelled = false;
+### useOptimistic
 
-    async function fetchUsers() {
-      try {
-        setIsLoading(true);
-        const data = await api.getUsers(filters);
-        if (!cancelled) {
-          setUsers(data);
-          setError(null);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e : new Error('Unknown error'));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
+- Immediately reflect expected state while async action completes
+- Signature: `useOptimistic(value, updateFn)` — returns `[optimisticState, setOptimistic]`
+- Always pair with a server action that resolves to the real state
 
-    fetchUsers();
-    return () => { cancelled = true; };
-  }, [filters]);
+### use()
 
-  return { users, isLoading, error };
-}
-```
+- Unwrap promises in render — must be inside a Suspense boundary
+- Unwrap context conditionally — unlike `useContext`, can be called inside `if` blocks
+- Do NOT create promises inside render — pass them from a parent/loader/server component
 
-### BAD
+## Custom Hooks
 
-```tsx
-// Missing cleanup, no error handling
-export function useUsers() {
-  const [users, setUsers] = useState([]);
+- Prefix with `use` — no exceptions
+- Single responsibility: one hook = one concern
+- Return object for 3+ values (`{ data, isLoading, error }`), tuple for 1-2
+- Always clean up subscriptions, timers, and AbortControllers in `useEffect` return
 
-  useEffect(() => {
-    api.getUsers().then(setUsers);
-  }, []);
+## useEffect Rules
 
-  return users;
-}
-```
+- Always provide a cleanup function for subscriptions, listeners, and fetch calls
+- Use `AbortController` for fetch cleanup — not boolean flags
+- Do NOT use `useEffect` for derived state — compute during render instead
+- Do NOT use `useEffect` for event handling — use event handlers directly
 
-## useActionState (React 19)
+## Anti-Patterns
 
-### GOOD
-
-```tsx
-async function submitForm(prevState: FormState, formData: FormData) {
-  const result = await api.submit(formData);
-  return { success: true, data: result };
-}
-
-function Form() {
-  const [state, formAction, isPending] = useActionState(submitForm, { success: false });
-
-  return (
-    <form action={formAction}>
-      <input name="email" disabled={isPending} />
-      <button disabled={isPending}>
-        {isPending ? 'Submitting...' : 'Submit'}
-      </button>
-      {state.success && <p>Success!</p>}
-    </form>
-  );
-}
-```
-
-## useOptimistic (React 19)
-
-### GOOD
-
-```tsx
-function TodoList({ todos }: { todos: Todo[] }) {
-  const [optimisticTodos, addOptimisticTodo] = useOptimistic(
-    todos,
-    (state, newTodo: Todo) => [...state, newTodo]
-  );
-
-  async function handleAdd(formData: FormData) {
-    const newTodo = { id: crypto.randomUUID(), text: formData.get('text') };
-    addOptimisticTodo(newTodo);
-    await api.addTodo(newTodo);
-  }
-
-  return (
-    <form action={handleAdd}>
-      <input name="text" />
-      <ul>
-        {optimisticTodos.map(todo => <li key={todo.id}>{todo.text}</li>)}
-      </ul>
-    </form>
-  );
-}
-```
-
-## use() Hook (React 19)
-
-### GOOD
-
-```tsx
-// Unwrap promise in render
-function UserProfile({ userPromise }: { userPromise: Promise<User> }) {
-  const user = use(userPromise);
-  return <h1>{user.name}</h1>;
-}
-
-// Unwrap context conditionally
-function ThemeButton({ showTheme }: { showTheme: boolean }) {
-  if (showTheme) {
-    const theme = use(ThemeContext);
-    return <button style={{ color: theme.primary }}>Themed</button>;
-  }
-  return <button>Default</button>;
-}
-```
-
-## React Compiler and Manual Memoization
-
-If React Compiler (`babel-plugin-react-compiler`) is enabled in the project
-(`babel.config.js` or `next.config.js`), do NOT add `useMemo` or `useCallback`
-manually — the compiler handles all memoization automatically and manual hooks
-become redundant at best, conflicting at worst.
-
-**Always check before adding any `useMemo`/`useCallback`:**
-
-```typescript
-// With React Compiler active — NEVER add these manually
-const sorted = useMemo(() => items.sort(...), [items]);  // BAD — compiler does this
-const handler = useCallback(() => onSelect(id), [id]);  // BAD — compiler does this
-
-// Without React Compiler — follow the rules below
-```
-
-## useMemo / useCallback
-
-### GOOD
-
-```tsx
-// Expensive computation
-const sortedItems = useMemo(
-  () => items.sort((a, b) => a.name.localeCompare(b.name)),
-  [items]
-);
-
-// Stable callback for child components
-const handleSelect = useCallback(
-  (id: string) => onSelect(items.find(item => item.id === id)),
-  [items, onSelect]
-);
-```
-
-### BAD
-
-```tsx
-// Unnecessary memoization
-const name = useMemo(() => user.firstName + ' ' + user.lastName, [user]);
-
-// Missing dependency
-const handleClick = useCallback(() => {
-  doSomething(value); // value not in deps
-}, []);
-```
-
-## useEffect Cleanup
-
-### GOOD
-
-```tsx
-useEffect(() => {
-  const controller = new AbortController();
-
-  fetch(url, { signal: controller.signal })
-    .then(res => res.json())
-    .then(setData);
-
-  return () => controller.abort();
-}, [url]);
-```
-
-### BAD
-
-```tsx
-useEffect(() => {
-  // No cleanup for subscriptions
-  socket.on('message', handleMessage);
-}, []);
-```
+- Do NOT add `useMemo`/`useCallback` manually — React Compiler handles all memoization
+- Do NOT use `useFormState` — it is deprecated, use `useActionState`
+- Do NOT fetch in `useEffect` when TanStack Query or a router loader is available
+- Do NOT omit dependencies from `useEffect` — let the linter enforce correctness
+- Do NOT create promises inside components passed to `use()` — causes infinite re-renders

@@ -7,83 +7,58 @@ alwaysApply: true
 
 ## Stack
 
-- .NET 9 / .NET 8 (LTS)
-- ASP.NET Core Web API
-- Entity Framework Core
-- C# 13+
+- .NET 9, ASP.NET Core, Entity Framework Core, C# 13+
 - xUnit + NSubstitute + FluentAssertions
 
-## Architecture - Clean Architecture
+## Architecture
 
-```
-src/
-├── Domain/           # Entities, ValueObjects, Interfaces
-│                     # ZERO external dependencies
-├── Application/      # Commands, Queries, DTOs, Validators
-│                     # MediatR, FluentValidation
-├── Infrastructure/   # DbContext, Repositories, External services
-│                     # EF Core, external APIs
-└── WebApi/           # Controllers/Endpoints, Middleware
-                      # Presentation layer
-```
+Use Clean Architecture with strict layer dependencies:
+- `WebApi -> Application -> Domain`
+- `Infrastructure -> Application -> Domain`
 
-**Dependencies**:
-- `WebApi → Application → Domain`
-- `Infrastructure → Application → Domain`
+| Layer | Contains | References |
+|-------|----------|------------|
+| Domain | Entities, Value Objects, Interfaces | Nothing (zero NuGet deps) |
+| Application | Commands, Queries, DTOs, Validators | Domain only |
+| Infrastructure | DbContext, Repos, External Services | Application, Domain |
+| WebApi | Endpoints, Middleware | Application, Infrastructure |
 
-## Core Principles
+## API Style
 
-### CQRS with MediatR
+- Use Minimal APIs by default for new endpoints (lower overhead than controllers)
+- Use `TypedResults` for compile-time response type safety
+- Use `AddOpenApi()` + `MapOpenApi()` for built-in OpenAPI support (no Swashbuckle needed in .NET 9)
+- Reserve Controllers only for complex model binding or content negotiation scenarios
 
-- **Commands** (write): Modify state, return minimal data (ID or void)
-- **Queries** (read): Return data, never modify state
-- Commands and queries implement `IRequest<T>`
+## C# 12+ Conventions
 
-### C# 13 Style
+- File-scoped namespaces everywhere
+- Primary constructors for DI injection
+- Records for DTOs and commands/queries
+- Nullable reference types enabled project-wide
+- `required` keyword for mandatory init properties
 
-- File-scoped namespaces
-- Primary constructors for DI
-- Records for DTOs
-- Nullable reference types enabled
-- Required members with `required` keyword
-
-### Naming
+## Naming
 
 | Element | Convention |
 |---------|------------|
-| Classes/Methods | PascalCase |
-| Interfaces | IPascalCase |
-| Private fields | _camelCase |
-| Async methods | Suffix `Async` |
-| Constants | PascalCase |
-
-### API Patterns
-
-- **Minimal APIs**: Preferred for new projects (93% less memory in .NET 9)
-- **Controllers**: Only for complex model binding scenarios
-- Use `ISender` from MediatR for dispatching commands/queries
-- Return `TypedResults.Ok()`, `TypedResults.NotFound()`, etc.
-- Built-in OpenAPI: `AddOpenApi()` + `MapOpenApi()`
-
-### Validation
-
-- FluentValidation for complex rules
-- Data annotations for simple DTOs
-- Validation in MediatR pipeline behavior
+| Classes, Methods, Constants | PascalCase |
+| Interfaces | `I` + PascalCase |
+| Private fields | `_camelCase` |
+| Async methods | Suffix with `Async` |
 
 ## Commands
 
 ```bash
-dotnet run --project src/WebApi           # Dev
-dotnet build                               # Build
-dotnet test                                # Test
+dotnet run --project src/WebApi
+dotnet test
 dotnet ef migrations add Name -p src/Infrastructure -s src/WebApi
 dotnet ef database update -p src/Infrastructure -s src/WebApi
 ```
 
 ## Code Style
 
-- `readonly` for immutable fields
-- Expression-bodied members when simple
-- Pattern matching over type checks
-- `async`/`await` all the way down
+- Mark fields `readonly` when not reassigned
+- Prefer expression-bodied members for single-line logic
+- Use pattern matching over `is`/`as` type checks
+- Propagate `async`/`await` all the way down -- never `.Result` or `.Wait()`

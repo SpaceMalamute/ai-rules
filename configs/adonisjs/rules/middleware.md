@@ -7,135 +7,41 @@ paths:
 
 # AdonisJS Middleware
 
-## Creating Middleware
+## Middleware Types
 
-```typescript
-// app/middleware/admin_middleware.ts
-import type { HttpContext } from '@adonisjs/core/http'
-import type { NextFn } from '@adonisjs/core/types/http'
+| Type | Registration | Runs on |
+|------|-------------|---------|
+| Server middleware | `server.use([])` in `start/kernel.ts` | Every HTTP request |
+| Router middleware | `router.use([])` in `start/kernel.ts` | Matched routes only |
+| Named middleware | `router.named({})` in `start/kernel.ts` | Routes that explicitly `.use()` it |
 
-export default class AdminMiddleware {
-  async handle({ auth, response }: HttpContext, next: NextFn) {
-    if (auth.user?.role !== 'admin') {
-      return response.forbidden({ message: 'Admin access required' })
-    }
+## Structure
 
-    await next()
-  }
-}
-```
+- Place middleware in `app/middleware/` with snake_case filenames
+- Class with `async handle(ctx: HttpContext, next: NextFn)` method
+- Always `await next()` to continue the chain (unless short-circuiting with a response)
+- Optional `async terminate(ctx: HttpContext)` -- runs after response is sent (analytics, logging)
 
-## Register Middleware
+## Registration
 
-```typescript
-// start/kernel.ts
-import router from '@adonisjs/core/services/router'
-
-// Named middleware (use on specific routes)
-router.named({
-  auth: () => import('#middleware/auth_middleware'),
-  admin: () => import('#middleware/admin_middleware'),
-  verified: () => import('#middleware/verified_middleware'),
-})
-```
-
-## Using Middleware
-
-```typescript
-// start/routes.ts
-import router from '@adonisjs/core/services/router'
-import { middleware } from '#start/kernel'
-
-// Single middleware
-router.get('dashboard', [DashboardController, 'index'])
-  .use(middleware.auth())
-
-// Multiple middleware
-router.get('admin', [AdminController, 'index'])
-  .use([middleware.auth(), middleware.admin()])
-
-// Group middleware
-router.group(() => {
-  router.get('profile', [ProfileController, 'show'])
-  router.put('profile', [ProfileController, 'update'])
-}).use(middleware.auth())
-```
+- Named middleware: register in `router.named({})` with lazy imports
+- Apply to routes: `.use(middleware.auth())` or `.use([middleware.auth(), middleware.admin()])`
+- Apply to groups: `router.group(() => {...}).use(middleware.auth())`
 
 ## Middleware with Parameters
 
-```typescript
-// app/middleware/role_middleware.ts
-import type { HttpContext } from '@adonisjs/core/http'
-import type { NextFn } from '@adonisjs/core/types/http'
+- Third argument in `handle()`: `options: { roles: string[] }`
+- Usage: `.use(middleware.role({ roles: ['admin', 'manager'] }))`
 
-export default class RoleMiddleware {
-  async handle({ auth, response }: HttpContext, next: NextFn, options: { roles: string[] }) {
-    if (!options.roles.includes(auth.user!.role)) {
-      return response.forbidden({ message: 'Insufficient permissions' })
-    }
+## Execution Order
 
-    await next()
-  }
-}
+- Server middleware runs first (container bindings, CORS)
+- Router middleware runs second (body parser)
+- Named middleware runs last in declaration order
 
-// Usage
-router.get('reports', [ReportsController, 'index'])
-  .use(middleware.role({ roles: ['admin', 'manager'] }))
-```
+## Anti-patterns
 
-## Request Logging Middleware
-
-```typescript
-import type { HttpContext } from '@adonisjs/core/http'
-import type { NextFn } from '@adonisjs/core/types/http'
-import logger from '@adonisjs/core/services/logger'
-
-export default class RequestLoggerMiddleware {
-  async handle({ request }: HttpContext, next: NextFn) {
-    const start = Date.now()
-
-    await next()
-
-    const duration = Date.now() - start
-    logger.info(`${request.method()} ${request.url()} - ${duration}ms`)
-  }
-}
-```
-
-## Global Middleware
-
-```typescript
-// start/kernel.ts
-import server from '@adonisjs/core/services/server'
-
-// Server middleware (runs for every request)
-server.use([
-  () => import('#middleware/container_bindings_middleware'),
-  () => import('#middleware/force_json_response_middleware'),
-])
-
-// Router middleware (runs for routes only)
-router.use([
-  () => import('@adonisjs/core/bodyparser_middleware'),
-  () => import('#middleware/request_logger_middleware'),
-])
-```
-
-## Terminate Hook
-
-```typescript
-export default class AnalyticsMiddleware {
-  async handle(ctx: HttpContext, next: NextFn) {
-    await next()
-  }
-
-  // Runs after response is sent
-  async terminate(ctx: HttpContext) {
-    await Analytics.track({
-      path: ctx.request.url(),
-      userId: ctx.auth.user?.id,
-      duration: ctx.response.getResponseTime(),
-    })
-  }
-}
-```
+- Do NOT put business logic in middleware -- keep it to cross-cutting concerns (auth, logging, rate limiting)
+- Do NOT forget `await next()` -- silently drops the request
+- Do NOT modify the response body in middleware unless it is a response-shaping concern (compression, serialization)
+- Do NOT register heavy middleware as server middleware -- use named middleware for route-specific concerns

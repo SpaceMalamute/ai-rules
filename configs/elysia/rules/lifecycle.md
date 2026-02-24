@@ -17,124 +17,39 @@ Request → onRequest → onParse → transform/derive → [Validation]
 → [onError] → afterResponse
 ```
 
-## beforeHandle — Auth Guards
+## Hook Reference
 
-### GOOD
+| Hook | Phase | Use Case |
+|------|-------|----------|
+| `onRequest` | Earliest | Logging, CORS headers, rate limiting |
+| `onParse` | Body parsing | Custom content-type parsers |
+| `transform` | Before validation | Mutate/normalize input (trim, lowercase) |
+| `derive` | Before validation | Add request-scoped context (extract token from headers) |
+| `beforeHandle` | After validation | Auth guards, permission checks — return early to short-circuit |
+| `resolve` | After validation | Compute properties from validated data (resolve user from token) |
+| `afterHandle` | After handler | Transform/wrap responses (envelope pattern) |
+| `mapResponse` | Before send | Custom serialization, set response headers |
+| `afterResponse` | After send | Cleanup, logging, metrics |
 
-```typescript
-import { Elysia } from 'elysia'
+## derive vs resolve
 
-const app = new Elysia()
-  .derive(({ headers }) => ({
-    token: headers.authorization?.replace('Bearer ', ''),
-  }))
-  .get('/public', () => 'Hello')
-  // beforeHandle runs after derive, before handler
-  .get('/protected', ({ user }) => user, {
-    beforeHandle({ token, status }) {
-      if (!token) return status(401, 'Unauthorized')
-    },
-    resolve({ token }) {
-      return { user: verifyToken(token) }
-    },
-  })
-```
+| | `derive` | `resolve` |
+|---|---------|----------|
+| Runs | Before validation | After validation |
+| Access to | Raw request (headers, raw body) | Validated + derived context |
+| Use for | Token extraction, request metadata | User resolution, computed props |
 
-### BAD
+## Key Rules
 
-```typescript
-// BAD: Auth check inside handler — runs even if unauthorized
-app.get('/protected', ({ token }) => {
-  if (!token) throw new Error('Unauthorized')
-  const user = verifyToken(token)
-  return user
-})
-```
+- **`beforeHandle` for guards** — return `status(401)` or `status(403)` to short-circuit before the handler runs
+- **`derive()` for request-scoped deps** — runs per request, adds properties to context before validation
+- **`resolve()` for computed properties** — runs per request after validation, can depend on derived + validated values
+- **Global vs route-level** — global hooks (`.onBeforeHandle(...)`) apply to all subsequent routes; route-level hooks (`{ beforeHandle: fn }`) apply to one route
+- **Order is critical** — hooks only affect routes registered AFTER them; register middleware plugins before route plugins
 
-## transform — Mutate Before Validation
+## Anti-Patterns
 
-### GOOD
-
-```typescript
-// transform runs BEFORE schema validation
-app.post('/users', ({ body }) => createUser(body), {
-  transform({ body }) {
-    if (typeof body.email === 'string') {
-      body.email = body.email.toLowerCase().trim()
-    }
-  },
-  body: t.Object({
-    email: t.String({ format: 'email' }),
-  }),
-})
-```
-
-## afterHandle — Transform Responses
-
-### GOOD
-
-```typescript
-// Wrap all responses in an envelope
-app.onAfterHandle(({ response }) => {
-  if (typeof response === 'object') {
-    return { data: response, timestamp: Date.now() }
-  }
-})
-```
-
-## mapResponse — Custom Serialization
-
-### GOOD
-
-```typescript
-app.mapResponse(({ response, set }) => {
-  if (response instanceof CustomResponse) {
-    set.headers['x-custom'] = 'true'
-    return new Response(JSON.stringify(response.data), {
-      headers: { 'content-type': 'application/json' },
-    })
-  }
-})
-```
-
-## afterResponse — Cleanup and Logging
-
-### GOOD
-
-```typescript
-app.onAfterResponse(({ path, set }) => {
-  console.log(`${set.status} ${path}`)
-})
-```
-
-## Route-Level vs Global Hooks
-
-### GOOD
-
-```typescript
-const app = new Elysia()
-  // Global hook — applies to all subsequent routes
-  .onBeforeHandle(({ headers, status }) => {
-    if (!headers['x-api-key']) return status(403)
-  })
-  .get('/api/data', () => getData())
-  .get('/api/users', () => getUsers())
-
-// Route-level hook — applies to one route only
-app.get('/admin', () => getAdmin(), {
-  beforeHandle({ token, status }) {
-    if (!isAdmin(token)) return status(403, 'Admin required')
-  },
-})
-```
-
-### BAD
-
-```typescript
-// BAD: Hook registered after routes — won't apply to them
-app
-  .get('/users', () => getUsers())
-  .onBeforeHandle(() => {
-    // This only applies to routes registered AFTER this line
-  })
-```
+- Do NOT put auth checks inside handlers — use `beforeHandle` to short-circuit before the handler runs
+- Do NOT register hooks after routes they should protect — hooks only apply forward
+- Do NOT use `transform` for adding context — use `derive`; `transform` is for mutating input data
+- Do NOT confuse `derive` and `resolve` — `derive` cannot access validated body; `resolve` can

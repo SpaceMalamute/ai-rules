@@ -9,165 +9,36 @@ paths:
 
 # Elysia Error Handling
 
-## Global onError Handler
+## Error Strategy
 
-### GOOD
+| Mechanism | Purpose | When to Use |
+|-----------|---------|-------------|
+| `onError` hook | Centralized error handling | Global/plugin-level catch-all for thrown errors |
+| `status()` helper | Typed error responses | Route-level expected errors (404, 400) — bypasses `onError` |
+| Custom error classes | Domain errors | Register via `.error()`, caught by `onError` with typed `code` |
+| `toResponse()` method | Full response control | On custom error classes for self-serializing errors |
 
-```typescript
-import { Elysia } from 'elysia'
+## `onError` Lifecycle Hook
 
-const app = new Elysia()
-  .onError(({ error, code, set }) => {
-    switch (code) {
-      case 'NOT_FOUND':
-        set.status = 404
-        return { error: 'Not Found' }
-      case 'VALIDATION':
-        set.status = 422
-        return { error: 'Validation failed', details: error.message }
-      case 'INTERNAL_SERVER_ERROR':
-        console.error('Unexpected error:', error)
-        set.status = 500
-        return { error: 'Internal Server Error' }
-    }
-  })
-```
+Register on the root app or in an error-handling plugin. Use `code` to discriminate built-in error types: `NOT_FOUND`, `VALIDATION`, `INTERNAL_SERVER_ERROR`, `PARSE`, `UNKNOWN`. Mount error plugins BEFORE route plugins — hook order matters.
 
-### BAD
+For plugin-level error handlers that should apply globally, use `{ as: 'global' }`.
+
+## `status()` Helper (Preferred for Expected Errors)
+
+Use `status(code, body)` in route handlers for expected error conditions. It bypasses `onError` and sends the response directly. Requires response schemas per status code to enable type safety:
 
 ```typescript
-// BAD: Try-catch in every handler instead of global onError
-app.get('/posts', async () => {
-  try {
-    return await getPosts()
-  } catch (e) {
-    return new Response('Error', { status: 500 })
-  }
-})
-```
-
-## status() Function
-
-### GOOD
-
-```typescript
-import { Elysia, t } from 'elysia'
-
-// return status() — bypasses onError, goes directly to client
-app.get('/users/:id', ({ params: { id }, status }) => {
-  const user = findUser(id)
-
-  if (!user) {
-    return status(404, { error: 'User not found' })
-  }
-
-  return user
-}, {
-  response: {
-    200: t.Object({ id: t.String(), name: t.String() }),
-    404: t.Object({ error: t.String() }),
-  },
-})
-```
-
-### BAD
-
-```typescript
-// BAD: Manually setting status on set object when status() is cleaner
-app.get('/users/:id', ({ params: { id }, set }) => {
-  const user = findUser(id)
-  if (!user) {
-    set.status = 404
-    return { error: 'User not found' }
-  }
-  return user
-})
+{ response: { 200: t.Object({...}), 404: t.Object({ error: t.String() }) } }
 ```
 
 ## Custom Error Classes
 
-### GOOD
+Register with `.error({ AppError, NotFoundError })` — Elysia maps class names to `code` strings in `onError`. Add `toResponse()` method on a class for self-serializing errors that bypass `onError` entirely.
 
-```typescript
-class AppError extends Error {
-  constructor(
-    public message: string,
-    public status: number = 400
-  ) {
-    super(message)
-  }
-}
+## Anti-Patterns
 
-class NotFoundError extends AppError {
-  constructor(resource: string) {
-    super(`${resource} not found`, 404)
-  }
-}
-
-const app = new Elysia()
-  .error({ AppError, NotFoundError })
-  .onError(({ code, error }) => {
-    if (code === 'AppError' || code === 'NotFoundError') {
-      return { error: error.message }
-    }
-  })
-  .get('/users/:id', ({ params: { id } }) => {
-    const user = findUser(id)
-    if (!user) throw new NotFoundError('User')
-    return user
-  })
-```
-
-## toResponse() Method
-
-### GOOD
-
-```typescript
-// Full control over the error response
-class ApiError extends Error {
-  constructor(
-    public message: string,
-    public statusCode: number
-  ) {
-    super(message)
-  }
-
-  toResponse() {
-    return Response.json(
-      { error: this.message },
-      { status: this.statusCode }
-    )
-  }
-}
-
-// Elysia automatically calls toResponse() when thrown
-app.get('/data', () => {
-  throw new ApiError('Forbidden', 403)
-})
-```
-
-## Error Handling in Plugins
-
-### GOOD
-
-```typescript
-const errorPlugin = new Elysia({ name: 'error-handler' })
-  .error({ AppError })
-  .onError({ as: 'global' }, ({ code, error, set }) => {
-    if (code === 'AppError') {
-      set.status = error.status
-      return {
-        error: {
-          message: error.message,
-          status: error.status,
-        },
-      }
-    }
-  })
-
-// Mount error handler first
-const app = new Elysia()
-  .use(errorPlugin)
-  .use(users)
-  .use(posts)
-```
+- Do NOT wrap every handler in try-catch — use `onError` for centralized handling
+- Do NOT use `set.status = 404` when `status()` helper is available — `status()` is typed and cleaner
+- Do NOT register error plugins after route plugins — hooks only apply to routes registered after them
+- Do NOT throw plain strings or generic `Error` — use custom error classes with `.error()` for typed discrimination

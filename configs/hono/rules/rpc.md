@@ -9,138 +9,48 @@ paths:
 
 # Hono RPC
 
-## Server-Side Type Export
+## Server-Side Setup
 
-### GOOD
-
-```typescript
-// src/routes/posts.ts
-import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { z } from 'zod'
-
-const createPostSchema = z.object({
-  title: z.string(),
-  body: z.string(),
-})
-
-// Chain methods for type inference
-const app = new Hono()
-  .get('/posts', async (c) => {
-    return c.json(await getPosts())
-  })
-  .post('/posts',
-    zValidator('json', createPostSchema),
-    async (c) => {
-      const data = c.req.valid('json')
-      return c.json(await createPost(data), 201)
-    },
-  )
-  .get('/posts/:id', async (c) => {
-    const id = c.req.param('id')
-    return c.json(await getPost(id))
-  })
-
-export default app
-
-// src/index.ts
-import { Hono } from 'hono'
-import posts from './routes/posts'
-
-const app = new Hono()
-app.route('/', posts)
-
-export type AppType = typeof app
-export default app
-```
-
-### BAD
-
-```typescript
-// BAD: Non-chained routes lose type information for RPC
-const app = new Hono()
-app.get('/posts', handler1)
-app.post('/posts', handler2)
-
-export type AppType = typeof app // Types won't include route details
-```
+- Chain all route methods on the same Hono instance — non-chained routes lose type information
+- Export `AppType` from the server entry point for client consumption:
+  `export type AppType = typeof app`
+- Mount sub-apps with `app.route()` — the mounted type is preserved in `AppType`
 
 ## Client-Side Usage
 
-### GOOD
-
-```typescript
-// src/client.ts
-import { hc } from 'hono/client'
-import type { AppType } from './index'
-
-const client = hc<AppType>('http://localhost:8787')
-
-// Fully typed — knows about /posts and its methods
-const listRes = await client.posts.$get()
-const posts = await listRes.json() // typed as Post[]
-
-const createRes = await client.posts.$post({
-  json: { title: 'New Post', body: 'Content' },
-})
-
-const getRes = await client.posts[':id'].$get({
-  param: { id: '123' },
-})
-```
+- Create typed client with `hc<AppType>()` from `hono/client` — provides end-to-end type safety
+- Client mirrors server route structure: `client.posts.$get()`, `client.posts.$post({ json: data })`
+- Path params use bracket syntax: `client.posts[':id'].$get({ param: { id: '123' } })`
 
 ## Type Utilities
 
-### GOOD
-
-```typescript
-import type { InferRequestType, InferResponseType } from 'hono/client'
-import type { AppType } from './index'
-
-// Infer request/response types for any endpoint
-type CreatePostRequest = InferRequestType<typeof client.posts.$post>
-type CreatePostResponse = InferResponseType<typeof client.posts.$post>
-type PostListResponse = InferResponseType<typeof client.posts.$get>
-
-// Use with status code for union discrimination
-type PostResponse200 = InferResponseType<typeof client.posts.$get, 200>
-```
+- `InferRequestType<typeof client.endpoint.$method>` — extract request type for any endpoint
+- `InferResponseType<typeof client.endpoint.$method>` — extract response type
+- `InferResponseType<..., 200>` — narrow to a specific status code for union discrimination
 
 ## URL and Path Helpers
 
-### GOOD
-
-```typescript
-const client = hc<AppType>('http://localhost:8787')
-
-// Get typed URL object
-const url = client.posts[':id'].$url({ param: { id: '123' } })
-// → URL { href: 'http://localhost:8787/posts/123' }
-
-// Get path string (no base URL needed)
-const path = client.posts[':id'].$path({ param: { id: '123' } })
-// → '/posts/123'
-```
+- `client.endpoint.$url({ param })` — get typed URL object with base URL
+- `client.endpoint.$path({ param })` — get path string only (no base URL)
 
 ## Large App Performance
 
-For large applications, RPC type inference may slow the IDE. Mitigate with:
+- RPC type inference can slow IDE on large apps
+- Split into smaller route modules and export per-module types: `export type PostsType = typeof postsRoute`
+- Keep route modules focused — fewer chained methods per instance
 
-### GOOD
+## Requirements for RPC to Work
 
-```typescript
-// Split into smaller route apps
-// src/routes/posts.ts
-const postsRoute = new Hono()
-  .get('/', handler)
-  .post('/', handler)
+| Requirement              | Why                                                    |
+|--------------------------|--------------------------------------------------------|
+| Chained route methods    | TypeScript infers return types only from method chains |
+| Inline handlers          | Extracted functions lose param/response type narrowing |
+| `export type AppType`    | Client needs the app type for `hc<AppType>()`         |
+| Zod validators in chain  | Validates AND types request body/query/params          |
 
-// src/routes/users.ts
-const usersRoute = new Hono()
-  .get('/', handler)
-  .post('/', handler)
+## Anti-patterns
 
-// Export types per module
-export type PostsType = typeof postsRoute
-export type UsersType = typeof usersRoute
-```
+- Do NOT define routes with separate `app.get()` / `app.post()` statements — `AppType` won't include route details
+- Do NOT manually type RPC responses — use `InferResponseType` / `InferRequestType` instead
+- Do NOT create one massive route file for RPC — split into modules to keep IDE responsive
+- Do NOT forget to export `AppType` — client has no type information without it

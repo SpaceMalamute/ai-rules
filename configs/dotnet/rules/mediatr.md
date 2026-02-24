@@ -5,317 +5,55 @@ paths:
   - "**/src/Application/**/*.cs"
 ---
 
-# MediatR Patterns
+# MediatR / Mediator Pattern Rules
 
-## Command/Query Separation
+## Licensing Notice
 
-```csharp
-// Commands - modify state, return minimal data
-public record CreateUserCommand(string Email, string Name) : IRequest<Guid>;
-public record UpdateUserCommand(Guid Id, string Name) : IRequest;
-public record DeleteUserCommand(Guid Id) : IRequest;
+MediatR v12+ is commercial (requires license for production). Evaluate alternatives:
 
-// Queries - read data, never modify state
-public record GetUserQuery(Guid Id) : IRequest<UserDto?>;
-public record GetUsersQuery(int Page, int PageSize) : IRequest<PaginatedList<UserDto>>;
-```
+| Option | When to use |
+|--------|-------------|
+| MediatR (licensed) | Existing projects, full pipeline behaviors support |
+| Wolverine | Full-featured mediator + messaging, OSS |
+| FastEndpoints | Endpoint-centric alternative, built-in validation |
+| Custom mediator | Simple projects -- a 50-line `IMediator` covers most needs |
 
-## Command Handler
+## CQRS Separation
 
-```csharp
-public class CreateUserCommandHandler(
-    IUserRepository userRepository,
-    IPasswordHasher passwordHasher,
-    IPublisher publisher
-) : IRequestHandler<CreateUserCommand, Guid>
-{
-    public async Task<Guid> Handle(
-        CreateUserCommand request,
-        CancellationToken cancellationToken)
-    {
-        var user = User.Create(
-            request.Email,
-            request.Name,
-            passwordHasher.Hash(request.Password)
-        );
+- Commands: modify state, return `Result<T>` or `Result` (or minimal data like ID)
+- Queries: return data, never modify state
+- Use `ISender` (not `IMediator`) for dispatching -- it is the narrower interface
 
-        await userRepository.AddAsync(user, cancellationToken);
+## Vertical Slice Architecture
 
-        // Publish domain event
-        await publisher.Publish(
-            new UserCreatedEvent(user.Id, user.Email),
-            cancellationToken
-        );
+As a pragmatic alternative to full Clean Architecture CQRS:
+- Colocate request, handler, validator, and response DTO in one file/folder per feature
+- Each slice is self-contained and independently modifiable
+- Still separate read (query) from write (command) concerns within the slice
 
-        return user.Id;
-    }
-}
-```
+## Pipeline Behaviors
 
-## Query Handler
+Register behaviors in order (first registered = outermost):
+1. `LoggingBehavior` -- log request name, duration, failures
+2. `ValidationBehavior` -- run FluentValidation validators, throw on failure
+3. `TransactionBehavior` -- wrap commands (not queries) in a DB transaction
 
-```csharp
-public class GetUserQueryHandler(
-    IApplicationDbContext context
-) : IRequestHandler<GetUserQuery, UserDto?>
-{
-    public async Task<UserDto?> Handle(
-        GetUserQuery request,
-        CancellationToken cancellationToken)
-    {
-        return await context.Users
-            .Where(u => u.Id == request.Id)
-            .Select(u => new UserDto(u.Id, u.Email, u.Name, u.CreatedAt))
-            .FirstOrDefaultAsync(cancellationToken);
-    }
-}
-```
+## Handler Conventions
 
-## Validation Behavior (Pipeline)
+- One handler per command/query (Single Responsibility)
+- Colocate command + handler + validator in the same folder
+- Return `Result<T>` from handlers -- do not throw exceptions for business failures
+- Accept `CancellationToken` and propagate it to all async calls
 
-```csharp
-public class ValidationBehavior<TRequest, TResponse>(
-    IEnumerable<IValidator<TRequest>> validators
-) : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
-{
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken)
-    {
-        if (!validators.Any())
-        {
-            return await next();
-        }
+## Domain Events
 
-        var context = new ValidationContext<TRequest>(request);
+- Use `INotification` for domain event fan-out (multiple handlers per event)
+- Dispatch domain events after `SaveChangesAsync`, not before
+- Keep event handlers idempotent -- they may be retried
 
-        var validationResults = await Task.WhenAll(
-            validators.Select(v => v.ValidateAsync(context, cancellationToken))
-        );
+## Anti-patterns
 
-        var failures = validationResults
-            .SelectMany(r => r.Errors)
-            .Where(f => f != null)
-            .ToList();
-
-        if (failures.Count != 0)
-        {
-            throw new ValidationException(failures);
-        }
-
-        return await next();
-    }
-}
-```
-
-## Logging Behavior
-
-```csharp
-public class LoggingBehavior<TRequest, TResponse>(
-    ILogger<LoggingBehavior<TRequest, TResponse>> logger
-) : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
-{
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken)
-    {
-        var requestName = typeof(TRequest).Name;
-
-        logger.LogInformation(
-            "Handling {RequestName} {@Request}",
-            requestName,
-            request
-        );
-
-        var stopwatch = Stopwatch.StartNew();
-
-        try
-        {
-            var response = await next();
-
-            stopwatch.Stop();
-
-            logger.LogInformation(
-                "Handled {RequestName} in {ElapsedMilliseconds}ms",
-                requestName,
-                stopwatch.ElapsedMilliseconds
-            );
-
-            return response;
-        }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-
-            logger.LogError(
-                ex,
-                "Error handling {RequestName} after {ElapsedMilliseconds}ms",
-                requestName,
-                stopwatch.ElapsedMilliseconds
-            );
-
-            throw;
-        }
-    }
-}
-```
-
-## Transaction Behavior
-
-```csharp
-public class TransactionBehavior<TRequest, TResponse>(
-    IApplicationDbContext context,
-    ILogger<TransactionBehavior<TRequest, TResponse>> logger
-) : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
-{
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken)
-    {
-        // Only wrap commands (not queries) in transaction
-        if (!typeof(TRequest).Name.EndsWith("Command"))
-        {
-            return await next();
-        }
-
-        await using var transaction = await context.Database
-            .BeginTransactionAsync(cancellationToken);
-
-        try
-        {
-            var response = await next();
-            await transaction.CommitAsync(cancellationToken);
-            return response;
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-    }
-}
-```
-
-## FluentValidation Validators
-
-```csharp
-public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
-{
-    public CreateUserCommandValidator(IUserRepository userRepository)
-    {
-        RuleFor(x => x.Email)
-            .NotEmpty()
-            .EmailAddress()
-            .MustAsync(async (email, ct) => !await userRepository.ExistsAsync(email, ct))
-            .WithMessage("Email already exists");
-
-        RuleFor(x => x.Name)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(x => x.Password)
-            .NotEmpty()
-            .MinimumLength(8)
-            .Matches("[A-Z]").WithMessage("Must contain uppercase letter")
-            .Matches("[a-z]").WithMessage("Must contain lowercase letter")
-            .Matches("[0-9]").WithMessage("Must contain digit");
-    }
-}
-```
-
-## Domain Events (Notifications)
-
-```csharp
-// Event
-public record UserCreatedEvent(Guid UserId, string Email) : INotification;
-
-// Multiple handlers for same event
-public class SendWelcomeEmailHandler(IEmailService emailService)
-    : INotificationHandler<UserCreatedEvent>
-{
-    public async Task Handle(
-        UserCreatedEvent notification,
-        CancellationToken cancellationToken)
-    {
-        await emailService.SendWelcomeEmailAsync(
-            notification.Email,
-            cancellationToken
-        );
-    }
-}
-
-public class CreateUserAnalyticsHandler(IAnalyticsService analytics)
-    : INotificationHandler<UserCreatedEvent>
-{
-    public async Task Handle(
-        UserCreatedEvent notification,
-        CancellationToken cancellationToken)
-    {
-        await analytics.TrackAsync(
-            "user_created",
-            new { notification.UserId },
-            cancellationToken
-        );
-    }
-}
-```
-
-## Registration (Program.cs)
-
-```csharp
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssemblyContaining<CreateUserCommand>();
-
-    // Pipeline behaviors (order matters)
-    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
-});
-
-// Register FluentValidation validators
-builder.Services.AddValidatorsFromAssemblyContaining<CreateUserCommandValidator>();
-```
-
-## Usage in Controller/Endpoint
-
-```csharp
-// Minimal API
-app.MapPost("/api/users", async (CreateUserCommand command, ISender sender) =>
-{
-    var userId = await sender.Send(command);
-    return Results.CreatedAtRoute("GetUser", new { id = userId }, new { id = userId });
-});
-
-app.MapGet("/api/users/{id:guid}", async (Guid id, ISender sender) =>
-{
-    var user = await sender.Send(new GetUserQuery(id));
-    return user is not null ? Results.Ok(user) : Results.NotFound();
-}).WithName("GetUser");
-
-// Controller
-[ApiController]
-[Route("api/[controller]")]
-public class UsersController(ISender sender) : ControllerBase
-{
-    [HttpPost]
-    public async Task<IActionResult> Create(CreateUserCommand command)
-    {
-        var userId = await sender.Send(command);
-        return CreatedAtAction(nameof(Get), new { id = userId }, new { id = userId });
-    }
-
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id)
-    {
-        var user = await sender.Send(new GetUserQuery(id));
-        return user is not null ? Ok(user) : NotFound();
-    }
-}
-```
+- DO NOT inject `IMediator` when `ISender` suffices -- `IMediator` includes `Publish` which is rarely needed in handlers
+- DO NOT use MediatR for in-process method calls that have a single handler -- direct injection is simpler
+- DO NOT put domain logic in pipeline behaviors -- keep them cross-cutting only (logging, validation, transactions)
+- DO NOT create a pipeline behavior per feature -- use generic open behaviors

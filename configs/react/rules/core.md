@@ -7,87 +7,58 @@ alwaysApply: true
 
 ## Stack
 
-- React 19+
+- React 19+ with React Compiler 1.0 (auto-memoization enabled)
 - TypeScript strict mode
-- Vite (recommended bundler)
-- Vitest + React Testing Library
+- Vite (bundler) + Vitest + React Testing Library
 
 ## Architecture
 
+Organize by feature, colocate related code:
+
 ```
 src/
-  components/           # Reusable UI components
-    ui/                 # Design system primitives
-    forms/              # Form components
-  features/             # Feature modules
-    [feature]/
-      components/       # Feature-specific components
-      hooks/            # Feature-specific hooks
-      api/              # Feature API calls
-      types.ts          # Feature types
-  hooks/                # Shared custom hooks
-  lib/                  # Utilities and helpers
-  api/                  # API client and endpoints
-  types/                # Shared TypeScript types
-  App.tsx
-  main.tsx
+  components/ui/       # Design system primitives
+  features/[feature]/  # components/, hooks/, api/, types.ts
+  hooks/               # Shared custom hooks
+  lib/                 # Utilities and helpers
+  api/                 # API client and endpoints
+  types/               # Shared TypeScript types
 ```
 
-## Core Principles
+## React 19 Baseline
 
-### Component Model
+- **React Compiler**: No manual `useMemo`, `useCallback`, or `React.memo` — compiler handles all memoization
+- **`ref` as prop**: Pass `ref` directly — `forwardRef` is unnecessary
+- **`use()` hook**: Unwrap promises and context in render, supports conditional calls
+- **`useActionState`**: Replaces deprecated `useFormState` for form submissions
+- **`useOptimistic`**: Optimistic UI updates during async transitions
+- **Actions**: Async functions for `<form action={fn}>` pattern
 
-| Server Components | Client Components |
-|-------------------|-------------------|
-| Default in RSC frameworks | Standard React components |
-| No state, no effects | useState, useEffect, hooks |
-| Fetch data directly | Event handlers |
-| `async` functions | Browser APIs |
+## Component Model
 
-### React 19 Features
-
-- **Actions**: async functions for mutations
-- **useActionState**: Form state + pending status
-- **useOptimistic**: Optimistic UI updates
-- **use()**: Unwrap promises/context in render
-- **ref as prop**: No more forwardRef needed
-
-### State Management
-
-- **Local state**: `useState` for component state
-- **Shared state**: Context or state library (Zustand, Jotai)
-- **Server state**: TanStack Query or SWR
-- **Form state**: React Hook Form or native actions
+| Server Components (RSC frameworks) | Client Components |
+|-------------------------------------|-------------------|
+| Default — no `"use client"` needed  | Add `"use client"` only when using state/effects/browser APIs |
+| Fetch data directly, async allowed  | `useState`, `useEffect`, event handlers |
 
 ## Code Style
 
-- One component per file
-- Named exports for components
-- Files: `kebab-case.tsx`, Components: `PascalCase`
-- Props interface above component
-- Destructure props in function signature
+- Ban `React.FC` — use plain function declarations with typed props
+- One component per file, named exports only (no default exports)
+- Files: `kebab-case.tsx` / Components: `PascalCase` / Hooks: `useCamelCase`
+- Props interface declared above component, destructured in signature
 
-### Naming
+### Component Internal Order
 
-| Element | Convention |
-|---------|------------|
-| Components | `PascalCase` |
-| Files | `kebab-case.tsx` |
-| Hooks | `useCamelCase` |
-| Utilities | `camelCase` |
-| Constants | `UPPER_SNAKE_CASE` |
-| Types/Interfaces | `PascalCase` |
+1. Imports → 2. Types → 3. Component function → 4. Hooks → 5. Derived state → 6. Handlers → 7. Effects → 8. JSX
 
-### Component Structure
+## Anti-Patterns
 
-1. Imports
-2. Types/Interfaces
-3. Component function
-4. Hooks (in consistent order)
-5. Derived state / computations
-6. Event handlers
-7. Effects
-8. Return JSX
+- Do NOT use `forwardRef` — `ref` is a regular prop in React 19
+- Do NOT add `useMemo`/`useCallback`/`React.memo` — React Compiler handles it
+- Do NOT use `React.FC` — provides no benefit over plain function declarations and adds unnecessary indirection
+- Do NOT use class components or HOCs — use hooks and composition
+- Do NOT use `useFormState` — replaced by `useActionState`
 
 ## Commands
 
@@ -101,15 +72,7 @@ npm run typecheck       # TypeScript check
 
 ## Performance
 
-- Memoize expensive computations with `useMemo`
-- Memoize callbacks passed to children with `useCallback`
-- Use React Compiler (React 19) when available
-- Lazy load routes and heavy components
-- Avoid inline object/array props
-
-## Testing
-
-- Test behavior, not implementation
-- Use React Testing Library
-- Mock API calls, not components
-- Test user interactions with `userEvent`
+- Lazy load routes and heavy components with `React.lazy` + Suspense
+- Use Suspense boundaries as the default loading pattern
+- Extract complex object/array prop literals to named variables for readability (React Compiler handles memoization)
+- Profile with React DevTools before optimizing — trust the compiler first

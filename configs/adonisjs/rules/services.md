@@ -6,150 +6,41 @@ paths:
 
 # AdonisJS Services
 
-## Structure
+## Principles
 
-Services contain business logic. Controllers delegate to services.
+- Services contain ALL business logic -- controllers only delegate
+- One service per domain entity or bounded context
+- Services are stateless -- no instance properties storing request data
 
-```typescript
-// app/services/user_service.ts
-import { inject } from '@adonisjs/core'
-import User from '#models/user'
-import hash from '@adonisjs/core/services/hash'
+## Dependency Injection
 
-@inject()
-export default class UserService {
-  async getAll() {
-    return User.query().orderBy('createdAt', 'desc')
-  }
+- Use `@inject()` decorator on the class for constructor-based DI
+- Use `@inject()` on individual methods when only specific methods need a dependency
+- For complex setup or interfaces, register singletons in `providers/app_provider.ts` via `this.app.container.singleton()`
+- NEVER instantiate services with `new` in controllers -- breaks testability and container resolution
 
-  async findOrFail(id: number) {
-    return User.findOrFail(id)
-  }
+## Service Structure
 
-  async create(data: { email: string; password: string; name: string }) {
-    return User.create({
-      ...data,
-      password: await hash.make(data.password),
-    })
-  }
-
-  async update(id: number, data: Partial<{ email: string; name: string }>) {
-    const user = await User.findOrFail(id)
-    user.merge(data)
-    await user.save()
-    return user
-  }
-
-  async delete(id: number) {
-    const user = await User.findOrFail(id)
-    await user.delete()
-  }
-}
-```
-
-## Service with Dependencies
-
-```typescript
-import { inject } from '@adonisjs/core'
-import mail from '@adonisjs/mail/services/main'
-import User from '#models/user'
-import NotificationService from '#services/notification_service'
-
-@inject()
-export default class OrderService {
-  constructor(private notificationService: NotificationService) {}
-
-  async create(userId: number, items: OrderItem[]) {
-    const user = await User.findOrFail(userId)
-
-    const order = await Order.create({
-      userId,
-      total: this.calculateTotal(items),
-    })
-
-    await order.related('items').createMany(items)
-
-    // Use injected service
-    await this.notificationService.sendOrderConfirmation(user, order)
-
-    return order
-  }
-
-  private calculateTotal(items: OrderItem[]): number {
-    return items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  }
-}
-```
-
-## Register in Container (optional)
-
-For complex setup or interfaces:
-
-```typescript
-// providers/app_provider.ts
-import type { ApplicationService } from '@adonisjs/core/types'
-
-export default class AppProvider {
-  constructor(protected app: ApplicationService) {}
-
-  async boot() {
-    const { default: PaymentService } = await import('#services/payment_service')
-
-    this.app.container.singleton('payment', () => {
-      return new PaymentService(env.get('STRIPE_KEY'))
-    })
-  }
-}
-```
+- Place in `app/services/` with snake_case filenames
+- Export as default class
+- Public methods = business operations, private methods = internal helpers
 
 ## Error Handling
 
-```typescript
-import { Exception } from '@adonisjs/core/exceptions'
+- Throw custom exceptions extending `Exception` from `@adonisjs/core/exceptions`
+- Set `static status` (HTTP code) and `static code` (error identifier) on exception classes
+- Let the AdonisJS exception handler convert exceptions to HTTP responses
+- NEVER return error objects -- always throw
 
-export class InsufficientFundsException extends Exception {
-  static status = 422
-  static code = 'E_INSUFFICIENT_FUNDS'
-}
+## Service-to-Service Communication
 
-export default class WalletService {
-  async withdraw(userId: number, amount: number) {
-    const wallet = await Wallet.findByOrFail('userId', userId)
+- Inject other services via constructor DI
+- Keep dependency chains shallow (max 2-3 levels)
+- Extract shared logic into dedicated services rather than creating circular dependencies
 
-    if (wallet.balance < amount) {
-      throw new InsufficientFundsException('Insufficient funds')
-    }
+## Anti-patterns
 
-    wallet.balance -= amount
-    await wallet.save()
-    return wallet
-  }
-}
-```
-
-## Testing Services
-
-```typescript
-import { test } from '@japa/runner'
-import UserService from '#services/user_service'
-import { UserFactory } from '#database/factories/user_factory'
-
-test.group('UserService', (group) => {
-  group.each.setup(async () => {
-    await Database.beginGlobalTransaction()
-    return () => Database.rollbackGlobalTransaction()
-  })
-
-  test('creates user with hashed password', async ({ assert }) => {
-    const service = new UserService()
-
-    const user = await service.create({
-      email: 'test@example.com',
-      password: 'plaintext',
-      name: 'Test',
-    })
-
-    assert.notEqual(user.password, 'plaintext')
-  })
-})
-```
+- Do NOT access `HttpContext` (request/response) in services -- pass only the data needed
+- Do NOT return HTTP responses from services -- return data or throw exceptions
+- Do NOT create god services -- split by domain boundary
+- Do NOT duplicate model query logic -- use model scopes or query methods on the model itself

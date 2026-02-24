@@ -7,66 +7,59 @@ alwaysApply: true
 
 ## Stack
 
-- Hono v4+
+- Hono v4+ (multi-runtime: Cloudflare Workers, Bun, Node.js, Deno)
 - TypeScript strict mode
 - Vitest for testing
 - Zod for validation (`@hono/zod-validator`)
-- Multi-runtime: Cloudflare Workers, Node.js, Bun, Deno
 
-## Architecture
+## App Factory
 
-```
-src/
-├── index.ts            # App entry, mounts route modules
-├── routes/
-│   └── [resource].ts   # Route module (Hono instance per resource)
-├── middleware/
-│   └── [name].ts       # Custom middleware (createMiddleware)
-├── validators/
-│   └── [resource].ts   # Zod schemas
-└── types.ts            # Shared Env types (Bindings, Variables)
-test/
-└── [resource].test.ts  # Tests (app.request or testClient)
-```
+Use `createFactory<Env>()` from `hono/factory` for shared typing across all routes and middleware:
+
+`const factory = createFactory<{ Bindings: Env; Variables: Vars }>()`
 
 ## Core Principles
 
-- **Route modules**: Each resource exports a `new Hono()` instance, mounted via `app.route()`
-- **Inline handlers**: Define handlers inline with routes to preserve TypeScript path parameter inference
-- **Typed environment**: Use `Hono<{ Bindings: B; Variables: V }>` generics for type-safe `c.env` and `c.var`
-- **Chained definitions**: Chain `.get().post().put().delete()` on the same Hono instance for RPC type inference
+- **Typed environment**: Always pass `Env` generics — `Hono<{ Bindings: B; Variables: V }>` for type-safe `c.env` and `c.var`
+- **Route modules**: Each resource exports a `new Hono()` instance, mounted via `app.route('/prefix', subApp)`
+- **Inline handlers**: Define handlers inline with route chains — extracting handler functions breaks TypeScript path/param inference
+- **Chained definitions**: Chain `.get().post().put().delete()` on the same instance — required for RPC type inference
 - **Middleware order**: `app.use()` before route definitions; middleware calls `await next()` (onion model)
 - **Error handling**: Throw `HTTPException` from `hono/http-exception`; handle globally with `app.onError()`
-- **Zero dependencies**: Hono uses Web Standard APIs only — avoid importing Node.js-specific modules in shared code
-
-## Naming Conventions
-
-- Route files: plural resource name (`authors.ts`, `books.ts`)
-- Middleware files: descriptive name (`auth.ts`, `rate-limit.ts`)
-- Validators: match route file name (`authors.ts` in `validators/`)
-- Types: export `AppType` for RPC, `Env` for shared bindings
-
-## Commands
-
-```bash
-npm run dev             # Dev server (wrangler dev / tsx watch / bun run --hot)
-npm run build           # Production build
-npm run test            # Vitest
-npm run deploy          # Deploy (wrangler deploy / platform-specific)
-```
+- **Web Standards only**: Hono uses Web Standard APIs — avoid Node.js-specific modules in shared code
+- **Response helpers**: Prefer `c.json()`, `c.text()`, `c.html()` over raw `new Response()`
+- **Validated data**: Access via `c.req.valid('json' | 'query' | 'param')` — never parse manually
 
 ## Runtime Entry Points
 
-| Runtime            | Entry pattern                          |
-|--------------------|----------------------------------------|
-| Cloudflare Workers | `export default app`                   |
-| Node.js            | `serve(app)` from `@hono/node-server`  |
-| Bun                | `export default app`                   |
-| Deno               | `Deno.serve(app.fetch)`                |
+| Runtime            | Entry pattern                         |
+|--------------------|---------------------------------------|
+| Cloudflare Workers | `export default app`                  |
+| Bun                | `export default app`                  |
+| Node.js            | `serve(app)` from `@hono/node-server` |
+| Deno               | `Deno.serve(app.fetch)`               |
 
-## Code Style
+## Naming Conventions
 
-- Prefer `c.json()`, `c.text()`, `c.html()` over raw `new Response()`
-- Access validated data via `c.req.valid('json' | 'query' | 'param')`
-- Use `createMiddleware()` from `hono/factory` for typed custom middleware
-- Keep route modules small — split large resources into sub-routers
+| Element     | Convention                                            |
+|-------------|-------------------------------------------------------|
+| Route files | Plural resource (`authors.ts`, `books.ts`)            |
+| Middleware  | Descriptive name (`auth.ts`, `rate-limit.ts`)         |
+| Validators  | Match route file (`authors.ts` in `validators/`)      |
+| Types       | Export `AppType` for RPC, `Env` for shared bindings   |
+
+## Commands
+
+| Command          | Purpose                                     |
+|------------------|---------------------------------------------|
+| `npm run dev`    | Dev server (wrangler dev / tsx watch / bun)  |
+| `npm run build`  | Production build                             |
+| `npm run test`   | Vitest                                       |
+| `npm run deploy` | Deploy (wrangler deploy / platform-specific) |
+
+## Anti-patterns
+
+- Do NOT extract handler functions into classes or separate files — breaks type inference for params and RPC
+- Do NOT use non-chained route definitions — RPC types require method chaining on the same Hono instance
+- Do NOT import Node.js built-ins (`fs`, `path`, `crypto`) in shared code — breaks multi-runtime compatibility
+- Do NOT use `new Response()` when `c.json()` / `c.text()` helpers exist — loses Hono response typing

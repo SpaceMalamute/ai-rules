@@ -6,126 +6,51 @@ paths:
 
 # VineJS Validation
 
-## Basic Validator
+## Core Principles
 
-```typescript
-import vine from '@vinejs/vine'
+- VineJS is the ONLY validation layer -- do NOT use class-validator, Zod, or manual checks
+- ALWAYS use `vine.compile()` to pre-compile validators -- compiles schema once, validates many times (performance)
+- Export validators as named constants: `export const createUserValidator = vine.compile(...)`
+- Use `request.validateUsing(validator)` in controllers -- returns fully typed payload
 
-export const createUserValidator = vine.compile(
-  vine.object({
-    email: vine.string().email().normalizeEmail(),
-    password: vine.string().minLength(8),
-    name: vine.string().minLength(2).maxLength(100),
-  })
-)
+## Common Schema Types
 
-export const updateUserValidator = vine.compile(
-  vine.object({
-    email: vine.string().email().normalizeEmail().optional(),
-    name: vine.string().minLength(2).maxLength(100).optional(),
-  })
-)
-```
+| Type | Method | Key rules |
+|------|--------|-----------|
+| String | `vine.string()` | `.email()`, `.url()`, `.minLength()`, `.maxLength()`, `.regex()` |
+| Number | `vine.number()` | `.min()`, `.max()`, `.positive()`, `.decimal()` |
+| Boolean | `vine.boolean()` | -- |
+| Date | `vine.date()` | `{ formats: ['YYYY-MM-DD'] }` |
+| Enum | `vine.enum([])` | Pass literal array |
+| Array | `vine.array(vine.string())` | `.minLength()`, `.maxLength()` |
+| Object | `vine.object({})` | Nested schemas |
 
-## Common Rules
+## Optional and Nullable
 
-```typescript
-vine.object({
-  // Strings
-  name: vine.string().minLength(2).maxLength(100),
-  email: vine.string().email(),
-  url: vine.string().url(),
-  slug: vine.string().regex(/^[a-z0-9-]+$/),
-
-  // Numbers
-  age: vine.number().min(0).max(150),
-  price: vine.number().positive().decimal(2),
-
-  // Booleans
-  isActive: vine.boolean(),
-
-  // Dates
-  birthDate: vine.date({ formats: ['YYYY-MM-DD'] }),
-
-  // Arrays
-  tags: vine.array(vine.string()).minLength(1).maxLength(10),
-
-  // Enums
-  status: vine.enum(['draft', 'published', 'archived']),
-
-  // Optional & Nullable
-  bio: vine.string().optional(),
-  deletedAt: vine.date().nullable(),
-})
-```
-
-## Custom Error Messages
-
-```typescript
-export const createUserValidator = vine.compile(
-  vine.object({
-    email: vine.string().email(),
-    password: vine.string().minLength(8),
-  })
-)
-
-createUserValidator.messagesProvider = new SimpleMessagesProvider({
-  'email.required': 'Email is required',
-  'email.email': 'Invalid email format',
-  'password.minLength': 'Password must be at least 8 characters',
-})
-```
-
-## Unique Validation
-
-```typescript
-import vine from '@vinejs/vine'
-import { FieldContext } from '@vinejs/vine/types'
-import User from '#models/user'
-
-const uniqueEmail = vine.createRule(async (value: unknown, _options: undefined, field: FieldContext) => {
-  if (typeof value !== 'string') return
-
-  const user = await User.findBy('email', value)
-  if (user) {
-    field.report('Email already exists', 'unique', field)
-  }
-})
-
-export const createUserValidator = vine.compile(
-  vine.object({
-    email: vine.string().email().use(uniqueEmail()),
-  })
-)
-```
+- `.optional()` -- field can be omitted (value is `undefined`)
+- `.nullable()` -- field can be `null`
+- Combine: `.optional().nullable()` for fields that can be omitted or null
 
 ## Conditional Validation
 
-```typescript
-vine.object({
-  accountType: vine.enum(['personal', 'business']),
-  companyName: vine
-    .string()
-    .minLength(2)
-    .requiredWhen('accountType', '=', 'business'),
-  taxId: vine
-    .string()
-    .optional()
-    .requiredWhen('accountType', '=', 'business'),
-})
-```
+- Use `.requiredWhen('field', '=', 'value')` for fields conditionally required
+- Use `.requiredWhen(ref, operator, value)` for cross-field validation
 
-## Usage in Controller
+## Custom Rules
 
-```typescript
-import { createUserValidator } from '#validators/user'
+- Create with `vine.createRule(async (value, options, field) => {...})`
+- Report errors via `field.report(message, ruleName, field)`
+- Apply with `.use(customRule())`
+- Common use case: uniqueness checks against the database
 
-export default class UsersController {
-  async store({ request, response }: HttpContext) {
-    const payload = await request.validateUsing(createUserValidator)
-    // payload is fully typed: { email: string, password: string, name: string }
-    const user = await User.create(payload)
-    return response.created(user)
-  }
-}
-```
+## Custom Error Messages
+
+- Use `SimpleMessagesProvider` on the validator: `validator.messagesProvider = new SimpleMessagesProvider({...})`
+- Keys follow `field.rule` format: `'email.required'`, `'password.minLength'`
+
+## Anti-patterns
+
+- Do NOT validate manually in controllers with `if` statements -- use VineJS schemas
+- Do NOT create validators inline in controllers -- export from `app/validators/` files
+- Do NOT skip `.compile()` -- uncompiled validators re-parse the schema on every request
+- Do NOT use VineJS for authorization logic -- validation is for data shape, not permissions

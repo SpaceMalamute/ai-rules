@@ -10,164 +10,45 @@ paths:
 
 ## Route Module Pattern
 
-### GOOD
+- Each resource file exports a `new Hono()` instance with chained route definitions
+- Chain `.get().post().put().delete()` on the same instance — required for RPC type inference
+- Mount sub-applications with `app.route('/prefix', subApp)` in the root app
+- Use `basePath('/api/v1')` for API versioning on the root or sub-app
 
-```typescript
-// src/routes/authors.ts
-import { Hono } from 'hono'
+## Inline Handlers
 
-const app = new Hono()
-  .get('/', async (c) => {
-    const authors = await getAuthors()
-    return c.json(authors)
-  })
-  .get('/:id', async (c) => {
-    const id = c.req.param('id')
-    const author = await getAuthor(id)
-    return c.json(author)
-  })
-  .post('/', async (c) => {
-    const body = await c.req.json()
-    const author = await createAuthor(body)
-    return c.json(author, 201)
-  })
-
-export default app
-```
-
-### BAD
-
-```typescript
-// BAD: Separate controller class — breaks type inference
-class AuthorController {
-  static getAll = (c: Context) => { /* ... */ }
-}
-app.get('/', AuthorController.getAll)
-
-// BAD: Not chaining — loses RPC type inference
-const app = new Hono()
-app.get('/', handler1)
-app.post('/', handler2)
-```
-
-## Mounting Route Modules
-
-### GOOD
-
-```typescript
-// src/index.ts
-import { Hono } from 'hono'
-import authors from './routes/authors'
-import books from './routes/books'
-
-const app = new Hono()
-  .basePath('/api')
-
-app.route('/authors', authors)
-app.route('/books', books)
-
-export default app
-```
+- Always define handlers inline within the route chain
+- Never extract handlers into separate functions, classes, or controller files — breaks TypeScript param inference
 
 ## Path Parameters
 
-### GOOD
-
-```typescript
-// Named params
-app.get('/users/:id', (c) => {
-  const id = c.req.param('id') // typed as string
-  return c.json({ id })
-})
-
-// Multiple params
-app.get('/posts/:postId/comments/:commentId', (c) => {
-  const { postId, commentId } = c.req.param()
-  return c.json({ postId, commentId })
-})
-
-// Optional param
-app.get('/api/animals/:type?', (c) => {
-  const type = c.req.param('type') // string | undefined
-  return c.json({ type })
-})
-
-// Regex-constrained
-app.get('/post/:date{[0-9]+}/:title{[a-z]+}', (c) => {
-  const { date, title } = c.req.param()
-  return c.json({ date, title })
-})
-```
+- Named: `'/users/:id'` — access via `c.req.param('id')` (typed as `string`)
+- Multiple: `'/posts/:postId/comments/:commentId'` — destructure via `c.req.param()`
+- Optional: `'/animals/:type?'` — typed as `string | undefined`
+- Regex-constrained: `'/post/:date{[0-9]+}'` — validates at routing level
 
 ## Query Parameters
 
-### GOOD
-
-```typescript
-app.get('/search', (c) => {
-  const q = c.req.query('q')           // string | undefined
-  const tags = c.req.queries('tag')     // string[] | undefined
-  return c.json({ q, tags })
-})
-```
-
-## Request Body
-
-### GOOD
-
-```typescript
-app.post('/users', async (c) => {
-  const body = await c.req.json<CreateUserDto>()
-  return c.json(body, 201)
-})
-
-// Form data (multipart)
-app.post('/upload', async (c) => {
-  const body = await c.req.parseBody()
-  const file = body['file'] as File
-  return c.json({ name: file.name, size: file.size })
-})
-```
+- Single value: `c.req.query('q')` returns `string | undefined`
+- Multiple values: `c.req.queries('tag')` returns `string[] | undefined`
+- Prefer `zValidator('query', schema)` for typed, validated query params
 
 ## Response Helpers
 
-### GOOD
+| Method           | Use case                          |
+|------------------|-----------------------------------|
+| `c.json(data)`   | JSON response (sets Content-Type) |
+| `c.text(str)`    | Plain text response               |
+| `c.html(str)`    | HTML response                     |
+| `c.redirect(url)`| 302 redirect (or 301 with arg)    |
+| `c.notFound()`   | Trigger 404 handler               |
+| `c.status(code)` | Set status before response        |
+| `c.header(k, v)` | Set response header               |
 
-```typescript
-app.get('/text', (c) => c.text('Hello'))
-app.get('/json', (c) => c.json({ message: 'Hello' }))
-app.get('/html', (c) => c.html('<h1>Hello</h1>'))
-app.get('/redirect', (c) => c.redirect('/new-location'))
-app.get('/redirect-permanent', (c) => c.redirect('/new-location', 301))
-app.get('/not-found', (c) => c.notFound())
+## Anti-patterns
 
-// Custom status + headers
-app.post('/created', (c) => {
-  c.status(201)
-  c.header('X-Request-Id', '123')
-  return c.json({ created: true })
-})
-```
-
-### BAD
-
-```typescript
-// BAD: Raw Response when helpers exist
-app.get('/data', (c) => {
-  return new Response(JSON.stringify({ ok: true }), {
-    headers: { 'Content-Type': 'application/json' },
-  })
-})
-```
-
-## Grouping with basePath
-
-### GOOD
-
-```typescript
-// Sub-app with base path
-const api = new Hono().basePath('/api/v1')
-
-api.route('/users', usersRoute)
-api.route('/posts', postsRoute)
-```
+- Do NOT use non-chained route definitions (`app.get(...)` on separate lines) — breaks RPC type export
+- Do NOT extract handlers into controller classes — loses path parameter type inference
+- Do NOT use `new Response(JSON.stringify(...))` — use `c.json()` for proper typing and headers
+- Do NOT use `c.req.json()` for body parsing in validated routes — use `c.req.valid('json')` instead
+- Do NOT create monolithic route files — split large resources into sub-routers mounted via `app.route()`

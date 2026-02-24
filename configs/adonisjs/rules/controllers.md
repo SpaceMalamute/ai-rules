@@ -6,107 +6,43 @@ paths:
 
 # AdonisJS Controllers
 
-## Structure
+## Principles
 
-Controllers handle HTTP concerns only. Delegate business logic to services.
+- Controllers handle HTTP concerns ONLY: parse request, validate, delegate to service, return response
+- Use `@inject()` for constructor DI -- never instantiate services with `new`
+- Always validate input via `request.validateUsing(validator)` before processing
 
-```typescript
-import type { HttpContext } from '@adonisjs/core/http'
-import { inject } from '@adonisjs/core'
-import UserService from '#services/user_service'
-import { createUserValidator, updateUserValidator } from '#validators/user'
+## Controller Types
 
-@inject()
-export default class UsersController {
-  constructor(private userService: UserService) {}
+| Type | When to use | Convention |
+|------|------------|-----------|
+| Resource controller | Standard CRUD (index, store, show, update, destroy) | `router.resource('users', UsersController).apiOnly()` |
+| Single-action controller | One endpoint, one concern | `handle()` method only |
+| Auth controller | Authentication flows | Group under `app/controllers/auth/` |
 
-  async index({ response }: HttpContext) {
-    const users = await this.userService.getAll()
-    return response.ok(users)
-  }
+## Resource Controller Methods
 
-  async store({ request, response }: HttpContext) {
-    const payload = await request.validateUsing(createUserValidator)
-    const user = await this.userService.create(payload)
-    return response.created(user)
-  }
+| Method | HTTP | Purpose | Response |
+|--------|------|---------|----------|
+| `index` | GET /resources | List all | `response.ok(items)` |
+| `store` | POST /resources | Create | `response.created(item)` |
+| `show` | GET /resources/:id | Read one | `response.ok(item)` |
+| `update` | PUT /resources/:id | Update | `response.ok(item)` |
+| `destroy` | DELETE /resources/:id | Delete | `response.noContent()` |
 
-  async show({ params, response }: HttpContext) {
-    const user = await this.userService.findOrFail(params.id)
-    return response.ok(user)
-  }
+## Routing
 
-  async update({ params, request, response }: HttpContext) {
-    const payload = await request.validateUsing(updateUserValidator)
-    const user = await this.userService.update(params.id, payload)
-    return response.ok(user)
-  }
+- Use lazy imports: `const UsersController = () => import('#controllers/users_controller')`
+- Use `router.resource().apiOnly()` for API resources (excludes `create`/`edit` form routes)
+- Use `.only()` or `.except()` to limit resource routes
 
-  async destroy({ params, response }: HttpContext) {
-    await this.userService.delete(params.id)
-    return response.noContent()
-  }
-}
-```
+## Response Helpers
 
-## Best Practices
+Use verified response methods: `response.send()`, `response.json()`, `response.status()`, `response.redirect()`, `response.noContent()`, `response.stream()`, `response.download()`, `response.abort()`
 
-### Use Dependency Injection
+## Anti-patterns
 
-```typescript
-// Good
-@inject()
-export default class OrdersController {
-  constructor(
-    private orderService: OrderService,
-    private notificationService: NotificationService
-  ) {}
-}
-
-// Avoid: instantiating services manually
-export default class OrdersController {
-  private orderService = new OrderService() // Hard to test
-}
-```
-
-### Validate Input
-
-Always validate using VineJS validators:
-
-```typescript
-async store({ request }: HttpContext) {
-  // Validates and returns typed payload
-  const payload = await request.validateUsing(createOrderValidator)
-  // payload is now typed and validated
-}
-```
-
-### Use Response Helpers
-
-```typescript
-response.ok(data)           // 200
-response.created(data)      // 201
-response.noContent()        // 204
-response.badRequest(error)  // 400
-response.unauthorized()     // 401
-response.forbidden()        // 403
-response.notFound()         // 404
-```
-
-### Resource Routes
-
-```typescript
-// start/routes.ts
-import router from '@adonisjs/core/services/router'
-
-const UsersController = () => import('#controllers/users_controller')
-
-router.resource('users', UsersController).apiOnly()
-
-// Generates:
-// GET    /users          → index
-// POST   /users          → store
-// GET    /users/:id      → show
-// PUT    /users/:id      → update
-// DELETE /users/:id      → destroy
-```
+- Do NOT put business logic in controllers -- extract to services
+- Do NOT access the database directly in controllers -- delegate to services or models
+- Do NOT catch exceptions in controllers unless transforming the error shape -- let the exception handler do it
+- Do NOT use raw `response.send()` -- use typed helpers for consistent status codes

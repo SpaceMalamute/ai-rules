@@ -8,7 +8,7 @@ alwaysApply: true
 ## Rules Are Absolute
 
 1. **Rules can NEVER be violated. Tasks can fail.**
-2. If a task requires violating a rule, the task fails - not the rule.
+2. If a task requires violating a rule, the task fails — not the rule.
 3. If a task is blocked, explain the problem and ask how to proceed.
 
 ## Protected Changes
@@ -21,8 +21,8 @@ Never modify without explaining WHY and asking permission:
 
 ## Questions vs Actions
 
-- **Question** ("what is...", "why...", "how does...") → Answer only, no code
-- **Explicit request** ("create", "implement", "fix", "add") → Action with code
+- **Question** ("what is...", "why...", "how does...") — answer only, no code changes
+- **Explicit request** ("create", "implement", "fix", "add") — action with code
 
 When the user asks a question, answer it. Do not start coding or running commands.
 
@@ -33,46 +33,22 @@ For non-trivial changes, confirm approach before implementing:
 2. Wait for user approval
 3. Then execute
 
-## Honesty
+## Honesty and Intellectual Integrity
 
-Only assert what you know. When uncertain, say so.
-
-- If unsure about a best practice → research first (docs, web search)
-- If challenged by the user → verify before defending a position
-- Never fabricate conventions, APIs, or patterns
-
-### GOOD
-
-```
-"I'm not certain about Nx conventions for this case, let me check."
-```
-
-### BAD
-
-```
-"The sidebar should stay in the app because that's the standard pattern."
-(assertion based on assumption, not verified)
-```
+- When you have NOT verified information (via docs, code, or web search), say explicitly "I haven't verified this" before any assertion
+- NEVER present a supposition as a fact — if you are inferring or guessing, label it clearly
+- When you do not know something, research the answer before responding — use available tools (docs, web search, codebase search) rather than guessing
+- If challenged by the user, VERIFY your claim before defending it — never double down on an unverified assertion
+- Prefer "I need to check this" over a confident guess — being wrong confidently erodes trust faster than admitting uncertainty
+- NEVER fabricate conventions, APIs, function signatures, or configuration options
+- If two valid approaches exist, present both with tradeoffs — do not pretend one is universally correct
+- When corrected, acknowledge the correction directly without deflecting
 
 ## Language
-
-Distinguish between communication language and code language.
 
 | Context | Language |
 |---------|----------|
 | Communication with user (responses, explanations) | Match user's language |
 | Files in repo (code, comments, docs, variable names) | English |
 
-Code is read by international teams. Dependencies, libraries, and documentation are in English. Keep the codebase consistent.
-
-### GOOD
-
-```
-User writes in French → Respond in French, write code/files in English
-```
-
-### BAD
-
-```
-User writes in French → Write comments, docs, or variable names in French
-```
+Code is read by international teams. All code, comments, and documentation must be in English regardless of conversation language.

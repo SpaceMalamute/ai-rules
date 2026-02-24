@@ -9,138 +9,42 @@ paths:
 
 # Hono Error Handling
 
-## HTTPException
-
-### GOOD
-
-```typescript
-import { HTTPException } from 'hono/http-exception'
-
-app.get('/posts/:id', async (c) => {
-  const id = c.req.param('id')
-  const post = await getPost(id)
-
-  if (!post) {
-    throw new HTTPException(404, { message: 'Post not found' })
-  }
-
-  return c.json(post)
-})
-
-// With custom response
-app.delete('/admin/posts/:id', async (c) => {
-  const user = c.get('user')
-
-  if (user.role !== 'admin') {
-    throw new HTTPException(403, {
-      message: 'Admin access required',
-      res: new Response('Forbidden', { status: 403, headers: { 'X-Reason': 'role' } }),
-    })
-  }
-
-  await deletePost(c.req.param('id'))
-  return c.json({ deleted: true })
-})
-```
-
-### BAD
-
-```typescript
-// BAD: Returning error responses instead of throwing — skips error handler
-app.get('/posts/:id', async (c) => {
-  const post = await getPost(c.req.param('id'))
-  if (!post) {
-    return c.json({ error: 'Not found' }, 404) // Error handler won't see this
-  }
-  return c.json(post)
-})
-
-// BAD: Throwing plain Error — loses HTTP status
-app.get('/posts/:id', async (c) => {
-  throw new Error('Something went wrong') // Results in generic 500
-})
-```
-
 ## Global Error Handler
 
-### GOOD
+- Register `app.onError()` once on the root app — catches all thrown errors
+- Check `err instanceof HTTPException` to return structured HTTP errors
+- Log unexpected errors and return generic 500 for non-HTTPException errors
 
-```typescript
-import { Hono } from 'hono'
-import { HTTPException } from 'hono/http-exception'
+## HTTPException
 
-const app = new Hono()
-
-app.onError((err, c) => {
-  if (err instanceof HTTPException) {
-    return err.getResponse()
-  }
-
-  console.error('Unexpected error:', err)
-  return c.json({ error: 'Internal Server Error' }, 500)
-})
-```
+- Import from `hono/http-exception`
+- Throw `HTTPException` with status code and message for all expected errors (404, 401, 403, 422)
+- Supports optional `res` property for fully custom Response objects
+- Throw from handlers AND middleware — both flow to `app.onError()`
 
 ## Custom 404 Handler
 
-### GOOD
+- Register `app.notFound()` on the root app for unmatched routes
+- Return consistent error shape matching your `app.onError()` format
 
-```typescript
-app.notFound((c) => {
-  return c.json({
-    error: 'Not Found',
-    path: c.req.path,
-  }, 404)
-})
-```
+## Error Response Shape
 
-## Error Handling in Middleware
+- Use a single consistent error shape across the entire API
+- Include at minimum: `status` (number) and `message` (string)
+- Add `details` field for validation errors (field-level)
 
-### GOOD
+## Decision: Error Type to Use
 
-```typescript
-import { createMiddleware } from 'hono/factory'
-import { HTTPException } from 'hono/http-exception'
+| Situation                | Approach                                          |
+|--------------------------|---------------------------------------------------|
+| Known HTTP error         | `throw new HTTPException(status, { message })`    |
+| Validation failure       | Let `zValidator` handle (auto 400) or custom hook |
+| Unexpected/unknown error | Let it propagate to `app.onError()` as 500        |
+| Route not found          | `app.notFound()` handler                          |
 
-export const requireAuth = createMiddleware(async (c, next) => {
-  const token = c.req.header('Authorization')?.replace('Bearer ', '')
+## Anti-patterns
 
-  if (!token) {
-    throw new HTTPException(401, { message: 'Authentication required' })
-  }
-
-  try {
-    const user = await verifyToken(token)
-    c.set('user', user)
-  } catch {
-    throw new HTTPException(401, { message: 'Invalid or expired token' })
-  }
-
-  await next()
-})
-```
-
-## Structured Error Responses
-
-### GOOD
-
-```typescript
-// Consistent error shape across the API
-app.onError((err, c) => {
-  if (err instanceof HTTPException) {
-    return c.json({
-      error: {
-        status: err.status,
-        message: err.message,
-      },
-    }, err.status)
-  }
-
-  return c.json({
-    error: {
-      status: 500,
-      message: 'Internal Server Error',
-    },
-  }, 500)
-})
-```
+- Do NOT return `c.json({ error }, 404)` for errors — skips the global error handler, prevents centralized logging
+- Do NOT throw plain `Error` — loses HTTP status, results in generic 500
+- Do NOT catch errors in individual handlers just to re-format — centralize in `app.onError()`
+- Do NOT forget `await next()` in middleware try/catch — downstream handlers won't execute
