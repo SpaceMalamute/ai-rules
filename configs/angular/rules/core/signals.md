@@ -15,7 +15,7 @@ paths:
 | Need | Use | Why |
 |---|---|---|
 | Read-only derived value | `computed()` | Pure derivation, auto-tracked, memoized |
-| Writable value that resets on source change | `linkedSignal()` | Pagination reset, form defaults from server |
+| Writable value that resets on source change | `linkedSignal()` (stable since v20) | Pagination reset, form defaults from server |
 | Side effect (logging, analytics, DOM) | `effect()` | Last resort — prefer computed/linkedSignal first |
 
 ## Signal Basics
@@ -41,20 +41,6 @@ protected readonly currentPage = linkedSignal(() => {
 
 - Runs when any read signal inside changes
 - DO provide `onCleanup` callback for subscriptions or timers
-- Avoid chaining effects — prefer declarative computed/linkedSignal graphs
-
-## Signal Inputs / Outputs / Model
-
-- `input()`, `input.required()` — replaces `@Input()`
-- `output()` — replaces `@Output()` + `EventEmitter`
-- `model()`, `model.required()` — two-way binding (`[(prop)]`)
-- `input(defaultValue, { transform })` for input transforms
-
-## Signal Queries
-
-- `viewChild()` / `viewChild.required()` — replaces `@ViewChild()`
-- `viewChildren()` — replaces `@ViewChildren()`
-- `contentChild()` / `contentChildren()` — replaces `@ContentChild()` / `@ContentChildren()`
 
 ## RxJS Interop
 
@@ -64,7 +50,6 @@ protected readonly currentPage = linkedSignal(() => {
 
 ## Anti-patterns
 
-- DO NOT use `@Input()` / `@Output()` / `@ViewChild()` decorators — use signal APIs
 - DO NOT subscribe in `ngOnInit` — use `toSignal()` or `resource()`
 - DO NOT use `computed()` for state you need to write — use `linkedSignal()`
 - DO NOT chain multiple `effect()` calls — prefer declarative computed/linkedSignal graphs

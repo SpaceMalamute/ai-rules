@@ -16,7 +16,7 @@ alwaysApply: true
 
 Every Flask app MUST use the application factory pattern via `create_app()`. Never instantiate a global `app = Flask(__name__)` at module level.
 
-Always access app through `current_app` proxy inside request/CLI context. Never import a concrete app instance into blueprints, services, or models.
+Access app through `current_app` proxy -- see context rules.
 
 ## Module Organization
 
@@ -37,7 +37,7 @@ Always access app through `current_app` proxy inside request/CLI context. Never 
 - Routes are thin controllers: validate input, call service, serialize output
 - Services own business logic and transactions — routes never call `db.session.commit()`
 - One blueprint per domain, registered with URL prefix in factory
-- Extensions initialized in `extensions.py`, bound to app via `init_app()` in factory
+- Extensions: lazy init in `extensions.py`, bind via `init_app()` -- see extensions rules
 - Use `from_prefixed_env()` (Flask 2.2+) for environment-based config loading
 
 ## Anti-Patterns

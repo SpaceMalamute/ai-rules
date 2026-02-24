@@ -27,20 +27,6 @@ Use queries in this order — prefer accessible selectors:
 | 3 | `getByText` | Non-interactive text content |
 | 4 | `getByTestId` | Last resort — no accessible selector available |
 
-## What to Test
-
-- User-visible behavior: renders correct content, responds to interaction, shows errors
-- Component contracts: given props/state, verify output and callbacks
-- Async flows: loading → data, loading → error
-- Edge cases: empty states, boundary values, error states
-
-## What NOT to Test
-
-- Internal state values or implementation details
-- CSS class names or DOM structure
-- Third-party library internals
-- Snapshots of large component trees (brittle, low signal)
-
 ## Patterns
 
 - Always call `userEvent.setup()` before rendering — use the returned `user` instance for interactions

@@ -9,10 +9,6 @@ paths:
 
 # Elysia Routes
 
-## Method Chaining (Mandatory)
-
-Chain all route definitions on the same Elysia instance — breaking the chain loses type inference for Eden. This is the single most important rule in Elysia.
-
 ## Route Organization
 
 | Pattern | Use Case | Syntax |
@@ -30,22 +26,15 @@ Chain all route definitions on the same Elysia instance — breaking the chain l
 
 ## Response Schemas
 
-Always define response schemas per status code — they enable:
-1. Runtime response validation
-2. OpenAPI documentation generation
-3. Typed error responses via `status()` helper
-4. Eden client type narrowing on `error.status`
+See validation rules for response schema requirements.
 
 ## Controller Pattern
 
-- One Elysia instance per resource with `prefix`
-- Pass destructured values to service functions, never the full Context
-- Mount modules via `.use()` on the root app with method chaining
 - Export root app type as `export type App = typeof app`
 
 ## Anti-Patterns
 
-- Do NOT use separate statements (`app.get(); app.post()`) — breaks type chain
-- Do NOT duplicate schemas across routes — use `guard()` or `.model()` to share
+- Do NOT use separate statements (`app.get(); app.post()`) — breaks type chain for Eden
+- Do NOT extract handlers to standalone functions — context types are lost outside the chain
 - Do NOT pass full Context to services — breaks encapsulation, couples to Elysia internals
-- Do NOT define routes after lifecycle hooks meant for earlier routes — hooks only apply to routes registered after them
+- Do NOT define routes after lifecycle hooks meant for earlier routes — see lifecycle rules

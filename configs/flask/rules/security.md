@@ -8,10 +8,10 @@ paths:
 
 ## Password Handling
 
-- Use `werkzeug.security.generate_password_hash` / `check_password_hash` — never roll custom hashing
-- Werkzeug 3.0+ defaults to scrypt. For existing databases with pbkdf2 hashes, specify `method='pbkdf2:sha256'` or implement rehashing on login.
-- Store as `password_hash` column, never `password`
-- Model exposes `set_password()` and `check_password()` methods — callers never touch the hash directly
+- Use `werkzeug.security.generate_password_hash` / `check_password_hash`
+- Werkzeug 3.0+ defaults to scrypt. DO use `argon2-cffi` for cross-service consistency, or accept Werkzeug's scrypt default for Flask-only projects.
+- For existing databases with pbkdf2 hashes, specify `method='pbkdf2:sha256'` or implement rehashing on login
+- Model exposes `set_password()` and `check_password()` methods -- callers never touch the hash directly
 
 ## CSRF Protection
 
@@ -36,23 +36,11 @@ Use `flask-talisman` for HSTS, CSP, and other security headers. Configure CSP pe
 
 Manual fallback: set `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` in `@app.after_request`.
 
-## SQL Injection Prevention
-
-- Always use ORM queries or parameterized `text()` queries with bind parameters
-- Never use f-strings or `.format()` to build SQL
-
-**BANNED:** `db.session.execute(f"SELECT * FROM users WHERE email = '{email}'")` — SQL injection vector
-
 ## Rate Limiting
 
 - Use `flask-limiter` with Redis backend in production
 - Aggressive limits on auth endpoints: `5 per minute` on login
 - Exempt health check endpoints with `@limiter.exempt`
-
-## API Key Auth
-
-- Use `hmac.compare_digest()` for key comparison — prevents timing attacks
-- Never compare API keys with `==`
 
 ## File Uploads
 
@@ -63,7 +51,5 @@ Manual fallback: set `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` 
 
 ## Anti-Patterns
 
-- Plain-text password storage — always hash with werkzeug
-- Hardcoded secrets in source code — use env vars exclusively
 - `SECRET_KEY = "dev"` in production — must be cryptographically random, 32+ chars
 - Disabling CSRF globally — exempt only token-auth API routes

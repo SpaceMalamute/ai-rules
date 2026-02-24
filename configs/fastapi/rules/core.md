@@ -39,18 +39,17 @@ Shared code goes in `core/` (exceptions, security) and `common/` (base models, s
 
 ## Key Conventions
 
-- Use `Annotated[T, Depends(dep)]` type aliases for all injected dependencies
-- Use lifespan context manager -- NEVER `@app.on_event("startup"/"shutdown")`
+- `Annotated` type aliases for DI -- see dependencies rules
+- Lifespan context manager for startup/shutdown -- see lifespan rules
 - Settings via `pydantic-settings` `BaseSettings` with `.env` support
 - Custom domain exceptions with `@app.exception_handler` -- not bare `HTTPException` in services
-- `response_model` on every route that returns data; `response_model_exclude_unset=True` as default
+- `response_model` on every route -- see responses rules
 
 ## Anti-patterns
 
 - NEVER put business logic in routers -- routers are thin HTTP adapters
 - NEVER use sync ORM calls in async context -- causes thread pool exhaustion
 - NEVER import `app` in modules to avoid circular imports -- pass dependencies via DI
-- NEVER use `*` wildcard in CORS origins in production
 
 ## Commands
 

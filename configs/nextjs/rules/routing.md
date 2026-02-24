@@ -58,4 +58,4 @@ DO NOT nest route groups unnecessarily — keep the structure flat and readable.
 
 - DO NOT destructure `params` synchronously — it is a Promise in Next.js 15
 - DO NOT create deeply nested route groups — adds complexity without value
-- DO NOT forget `loading.tsx` for routes with slow data fetching
+- DO NOT forget `loading.tsx` for routes with slow data fetching — users see a blank screen without it

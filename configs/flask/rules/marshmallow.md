@@ -48,11 +48,10 @@ Define a `BaseSchema` with `Meta.ordered = True` and a `TimestampMixin` with `cr
 
 ## Error Handling
 
-Register a global `@app.errorhandler(ValidationError)` that returns `{"error": "...", "details": error.messages}` with 400 status. This lets routes call `schema.load()` without try/except — errors propagate automatically.
+See error-handlers rules for global `ValidationError` handler registration. Routes should call `schema.load()` without try/except — errors propagate automatically via the global handler.
 
 ## Anti-Patterns
 
 - Single schema for input and output — leaks `password_hash` or accepts `id` in input
 - Missing `required=True` on creation schemas — silently accepts empty data
 - `schema.dump()` with raw dicts instead of model instances — skips `dump_only` enforcement
-- Catching `ValidationError` in every route — use global error handler instead

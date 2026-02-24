@@ -13,26 +13,15 @@ paths:
 
 ## Route Handler Rules
 
-- Every handler MUST be `async def`
-- Every handler returning data MUST have `response_model` set
 - Use `status_code=` for non-200 defaults (201 on POST create, 204 on DELETE)
-- Use `Annotated` type aliases for all dependencies -- NEVER inline `Depends()`
 - Use `summary` and `description` on routes for OpenAPI documentation
 - Return type annotation should match the ORM/domain object; `response_model` handles serialization
 
-## SQLAlchemy Async Integration
+## Async SQLAlchemy Override
 
-- Use `AsyncSession` with `expire_on_commit=False` -- prevents lazy load issues after commit
-- Set `lazy='raise'` on ALL SQLAlchemy relationships -- prevents implicit lazy loads that break async
-- Use `selectinload()` / `joinedload()` for eager loading -- NEVER rely on implicit lazy loading
-- Always use `select()` + `session.scalars()` / `session.execute()` -- NEVER use legacy `session.query()`
+- Set `lazy='raise'` on ALL SQLAlchemy relationships -- in async contexts, this overrides the shared `selectin` default because implicit I/O is unsafe with closed async sessions and causes `MissingGreenlet` errors. Always use explicit `selectinload()` / `joinedload()` at query time instead.
 
-## Error Handling
-
-- Define domain exceptions (`NotFoundError`, `ConflictError`, `BusinessError`) in `core/exceptions.py`
-- Register `@app.exception_handler(DomainError)` for each -- returns structured JSON
-- Services raise domain exceptions; routers NEVER catch them (middleware handles it)
-- Use `responses={404: {"model": ErrorResponse}}` on routes for OpenAPI docs
+For general SQLAlchemy 2.0 query patterns (`select()`, `session.scalars()`, model definitions), see shared SQLAlchemy rules.
 
 ## OpenAPI Configuration
 
@@ -40,16 +29,7 @@ paths:
 - Use `openapi_tags` for logical endpoint grouping
 - Disable `docs_url` and `redoc_url` in production via settings toggle
 
-## Type Hints
-
-- Use `X | None` -- NEVER `Optional[X]`
-- Use `list[X]`, `dict[K, V]` -- NEVER `List`, `Dict` from typing
-- Use `Literal["a", "b"]` for constrained string params
-
 ## Anti-patterns
 
-- NEVER put business logic in route handlers -- delegate to service layer
-- NEVER use `session.query()` -- it is the legacy sync API
-- NEVER access relationships without explicit eager loading in async -- raises `MissingGreenlet`
-- NEVER return raw SQLAlchemy models without `response_model` -- leaks internal fields
+- NEVER return raw SQLAlchemy model instances directly from route handlers -- convert to Pydantic schemas
 - NEVER use bare `except Exception` in handlers -- let exception handlers do their job

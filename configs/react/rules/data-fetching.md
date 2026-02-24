@@ -35,8 +35,7 @@ paths:
 
 ## `use()` Hook (React 19)
 
-- Unwrap promises passed from server/parent components inside Suspense boundaries
-- Do NOT create promises during render — pass them as props or from loaders
+- See hooks rules for `use()` API details — use inside Suspense boundaries to unwrap server data
 
 ## Suspense Integration
 

@@ -27,13 +27,12 @@ paths:
 ## ChangeDetectionStrategy.OnPush
 
 - DO add `changeDetection: ChangeDetectionStrategy.OnPush` on every component
-- Rationale: RFC to make it the default; explicit until then
+- Rationale: not the default yet; OnPush ensures optimal performance with signals and zoneless
 
 ## File Structure
 
 - DO use external templates (`templateUrl`) and styles (`styleUrl`)
 - DO NOT use inline `template:` or `styles:`
-- DO NOT add `standalone: true` in `@Component` — it is the default
 
 ## @defer — Component-Level Lazy Loading
 
@@ -43,7 +42,7 @@ paths:
 
 ## Smart Components (feature/)
 
-- DO inject `Store`, dispatch actions, use `selectSignal()`
+- When using NgRx: inject `Store`, dispatch actions, use `selectSignal()`
 - DO pass data down via `input()`, handle events via `output()`
 - DO NOT place business logic in the template
 
@@ -53,9 +52,3 @@ paths:
 - DO accept data via `input()` / `input.required()`, emit via `output()`
 - Must be testable in complete isolation
 
-## Anti-patterns
-
-- DO NOT use decorators (`@Input`, `@Output`, `@ViewChild`) — they are legacy
-- DO NOT use constructor injection — use `inject()`
-- DO NOT write useless comments — code must be self-documenting
-- DO NOT disable lint rules without a justification comment + ticket reference

@@ -59,10 +59,7 @@ Request --> Server Middleware --> Router Middleware --> Route Middleware --> Con
 node ace serve --watch          # Dev server
 node ace build                  # Production build
 node ace test                   # Run tests
-node ace make:controller        # Generate artifacts
-node ace make:model
-node ace make:service
-node ace make:validator
-node ace migration:run
-node ace migration:rollback
+node ace migration:run          # Run pending migrations
 ```
+
+Run `node ace list` for all generators and available commands.

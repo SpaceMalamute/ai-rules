@@ -44,12 +44,6 @@ paths:
 - `@beforeDelete` / `@afterDelete` for cleanup side effects
 - Keep hooks simple -- complex logic belongs in services
 
-## Factories (Testing)
-
-- Define factories in `database/factories/` using `Factory.define(Model, ({ faker }) => ({...}))`
-- Chain `.relation('posts', () => PostFactory)` for relationship factories
-- Use `Factory.create()`, `Factory.createMany(n)`, `Factory.with('relation', n).create()`
-
 ## Transactions
 
 - Wrap multi-model writes in `db.transaction(async (trx) => {...})`

@@ -34,7 +34,7 @@ paths:
 
 ## Anti-patterns
 
-- Sequential awaits for independent operations — wastes time proportional to call count
-- Missing `AbortController` cleanup in UI — causes memory leaks and stale state updates
-- `catch(() => {})` — silent error swallowing, always log minimum context
-- Mixing `.then()` chains with `async/await` — pick one style per function
+- DO NOT await independent operations sequentially — wastes time proportional to call count
+- DO NOT skip `AbortController` cleanup in UI — causes memory leaks and stale state updates
+- DO NOT use `catch(() => {})` — silent error swallowing, always log minimum context
+- DO NOT mix `.then()` chains with `async/await` — pick one style per function

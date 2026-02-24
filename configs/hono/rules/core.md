@@ -22,13 +22,13 @@ Use `createFactory<Env>()` from `hono/factory` for shared typing across all rout
 
 - **Typed environment**: Always pass `Env` generics — `Hono<{ Bindings: B; Variables: V }>` for type-safe `c.env` and `c.var`
 - **Route modules**: Each resource exports a `new Hono()` instance, mounted via `app.route('/prefix', subApp)`
-- **Inline handlers**: Define handlers inline with route chains — extracting handler functions breaks TypeScript path/param inference
-- **Chained definitions**: Chain `.get().post().put().delete()` on the same instance — required for RPC type inference
-- **Middleware order**: `app.use()` before route definitions; middleware calls `await next()` (onion model)
+- **Inline handlers**: Inline handlers required — see routes rules
+- **Chained definitions**: Chain route methods on same instance — see RPC rules
+- **Middleware order**: Middleware before route definitions — see middleware rules
 - **Error handling**: Throw `HTTPException` from `hono/http-exception`; handle globally with `app.onError()`
 - **Web Standards only**: Hono uses Web Standard APIs — avoid Node.js-specific modules in shared code
-- **Response helpers**: Prefer `c.json()`, `c.text()`, `c.html()` over raw `new Response()`
-- **Validated data**: Access via `c.req.valid('json' | 'query' | 'param')` — never parse manually
+- **Response helpers**: Use `c.json()`, `c.text()` response helpers
+- **Validated data**: Access validated data via `c.req.valid()` — see validation rules
 
 ## Runtime Entry Points
 
@@ -59,7 +59,4 @@ Use `createFactory<Env>()` from `hono/factory` for shared typing across all rout
 
 ## Anti-patterns
 
-- Do NOT extract handler functions into classes or separate files — breaks type inference for params and RPC
-- Do NOT use non-chained route definitions — RPC types require method chaining on the same Hono instance
 - Do NOT import Node.js built-ins (`fs`, `path`, `crypto`) in shared code — breaks multi-runtime compatibility
-- Do NOT use `new Response()` when `c.json()` / `c.text()` helpers exist — loses Hono response typing

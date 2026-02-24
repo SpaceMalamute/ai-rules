@@ -24,35 +24,9 @@ alwaysApply: true
 - Internal errors: detailed logs, generic user message
 - Never expose stack traces to end users
 
-## Testing
-
-- Test behavior, not implementation
-- Descriptive names: `should return user when id is valid`
-- One assertion per test when practical
-- Mock external dependencies only — never mock the unit under test
-
-## Security
-
-- Never commit secrets — use environment variables or secret managers
-- Validate all inputs — never trust user data
-- Use parameterized queries — no string concatenation for SQL
-- Sanitize outputs — prevent XSS
-
-## Documentation
-
-- Self-documenting code first
-- Comments explain "why", not "what"
-- Delete stale comments — outdated comments are worse than none
-
 ## Dependencies
 
 - Pin exact versions in lock files
-- Audit regularly (`npm audit`, `pip-audit`, `dotnet list package --vulnerable`)
+- Audit regularly
 - Prefer well-maintained packages — minimize dependency count
 
-## Performance
-
-- Measure before optimizing — profile to find real bottlenecks
-- Cache expensive operations
-- Lazy load when possible
-- DO NOT optimize prematurely

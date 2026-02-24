@@ -52,6 +52,6 @@ paths:
 
 ## Anti-patterns
 
-- DO NOT inject scoped services (DbContext, repos) directly into constructor -- they become captive singletons
+- DO NOT inject scoped services directly into constructor -- use `IServiceProvider.CreateAsyncScope()` per iteration (see DI rules for captive dependency)
 - DO NOT poll without delay when idle -- it causes CPU spinning
 - DO NOT ignore `StopAsync` graceful shutdown -- finish or cancel current work

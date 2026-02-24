@@ -16,8 +16,8 @@ paths:
 
 ## Zoneless Testing
 
-- Angular 19+ supports zoneless: use `provideZonelessChangeDetection()` in `TestBed` providers
-- DO use `await fixture.whenStable()` — not `fixture.detectChanges()` for zoneless
+- Angular 21 is zoneless by default; for pre-v21 codebases, add `provideZonelessChangeDetection()` in TestBed providers
+- DO prefer `await fixture.whenStable()` over `fixture.detectChanges()` in zoneless — ensures all signals are settled
 - DO use `fixture.componentRef.setInput('name', value)` for signal inputs
 - DO read signal values directly: `expect(component.mySignal()).toBe(expected)`
 

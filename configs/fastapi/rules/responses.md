@@ -1,5 +1,5 @@
 ---
-description: "FastAPI response models and status codes"
+description: "FastAPI response models and streaming patterns"
 paths:
   - "**/*.py"
 ---
@@ -8,21 +8,8 @@ paths:
 
 ## Response Model Rules
 
-- Every data-returning route MUST set `response_model=SchemaName`
 - Use `response_model_exclude_unset=True` as default -- omits fields not explicitly set
-- Create dedicated response schemas to control exposed fields — NEVER use `response_model_exclude` to hide fields
-- Response schemas MUST have `model_config = ConfigDict(from_attributes=True)` for ORM compatibility
-
-## Status Code Conventions
-
-| Operation | Status code | Return type |
-|-----------|------------|-------------|
-| GET single | 200 | `response_model=ItemResponse` |
-| GET list | 200 | `response_model=Page[ItemResponse]` |
-| POST create | 201 | `response_model=ItemResponse` |
-| PUT/PATCH update | 200 | `response_model=ItemResponse` |
-| DELETE | 204 | `Response(status_code=204)` |
-| Async job queued | 202 | `{"task_id": "..."}` |
+- Create dedicated response schemas to control exposed fields -- NEVER use `response_model_exclude` to hide fields
 
 ## Response Classes
 
@@ -56,6 +43,4 @@ paths:
 ## Anti-patterns
 
 - NEVER return raw dicts from routes -- always use `response_model` for serialization control
-- NEVER return 200 for creation -- use 201
-- NEVER return response body on DELETE -- use 204 No Content
 - NEVER leak internal model fields -- `response_model` acts as a serialization firewall

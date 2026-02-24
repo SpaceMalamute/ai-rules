@@ -1,7 +1,6 @@
 ---
 description: "MediatR CQRS and pipeline behaviors"
 paths:
-  - "**/src/**/*.cs"
   - "**/src/Application/**/*.cs"
 ---
 
@@ -42,13 +41,13 @@ Register behaviors in order (first registered = outermost):
 
 - One handler per command/query (Single Responsibility)
 - Colocate command + handler + validator in the same folder
-- Return `Result<T>` from handlers -- do not throw exceptions for business failures
+- Return `Result<T>` from handlers -- see result-pattern rules
 - Accept `CancellationToken` and propagate it to all async calls
 
 ## Domain Events
 
 - Use `INotification` for domain event fan-out (multiple handlers per event)
-- Dispatch domain events after `SaveChangesAsync`, not before
+- See ddd.md for domain event dispatch rules (timing relative to SaveChangesAsync)
 - Keep event handlers idempotent -- they may be retried
 
 ## Anti-patterns

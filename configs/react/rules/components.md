@@ -7,13 +7,6 @@ paths:
 
 # React Components
 
-## Definition
-
-- Plain function declaration with typed props interface — never `React.FC`
-- Named exports only — no default exports
-- One component per file
-- Destructure props in function signature
-
 ## Server Components Awareness
 
 - Components are Server Components by default in RSC frameworks
@@ -43,8 +36,5 @@ paths:
 
 ## Anti-Patterns
 
-- Do NOT use `forwardRef` — `ref` is a regular prop in React 19
-- Do NOT manually memoize with `React.memo` — React Compiler handles it
 - Do NOT pass many config props — use composition instead
-- Do NOT use anonymous default exports — makes debugging and refactoring harder
 - Do NOT use `index` as `key` for dynamic lists — use stable unique identifiers

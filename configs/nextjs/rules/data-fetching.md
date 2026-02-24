@@ -27,22 +27,11 @@ Each `<Suspense>` boundary streams independently — split by data speed.
 ## Client Components
 
 DO use the `use()` hook to unwrap promises passed from Server Components.
-DO NOT use `useEffect` + `fetch` for data fetching — use Server Components.
 For client-side interactivity with server data: fetch in Server Component, pass as props.
 
 ## Dynamic Params (Next.js 15)
 
-`params` and `searchParams` are `Promise` — always `await` them:
-
-```tsx
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-}
-```
+Dynamic params (`params`, `searchParams`) are Promises — see routing rules.
 
 ## Error Handling
 
@@ -52,7 +41,5 @@ export default async function Page({
 
 ## Anti-Patterns
 
-- DO NOT create API routes just to call them from Server Components — query DB directly
-- DO NOT fetch in `useEffect` — Server Components eliminate the need
-- DO NOT use `cache: 'force-cache'` by default in Next.js 15 — caching is opt-in now
-- DO NOT destructure `params` synchronously — it is a Promise in Next.js 15
+- DO NOT default to `cache: 'force-cache'` — Next.js 15+ is no-cache by default; opt in explicitly with `"use cache"` directive instead
+- DO NOT destructure `params` synchronously — see routing rules

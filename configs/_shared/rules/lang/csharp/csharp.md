@@ -38,18 +38,6 @@ paths:
 - Use primary constructors (C# 12+) for DI in services
 - Use `using` declarations over `using` blocks when scope matches method lifetime
 
-## Async Rules
-
-- Async all the way — never block with `.Result` or `.Wait()`
-- Use `ConfigureAwait(false)` in library code, not in ASP.NET Core controllers
-- Always propagate `CancellationToken`
-
-## LINQ
-
-- Use method syntax for simple queries, query syntax for joins
-- DO NOT enumerate an `IEnumerable` multiple times — materialize with `.ToList()` first
-- Use `AsNoTracking()` for read-only EF Core queries
-
 ## Error Handling
 
 - Throw specific exceptions, not `new Exception("...")`

@@ -12,7 +12,7 @@ paths:
 ## Setup
 
 - Use Eden Treaty v2 (`treaty` from `@elysiajs/eden`) as the default client
-- Export app type: `export type App = typeof app` — requires method chaining to capture all routes
+- Export app type: `export type App = typeof app` — Eden requires method chaining, see routes rules
 - Client-side: `const api = treaty<App>('http://localhost:3000')`
 - Testing: pass app instance directly — `const api = treaty(app)` — no URL, no server needed
 
@@ -37,7 +37,6 @@ Every Eden call returns `{ data, error, status }`:
 
 ## Anti-Patterns
 
-- Do NOT break method chains on the server — `export type App = typeof app` will miss routes registered as separate statements
 - Do NOT use Eden Fetch for new code — Treaty v2 has better ergonomics and type inference
 - Do NOT pass URLs in tests — pass the app instance directly to `treaty()` for zero-network-overhead testing
 - Do NOT forget to export `App` type — Eden client has no type information without it

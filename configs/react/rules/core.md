@@ -27,7 +27,7 @@ src/
 
 ## React 19 Baseline
 
-- **React Compiler**: No manual `useMemo`, `useCallback`, or `React.memo` — compiler handles all memoization
+- **React Compiler**: Handles memoization automatically
 - **`ref` as prop**: Pass `ref` directly — `forwardRef` is unnecessary
 - **`use()` hook**: Unwrap promises and context in render, supports conditional calls
 - **`useActionState`**: Replaces deprecated `useFormState` for form submissions
@@ -36,8 +36,12 @@ src/
 
 ## Component Model
 
-| Server Components (RSC frameworks) | Client Components |
-|-------------------------------------|-------------------|
+In a Vite SPA, all components are client components by default — no `"use client"` directive needed.
+
+When using an RSC-capable framework (Next.js, React Router v7 framework mode):
+
+| Server Components | Client Components |
+|-------------------|-------------------|
 | Default — no `"use client"` needed  | Add `"use client"` only when using state/effects/browser APIs |
 | Fetch data directly, async allowed  | `useState`, `useEffect`, event handlers |
 
@@ -54,11 +58,9 @@ src/
 
 ## Anti-Patterns
 
-- Do NOT use `forwardRef` — `ref` is a regular prop in React 19
 - Do NOT add `useMemo`/`useCallback`/`React.memo` — React Compiler handles it
 - Do NOT use `React.FC` — provides no benefit over plain function declarations and adds unnecessary indirection
 - Do NOT use class components or HOCs — use hooks and composition
-- Do NOT use `useFormState` — replaced by `useActionState`
 
 ## Commands
 

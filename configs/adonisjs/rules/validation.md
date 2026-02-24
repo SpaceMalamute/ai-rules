@@ -11,7 +11,6 @@ paths:
 - VineJS is the ONLY validation layer -- do NOT use class-validator, Zod, or manual checks
 - ALWAYS use `vine.compile()` to pre-compile validators -- compiles schema once, validates many times (performance)
 - Export validators as named constants: `export const createUserValidator = vine.compile(...)`
-- Use `request.validateUsing(validator)` in controllers -- returns fully typed payload
 
 ## Common Schema Types
 

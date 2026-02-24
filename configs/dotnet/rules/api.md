@@ -8,19 +8,13 @@ paths:
 
 # ASP.NET Core API Rules
 
-## Endpoint Strategy
+## Minimal API Patterns
 
-| Approach | When to use |
-|----------|-------------|
-| Minimal APIs (default) | New endpoints, simple routing, CRUD |
-| Controllers | Complex model binding, content negotiation, OData |
-
-## Minimal API Directives
+See core.md for API style defaults (Minimal APIs, OpenAPI).
 
 - Organize endpoints in static extension methods per feature: `MapUserEndpoints()`
 - Use `MapGroup()` to share prefix, tags, and auth per feature
 - Use `[AsParameters]` to bind complex query objects
-- Use `TypedResults.Ok()`, `TypedResults.NotFound()`, etc. for compile-time response type checking
 - Use `WithName()` on GET endpoints to enable `CreatedAtRoute` links
 
 ## Response Conventions
@@ -51,4 +45,4 @@ paths:
 
 - DO NOT use `IActionResult` in Minimal APIs -- use `TypedResults` or `Results`
 - DO NOT put business logic in endpoints -- delegate to MediatR/services
-- DO NOT skip `CancellationToken` propagation in endpoint handlers
+- DO NOT skip `CancellationToken` propagation in endpoint handlers — disconnected requests waste server resources

@@ -44,7 +44,7 @@ paths:
 | Requirement              | Why                                                    |
 |--------------------------|--------------------------------------------------------|
 | Chained route methods    | TypeScript infers return types only from method chains |
-| Inline handlers          | Extracted functions lose param/response type narrowing |
+| Inline handlers          | See routes rules                                      |
 | `export type AppType`    | Client needs the app type for `hc<AppType>()`         |
 | Zod validators in chain  | Validates AND types request body/query/params          |
 

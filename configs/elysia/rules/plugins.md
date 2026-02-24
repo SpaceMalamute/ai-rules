@@ -11,7 +11,6 @@ paths:
 
 ## Plugin Creation Rules
 
-- Always set `name` property — Elysia deduplicates plugins by name; unnamed plugins register multiple times
 - Use instance plugins (`new Elysia()`) for stateful plugins with lifecycle hooks
 - Use functional plugins (`(app: Elysia) => app.derive(...)`) for simple transformations
 - Configurable plugins: factory function returning a named Elysia instance

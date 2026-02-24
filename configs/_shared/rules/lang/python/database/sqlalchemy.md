@@ -43,12 +43,6 @@ paths:
 - Always paginate: `.offset((page - 1) * size).limit(size)`
 - Run a count query in parallel for total
 
-## Repository Pattern
-
-- Generic `BaseRepository[T]` with CRUD: `get`, `get_all`, `create`, `update`, `delete`
-- Domain-specific repositories extend base with custom queries
-- Repository handles data access only — no business logic
-
 ## Anti-patterns
 
 - DO NOT use legacy `Column()` / `session.query()` — use 2.0 style

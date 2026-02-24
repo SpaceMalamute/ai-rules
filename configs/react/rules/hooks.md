@@ -18,7 +18,7 @@ paths:
 ### useOptimistic
 
 - Immediately reflect expected state while async action completes
-- Signature: `useOptimistic(value, updateFn)` — returns `[optimisticState, setOptimistic]`
+- Signature: `useOptimistic(state, updateFn)` — returns `[optimisticState, addOptimistic]`
 - Always pair with a server action that resolves to the real state
 
 ### use()
@@ -38,13 +38,10 @@ paths:
 
 - Always provide a cleanup function for subscriptions, listeners, and fetch calls
 - Use `AbortController` for fetch cleanup — not boolean flags
-- Do NOT use `useEffect` for derived state — compute during render instead
 - Do NOT use `useEffect` for event handling — use event handlers directly
 
 ## Anti-Patterns
 
-- Do NOT add `useMemo`/`useCallback` manually — React Compiler handles all memoization
 - Do NOT use `useFormState` — it is deprecated, use `useActionState`
-- Do NOT fetch in `useEffect` when TanStack Query or a router loader is available
 - Do NOT omit dependencies from `useEffect` — let the linter enforce correctness
 - Do NOT create promises inside components passed to `use()` — causes infinite re-renders

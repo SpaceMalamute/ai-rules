@@ -59,6 +59,4 @@ Within a router, order endpoints: list > get > create > update > delete (CRUD or
 ## Anti-patterns
 
 - NEVER create routers without `prefix` and `tags` -- breaks OpenAPI organization
-- NEVER put business logic in router files -- delegate to services
 - NEVER define multiple routers in the same file -- one router per module
-- NEVER use `response_model_exclude` to hide fields -- create a dedicated response schema instead

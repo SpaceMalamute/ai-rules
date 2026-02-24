@@ -19,22 +19,17 @@ paths:
 ## Custom Pipes
 
 - DO keep pipes pure (default) — impure pipes cause performance issues
-- DO NOT add `standalone: true` — it is the default
-- DO use `inject()` for DI inside pipes (e.g., `DomSanitizer` in `safeHtml` pipe)
 - DO accept parameters via `transform(value, ...args)` method
 - Common custom pipes: `timeAgo`, `truncate`, `filter`, `safeHtml`
 
 ## Custom Directives
 
-- DO use `input()` signal inputs — never `@Input()` decorator
-- DO use `output()` — never `@Output()` decorator
-- DO use `inject()` for DI — never constructor injection
 - DO use `takeUntilDestroyed()` for RxJS subscriptions in directives
 
 ### Attribute Directives
 
 - For DOM behavior (highlight, click-outside, auto-focus, debounce-input)
-- DO prefer `host: { '(event)': 'handler($event)' }` in @Component/@Directive metadata over @HostListener (which exists only for backwards compatibility)
+- DO prefer `host: { '(event)': 'handler($event)' }` in @Component/@Directive metadata over `@HostListener` — simpler, no separate decorator
 - Alternatively, use `fromEvent()` + `takeUntilDestroyed()` for event handling
 
 ### Structural Directives
@@ -48,4 +43,3 @@ paths:
 - DO NOT use `pure: false` on pipes — causes re-evaluation every CD cycle; update source data via signals instead
 - DO NOT manipulate DOM via `nativeElement.innerHTML` — use `Renderer2` or Angular bindings
 - DO NOT use `*ngIf`, `*ngFor`, `[ngSwitch]` — use built-in control flow (`@if`, `@for`, `@switch`)
-- DO NOT add `standalone: true` — it is the default since Angular 19

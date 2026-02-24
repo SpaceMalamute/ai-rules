@@ -1,5 +1,5 @@
 ---
-description: "React Router v6.4+ routing and code splitting"
+description: "React Router v6.4+ / v7 routing and code splitting"
 paths:
   - "**/src/router.*"
   - "**/src/routes/**"
@@ -52,4 +52,4 @@ paths:
 - Do NOT fetch data in `useEffect` when loaders are available — causes waterfalls
 - Do NOT redirect in `useEffect` — use `redirect()` in loaders/actions instead
 - Do NOT use the old `<BrowserRouter>` + `<Routes>` API for data-driven apps
-- React Router v7 adds a framework mode with file-based routing via `route.ts` — see React Router docs
+- DO consider React Router v7 framework mode with file-based `route.ts` for new projects

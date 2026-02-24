@@ -12,7 +12,7 @@ All caching is **opt-in** in Next.js 15. Nothing is cached by default.
 
 ## `"use cache"` Directive
 
-Requires `dynamicIO` in `next.config.ts`. This is the primary caching mechanism.
+Requires `cacheComponents: true` (Next.js 16+) or `experimental: { dynamicIO: true }` (Next.js 15) in `next.config.ts`. This is the primary caching mechanism.
 
 ```tsx
 import { cacheTag, cacheLife } from 'next/cache';
@@ -32,12 +32,12 @@ Can be applied to: functions, Server Components, entire route modules.
 | Profile | Stale | Revalidate | Expire |
 |---------|-------|------------|--------|
 | `'default'` | 5min | 15min | never |
-| `'seconds'` | 0 | 1s | 1min |
+| `'seconds'` | 30s | 1s | 1min |
 | `'minutes'` | 5min | 1min | 1h |
 | `'hours'` | 5min | 1h | 1day |
 | `'days'` | 5min | 1day | 1week |
 | `'weeks'` | 5min | 1week | 1month |
-| `'max'` | 5min | 1month | indefinite |
+| `'max'` | 5min | 30days | 1year |
 
 ## Invalidation
 

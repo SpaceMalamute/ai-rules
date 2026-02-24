@@ -15,7 +15,7 @@ paths:
 - DO set `metadataBase` in root layout — all relative URLs resolve against it
 - DO use `title.template` in root layout (`'%s | App Name'`) so child pages only set `title: 'Page'`
 - DO include `openGraph` and `twitter` card metadata on all public pages
-- DO use `generateMetadata` with `await params` for dynamic pages (Next.js 15 — params is a Promise)
+- DO use `generateMetadata` with `await params` for dynamic pages (see routing rules)
 
 ## Structured Data
 

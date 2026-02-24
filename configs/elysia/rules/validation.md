@@ -49,6 +49,5 @@ Use `t.File()` for single and `t.Files()` for multiple uploads with `type` and `
 ## Anti-Patterns
 
 - Do NOT validate manually in handlers — use schemas; they integrate with OpenAPI and Eden
-- Do NOT use Zod as primary validator — breaks Elysia's type inference; TypeBox is zero-cost since it's built-in
 - Do NOT skip `response` schemas — loses typed error handling and OpenAPI documentation
 - Do NOT duplicate schemas across routes — use `.model()` or `guard()` to share them

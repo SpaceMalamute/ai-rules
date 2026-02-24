@@ -10,9 +10,7 @@ paths:
 
 ## Strategy
 
-- DO use Passport.js with `@nestjs/passport` — JWT as primary strategy, Local for login
-- DO register `JwtAuthGuard` globally via `APP_GUARD` — all routes are protected by default
-- DO use `@Public()` decorator (`SetMetadata`) to opt out specific endpoints
+- DO use Local strategy for the login endpoint alongside the global JWT strategy
 - DO use `configService.getOrThrow('JWT_SECRET')` — never hardcode secrets
 
 ## Custom Decorators
@@ -34,10 +32,9 @@ Guards execute in registration order. When combining: `JwtAuthGuard` (global) �
 
 ## Security Directives
 
-- DO hash passwords with bcrypt (cost >= 10) — never store plain text
 - DO implement refresh token rotation for long-lived sessions
 - DO rate-limit `/auth/login` and `/auth/register` endpoints
-- DO log failed authentication attempts with IP and timestamp
+- DO log failed authentication attempts via NestJS Logger (with IP and timestamp)
 - DO set short JWT expiration (e.g., 15m access + 7d refresh)
 - DO NOT return password hashes in any response — use response DTOs or `@Exclude()`
 

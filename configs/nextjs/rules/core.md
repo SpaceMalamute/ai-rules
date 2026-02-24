@@ -15,8 +15,8 @@ alwaysApply: true
 ## Rendering Model
 
 - **PPR (Partial Prerendering)** — static shell + dynamic streaming holes
-- Enable `experimental: { ppr: true }` for Partial Prerendering
-- Enable `dynamicIO` in `next.config.ts` for opt-in caching/dynamic behavior
+- Enable `ppr: true` in `next.config.ts` (stable since 15.2 — no longer under `experimental`)
+- Enable `cacheComponents: true` (Next.js 16+) or `experimental: { dynamicIO: true }` (Next.js 15) for opt-in caching
 - Functions using dynamic APIs (`cookies()`, `headers()`, `searchParams`) render dynamically; use `"use cache"` to opt specific functions/components into caching
 - Use `<Suspense>` to define dynamic holes within a static page
 
@@ -40,12 +40,12 @@ alwaysApply: true
 | Secrets / env vars | Event handlers, browser APIs |
 | Heavy deps that stay server-side | Interactive UI "islands" |
 
-DO push `'use client'` to the **leaf** — keep the boundary as small as possible.
+Push `'use client'` to the leaf — see components rules.
 
 ## React 19 Changes
 
 - `ref` is a regular prop — DO NOT use `forwardRef`
-- `useActionState` replaces `useFormState` (deprecated)
+- `useActionState` for form state management
 - `useOptimistic` for optimistic UI
 - `use()` to unwrap promises/context in client components
 
@@ -58,9 +58,7 @@ DO push `'use client'` to the **leaf** — keep the boundary as small as possibl
 
 ## Caching (Next.js 15)
 
-- All caching is **opt-in** (not opt-out like Next.js 14)
-- `"use cache"` directive + `cacheTag()` + `cacheLife()` for granular control
-- `revalidateTag()` for on-demand invalidation
+- All caching is **opt-in** — see caching rules for `"use cache"`, `cacheTag()`, `cacheLife()` patterns
 
 ## Performance
 

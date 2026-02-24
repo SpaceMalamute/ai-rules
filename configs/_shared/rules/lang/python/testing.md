@@ -22,15 +22,9 @@ paths:
 - Create test client with `httpx.AsyncClient` + `ASGITransport`
 - Override dependencies with `app.dependency_overrides` — clean up after tests
 
-## Test Naming
-
-- Format: `test_action_condition_expected` (e.g., `test_create_user_duplicate_email_raises_conflict`)
-- Group related tests in classes: `class TestUserService:`
-
 ## Unit Tests
 
 - Use `AsyncMock` for repository mocks
-- Follow AAA: Arrange (set up mocks), Act (call service), Assert (verify result + mock calls)
 - One assertion per test when practical
 
 ## Integration Tests (API)
@@ -49,14 +43,11 @@ paths:
 - Define custom markers: `slow`, `integration`, `e2e`
 - Run subsets: `pytest -m "not slow"`, `pytest -m integration`
 
-## Coverage
+## Configuration
 
-- Target: 80%+ on business logic, 100% on critical paths (auth, payments)
 - Configure in `pyproject.toml`: `fail_under = 80`, exclude `tests/`, `__init__.py`, `TYPE_CHECKING`
 
 ## Anti-patterns
 
-- DO NOT share mutable state between tests
 - DO NOT forget to rollback DB sessions in fixtures
-- DO NOT test implementation details — test behavior
 - DO NOT write flaky tests — use deterministic data, mock time

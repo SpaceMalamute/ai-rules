@@ -18,7 +18,7 @@ paths:
 ## Entity Configuration
 
 - Use Fluent API in `IEntityTypeConfiguration<T>` classes -- not data annotations on entities
-- For PostgreSQL, use snake_case naming (e.g., via UseSnakeCaseNamingConvention()). For SQL Server, PascalCase is conventional. Apply a consistent convention per project.
+- For PostgreSQL, use snake_case naming (e.g., via `UseSnakeCaseNamingConvention()` — requires EFCore.NamingConventions package). For SQL Server, PascalCase is conventional. Apply a consistent convention per project.
 - Always set `HasMaxLength()` on string properties
 - Use `ValueGeneratedNever()` for app-generated GUIDs
 - Map enums with `.HasConversion<string>()`
@@ -26,8 +26,6 @@ paths:
 
 ## Query Performance
 
-- Use `AsNoTracking()` on all read-only queries -- any query where the result will not be modified and saved back
-- Project to DTOs with `.Select()` instead of loading full entities for reads
 - Use `AsSplitQuery()` when including multiple collections to avoid cartesian explosion
 - Use `EF.CompileQuery()` for hot-path queries that execute frequently
 - Use `ExecuteUpdateAsync()` / `ExecuteDeleteAsync()` for bulk operations -- avoids loading entities into memory
@@ -37,25 +35,11 @@ paths:
 await context.Users
     .Where(u => u.LastLogin < cutoff)
     .ExecuteUpdateAsync(s => s.SetProperty(u => u.IsActive, false));
-
-// Bulk delete without loading entities
-await context.Orders
-    .Where(o => o.Status == OrderStatus.Expired)
-    .ExecuteDeleteAsync();
-
-// Compiled query for hot paths
-private static readonly Func<AppDbContext, Guid, Task<UserDto?>> GetUserById =
-    EF.CompileAsyncQuery((AppDbContext ctx, Guid id) =>
-        ctx.Users.AsNoTracking()
-            .Where(u => u.Id == id)
-            .Select(u => new UserDto(u.Id, u.Email, u.Name))
-            .FirstOrDefault());
 ```
 
 ## Repositories
 
-- Define interfaces in Domain (`IRepository<T> where T : AggregateRoot`)
-- Implement in Infrastructure
+- Implement `IRepository<T>` from Domain layer (see ddd rules for contract definition)
 - DO NOT expose `IQueryable<T>` from repositories -- it leaks persistence details
 - Use the Specification pattern for complex, reusable query filters
 
@@ -66,15 +50,10 @@ private static readonly Func<AppDbContext, Guid, Task<UserDto?>> GetUserById =
 - Generate SQL scripts for production deployments: `dotnet ef migrations script`
 - DO NOT use `EnsureCreated()` in production -- use `MigrateAsync()` only
 
-## Soft Delete
+## Soft Delete & Transactions
 
-- Use global query filters: `HasQueryFilter(e => e.DeletedAt == null)`
-- Access deleted records with `IgnoreQueryFilters()` when needed
-
-## Transactions
-
-- Rely on `SaveChangesAsync()` implicit transaction for single aggregate changes
-- Use explicit `BeginTransactionAsync()` only when spanning multiple aggregates or SaveChanges calls
+- Soft delete: global query filter `HasQueryFilter(e => e.DeletedAt == null)`, use `IgnoreQueryFilters()` for deleted records
+- Transactions: rely on `SaveChangesAsync()` implicit transaction; explicit `BeginTransactionAsync()` only for multi-aggregate operations
 
 ## Anti-patterns
 

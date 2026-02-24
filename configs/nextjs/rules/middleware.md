@@ -37,17 +37,19 @@ Pattern reference: `/dashboard/:path*` (specific), `/(api|admin)/:path*` (multi)
 
 ## Auth Pattern
 
-DO separate `auth.config.ts` (Edge-compatible, no DB) from `auth.ts` (full, Node.js) when using NextAuth.
-DO use the `authorized` callback in `auth.config.ts` for middleware auth checks.
+See authentication rules for `auth.config.ts` (Edge) vs `auth.ts` (Node.js) separation.
 DO redirect unauthenticated users with `callbackUrl` for return-after-login.
 
 ## Security Headers
 
 DO set security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, CSP) in middleware for app-wide coverage.
 
-## Upcoming: `proxy.ts` (Next.js 16)
+## `proxy.ts` (Next.js 16)
 
-`proxy.ts` will replace `middleware.ts` — runs on Node.js runtime instead of Edge. Plan for migration: avoid deep Edge-only dependencies in middleware.
+`proxy.ts` replaces `middleware.ts` — runs on Node.js runtime (not Edge).
+Rename export: `middleware()` becomes `proxy()`.
+Node.js APIs (`fs`, `path`, etc.) are now available.
+Codemod: `npx @next/codemod@latest middleware-to-proxy .`
 
 ## Anti-Patterns
 

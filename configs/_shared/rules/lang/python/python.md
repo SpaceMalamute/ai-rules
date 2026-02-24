@@ -33,12 +33,6 @@ Use modern syntax (Python 3.10+):
 | Constants | UPPER_SNAKE | `MAX_RETRY_COUNT` |
 | Private | _prefix | `_validate_input` |
 
-## Async/Await
-
-- Use `async def` for all I/O operations
-- Async lib choices: `httpx` (HTTP), `asyncpg` (PostgreSQL), `redis.asyncio` (Redis)
-- DO NOT use `requests`, `psycopg2`, or sync `redis` in async code — blocks event loop
-
 ## Code Style
 
 - Use `ruff check .` for linting, `ruff format .` for formatting

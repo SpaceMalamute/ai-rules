@@ -10,7 +10,7 @@ alwaysApply: true
 - Elysia v1.4+ on Bun runtime (Node.js via `@elysiajs/node` only when required)
 - TypeScript strict mode
 - Bun test runner (`bun:test`)
-- TypeBox for validation (built-in `Elysia.t`) — do NOT use Zod (breaks type inference)
+- TypeBox for validation (built-in `Elysia.t`)
 - Eden Treaty v2 for end-to-end type-safe client
 
 ## Commands
@@ -22,11 +22,11 @@ alwaysApply: true
 
 ## Core Principles
 
-- **Method chaining is mandatory** — chain `.get().post().use()` on the same instance; breaking the chain loses type inference and Eden types
-- **Inline handlers** — define handlers inline for full type inference; extracting to separate functions breaks context typing
+- **Method chaining mandatory** — see routes rules
+- **Inline handlers** — inline handlers for type inference, see routes rules
 - **Controller = Elysia instance** — one instance per resource with `prefix`, mounted via `.use()`; pass destructured values to services, never the full Context
-- **Plugin deduplication** — always set `name` in `new Elysia({ name: '...' })` to prevent duplicate registration
-- **Hook order matters** — lifecycle hooks only apply to routes registered AFTER them
+- **Plugin deduplication** — always set `name` in plugins, see plugins rules
+- **Hook order matters** — see lifecycle rules
 - **Encapsulation** — hooks are scoped to their instance by default; use `as('scoped')` or `as('global')` to propagate
 - **Single source of truth** — one TypeBox schema drives runtime validation, TS types, and OpenAPI docs
 
@@ -41,11 +41,7 @@ alwaysApply: true
 
 ## Anti-Patterns
 
-- Do NOT break method chains with separate statements — Eden won't see route types
-- Do NOT extract handlers to standalone functions — context types are lost outside the chain
-- Do NOT pass the full Context to service classes — breaks encapsulation, harder to test
-- Do NOT use `decorate` for per-request values — use `derive`/`resolve` instead
-- Do NOT use `derive` for static utilities — use `decorate` instead
+See specialized rule files for detailed anti-patterns (routes, plugins, lifecycle, eden).
 
 ## Code Style
 
@@ -53,4 +49,4 @@ alwaysApply: true
 - Use `guard()` to apply shared schemas across multiple routes
 - Use `derive` for request-scoped context, `decorate` for static utilities, `state` for mutable stores
 - Keep modules small — one Elysia instance per resource
-- Lazy-load modules with `.use(import('./modules/users'))` for faster startup
+- Lazy-load modules with dynamic imports for faster startup (see plugins rules)

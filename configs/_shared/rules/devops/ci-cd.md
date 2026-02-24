@@ -48,11 +48,11 @@ paths:
 
 - Use CI provider's secret management — never hardcode in workflow files
 - Use environment-scoped secrets for different stages
-- Reference via `${{ secrets.NAME }}` syntax
+- Reference via CI provider's secret syntax (e.g., `${{ secrets.NAME }}` in GitHub Actions)
 
 ## Caching
 
-- Use built-in caching (`actions/setup-node` with `cache: 'npm'`)
+- Use built-in caching (e.g., `actions/setup-node` with `cache: 'npm'` in GitHub Actions)
 - Key caches on lock file hash
 - Use Docker layer caching with `cache-from: type=gha`
 

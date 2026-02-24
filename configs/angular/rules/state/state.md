@@ -21,7 +21,7 @@ libs/[domain]/data-access/src/lib/+state/
 
 ## Actions
 
-- DO use `createActionGroup({ source, events })` — never standalone `createAction`
+- DO prefer `createActionGroup({ source, events })` over standalone `createAction` for better organization
 - DO follow the pattern: `Load X` / `Load X Success` / `Load X Failure`
 
 ## Reducers
@@ -39,7 +39,7 @@ libs/[domain]/data-access/src/lib/+state/
 ## Effects — Functional Only
 
 - DO use `createEffect(() => ..., { functional: true })`
-- DO use `inject()` for services inside effects — never constructor injection
+- DO use `inject()` for services inside effects
 - DO NOT dispatch actions that retrigger the same effect — causes infinite loops
 
 ## RxJS Operator Selection

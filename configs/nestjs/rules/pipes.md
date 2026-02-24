@@ -9,7 +9,7 @@ paths:
 
 ## Execution Order
 
-Pipes run after guards and interceptors (pre), before the controller method. Parameter-level pipes run before method-level pipes.
+Pipes run after guards and interceptors (pre), before the controller method. Execution order: global → controller → method → parameter. Method-level pipes run before parameter-level pipes.
 
 ## Built-in Pipes Reference
 
@@ -25,7 +25,6 @@ Pipes run after guards and interceptors (pre), before the controller method. Par
 
 ## Global ValidationPipe
 
-- DO enable globally with `whitelist`, `forbidNonWhitelisted`, `transform`
 - DO customize `exceptionFactory` to return structured validation errors (`{ field, constraints }`)
 - DO NOT enable `enableImplicitConversion` without understanding it converts all query strings automatically
 

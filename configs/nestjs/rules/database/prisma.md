@@ -11,7 +11,7 @@ paths:
 ## Setup
 
 - DO create a `@Global()` PrismaModule exporting `PrismaService`
-- DO extend `PrismaClient` in `PrismaService` implementing `OnModuleInit` + `OnModuleDestroy`
+- DO extend `PrismaClient` or wrap it via composition in `PrismaService` implementing `OnModuleInit` + `OnModuleDestroy`
 - DO call `$connect()` in `onModuleInit` and `$disconnect()` in `onModuleDestroy`
 
 ## Naming Conventions
@@ -39,7 +39,7 @@ paths:
 
 ## Soft Delete
 
-- Add `deletedAt DateTime?` column; intercept `delete` → `update` and inject `deletedAt: null` filter on reads via Prisma middleware or `$extends`
+- Add `deletedAt DateTime?` column; intercept `delete` → `update` and inject `deletedAt: null` filter on reads via `$extends` (client extensions, Prisma 4.16+) — Prisma middleware is legacy and should not be used for new code
 
 ## Migrations
 

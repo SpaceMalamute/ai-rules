@@ -49,17 +49,6 @@ mockRepo.findById.mockResolvedValue(someUser);
 - DO test auth flows: valid token, expired token, missing token, insufficient role
 - DO test validation: missing fields, invalid types, extra properties (should be rejected)
 
-## Coverage Targets
-
-| Layer | Target |
-|-------|--------|
-| Services | 90%+ |
-| Controllers | 80%+ (prefer E2E coverage) |
-| Guards / Pipes | 80%+ |
-| E2E | All API endpoints, happy + error paths |
-
 ## Anti-patterns
 
-- DO NOT test implementation details (e.g., checking which internal method was called) — test behavior
-- DO NOT share mutable state between tests — reset mocks in `beforeEach`
 - DO NOT skip E2E tests for "unit test coverage" — E2E catches integration bugs that units miss

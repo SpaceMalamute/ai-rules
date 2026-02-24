@@ -11,7 +11,7 @@ paths:
 
 - Every DTO property MUST have at least one class-validator decorator — undecorated properties are silently stripped by `whitelist`
 - DO use `@IsEmail()`, `@IsString()`, `@MinLength()`, `@IsUUID()`, `@IsEnum()`, `@IsInt()`, `@Min()`, `@Max()` etc.
-- DO use `@IsOptional()` for optional fields — it must come before other validators
+- DO use `@IsOptional()` for optional fields — convention: place before other validators for readability
 - DO use `@Type(() => Number)` from class-transformer for query params that need numeric conversion
 
 ## Mapped Types for Variants

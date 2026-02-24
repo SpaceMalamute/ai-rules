@@ -69,8 +69,8 @@ paths:
 
 ## Anti-Patterns
 
-- Tests that depend on execution order
-- Testing implementation, not behavior
-- Excessive mocking (testing mocks, not code)
-- Flaky tests (non-deterministic)
-- Slow tests in the unit test suite
+- DO NOT write tests that depend on execution order — each test must be independently runnable
+- DO NOT test implementation details — test behavior and outcomes
+- DO NOT over-mock — excessive mocking tests mocks, not code
+- DO NOT accept flaky tests — use deterministic data and mock time
+- DO NOT put slow tests in the unit suite — tag them and run separately

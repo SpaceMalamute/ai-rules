@@ -14,10 +14,7 @@ paths:
 
 ## Dependency Injection
 
-- Use `@inject()` decorator on the class for constructor-based DI
-- Use `@inject()` on individual methods when only specific methods need a dependency
 - For complex setup or interfaces, register singletons in `providers/app_provider.ts` via `this.app.container.singleton()`
-- NEVER instantiate services with `new` in controllers -- breaks testability and container resolution
 
 ## Service Structure
 
@@ -27,9 +24,6 @@ paths:
 
 ## Error Handling
 
-- Throw custom exceptions extending `Exception` from `@adonisjs/core/exceptions`
-- Set `static status` (HTTP code) and `static code` (error identifier) on exception classes
-- Let the AdonisJS exception handler convert exceptions to HTTP responses
 - NEVER return error objects -- always throw
 
 ## Service-to-Service Communication

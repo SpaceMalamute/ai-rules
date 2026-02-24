@@ -35,7 +35,7 @@ Request → Middleware → Guard → Interceptor (pre) → Pipe → Controller �
 ## Exception Handling
 
 - DO use built-in NestJS HTTP exceptions (`NotFoundException`, `ConflictException`, etc.)
-- DO use `IntrinsicException` (NestJS 11) as a base class for exceptions that should bypass automatic logging by base exception filters — useful for expected application errors
+- NestJS 11: `HttpException` extends `IntrinsicException` — see filters rules
 - DO create domain-specific exception classes extending `HttpException` for business rules
 - DO NOT throw generic `Error` — always use typed exceptions
 
@@ -51,9 +51,7 @@ Enable `ValidationPipe` globally in `main.ts`: `whitelist: true`, `forbidNonWhit
 
 ## Authentication
 
-- Passport.js + JWT strategy as default
-- Global `JwtAuthGuard` via `APP_GUARD` with `@Public()` decorator for opt-out
-- `@CurrentUser()` param decorator for accessing authenticated user
+- Auth: Passport.js + JWT, global `JwtAuthGuard` via `APP_GUARD`, `@Public()` for opt-out — see auth rules for details
 
 ## Code Style
 
@@ -61,7 +59,7 @@ Enable `ValidationPipe` globally in `main.ts`: `whitelist: true`, `forbidNonWhit
 - DO NOT use property injection (`@Inject()` on fields) — harder to test
 - Async methods return `Promise<T>` with explicit return types
 - Use built-in pipes for params: `ParseUUIDPipe`, `ParseIntPipe`, `ParseEnumPipe`
-- Use `PartialType`, `PickType`, `OmitType` from `@nestjs/mapped-types` for DTO variants
+- Mapped types (`PartialType`, `PickType`, `OmitType`) — see validation rules
 
 ## Commands
 

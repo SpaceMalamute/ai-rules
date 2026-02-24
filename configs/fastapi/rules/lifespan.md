@@ -53,7 +53,6 @@ Override lifespan for tests by creating a `test_lifespan` that injects mocks. Or
 
 ## Anti-patterns
 
-- NEVER use `@app.on_event` -- deprecated and does not support cleanup on exception
 - NEVER create DB engines or connection pools at module import time
 - NEVER forget to `dispose()`/`close()` resources -- causes connection leaks
 - NEVER run `Base.metadata.create_all` in production lifespan -- use Alembic migrations

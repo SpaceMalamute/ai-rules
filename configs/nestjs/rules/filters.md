@@ -38,8 +38,6 @@ Filters applied in reverse registration order: last registered = first to catch.
 | Controller | `@UseFilters(Filter)` | Yes |
 | Method | `@UseFilters(Filter)` | Yes |
 
-- DO prefer `APP_FILTER` in a module over `main.ts` registration — enables dependency injection
-
 ## NestJS 11: IntrinsicException
 
 - `IntrinsicException` (NestJS 11) is a base class for exceptions that bypass automatic error logging. `HttpException` extends it. Custom exceptions extending `IntrinsicException` directly will not be auto-logged by default filters.

@@ -29,21 +29,16 @@ paths:
 | PATCH | Partial update | No | 200 |
 | DELETE | Remove | Yes | 204 |
 
-## Status Codes
+## Status Codes (non-obvious)
 
 | Code | When |
 |------|------|
-| 200 | Successful GET, PUT, PATCH |
-| 201 | Successful POST (resource created) |
-| 204 | Successful DELETE (no body) |
-| 400 | Validation error |
-| 401 | Not authenticated |
-| 403 | Authenticated but not authorized |
-| 404 | Resource not found |
-| 409 | Conflict (duplicate) |
-| 422 | Business rule violation |
-| 429 | Rate limited |
-| 500 | Internal server error |
+| 409 | Conflict (duplicate resource, optimistic lock failure) |
+| 422 | Business rule violation (valid syntax, invalid semantics) |
+| 429 | Rate limited — include `Retry-After` header |
+| 502 | Bad gateway (upstream returned invalid response) |
+| 503 | Service unavailable (overloaded or in maintenance) |
+| 504 | Gateway timeout (upstream did not respond in time) |
 
 ## Pagination Decision Matrix
 
@@ -56,7 +51,7 @@ Always return: `total`, `page`/`cursor`, `hasNext`
 
 ## Error Response Format
 
-Use RFC 7807 Problem Details: `type`, `title`, `status`, `detail`, `instance`, optional `errors[]` array for field-level validation.
+Use RFC 9457 Problem Details: `type`, `title`, `status`, `detail`, `instance`, optional `errors[]` array for field-level validation.
 
 ## Versioning
 

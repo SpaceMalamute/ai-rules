@@ -12,7 +12,7 @@ paths:
 
 - DO use `TypeOrmModule.forRootAsync()` with `ConfigService` injection — never hardcode DB credentials
 - DO set `synchronize: false` in production — always use migrations
-- DO auto-discover entities via `entities: [__dirname + '/**/*.entity{.ts,.js}']` or explicit array
+- DO auto-discover entities via `autoLoadEntities: true` (preferred) or glob fallback `entities: [__dirname + '/**/*.entity{.ts,.js}']`
 
 ## Naming Conventions
 

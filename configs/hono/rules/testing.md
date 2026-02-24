@@ -21,7 +21,7 @@ paths:
 - Import from `hono/testing` — provides type-safe testing mirroring the RPC client:
   `const client = testClient(app)`
 - Mirrors `hc` client API: `client.posts.$get()`, `client.posts.$post({ json: data })`
-- Requires chained route definitions on the app instance (same requirement as RPC)
+- Requires chained route definitions — see RPC rules
 - No HTTP server needed — tests run in-process against the app instance
 
 ## app.request()

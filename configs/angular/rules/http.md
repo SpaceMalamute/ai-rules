@@ -42,5 +42,4 @@ Common interceptors: auth (add Bearer token), error (global error handling), ret
 - DO NOT use class-based interceptors — they are legacy (prefer `HttpInterceptorFn`). Use `withInterceptorsFromDi()` only for migration
 - DO NOT hardcode API URLs — use injection tokens
 - DO NOT subscribe without error handling — always handle the error path
-- DO NOT use `httpResource()` for mutations — it is read-only
 - DO NOT create wrapper services that just re-export HttpClient methods without adding value

@@ -40,8 +40,6 @@ Interceptors run after guards, before pipes. Multiple interceptors execute first
 | Controller | `@UseInterceptors(I)` | Yes |
 | Method | `@UseInterceptors(I)` | Yes |
 
-- DO prefer `APP_INTERCEPTOR` in a module over `main.ts` — enables DI for services like cache or audit
-
 ## Anti-patterns
 
 - DO NOT mutate the request object in interceptors — use middleware for request mutation

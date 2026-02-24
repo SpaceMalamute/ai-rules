@@ -18,10 +18,8 @@ paths:
 
 ## useActionState (React 19 Default)
 
-- Use for simple forms: `const [state, formAction, isPending] = useActionState(action, initialState)`
-- Action signature: `async (prevState, formData) => newState`
+- Use for simple forms — see hooks rules for `useActionState` API details
 - Return error/success state from the action — render based on returned state
-- Wire to `<form action={formAction}>` for progressive enhancement
 
 ## React Hook Form + Zod (Complex Forms)
 
@@ -44,7 +42,6 @@ paths:
 
 ## Anti-Patterns
 
-- Do NOT use `useFormState` — it is deprecated, use `useActionState`
 - Do NOT use controlled inputs for every form — most forms work fine with FormData
 - Do NOT validate only on the client — always validate server-side too
 - Do NOT skip error `aria` attributes — screen readers depend on them

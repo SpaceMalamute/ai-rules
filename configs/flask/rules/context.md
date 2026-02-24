@@ -36,7 +36,7 @@ Correct uses of `g`:
 
 1. `@app.before_request` — auth, request ID, timing start
 2. Route handler executes
-3. `@app.after_request` — response headers, logging (runs on error responses; skipped if handler itself raises)
+3. `@app.after_request` — response headers, logging (runs on success and handled errors; skipped on unhandled exceptions)
 4. `@app.teardown_request` — cleanup (DB connections, temp files)
 
 Blueprint hooks (`@bp.before_request`) run only for that blueprint's routes, but app-level hooks run for ALL routes including blueprint routes.

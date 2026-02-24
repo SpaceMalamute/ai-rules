@@ -52,7 +52,7 @@ Use pattern matching to map exception types to HTTP status codes:
 
 ## Anti-patterns
 
-- DO NOT inject scoped services (DbContext) in middleware constructor -- middleware is singleton, causing captive dependency
+- DO NOT inject scoped services in middleware constructor -- inject in `InvokeAsync` parameters instead (see DI rules for captive dependency)
 - DO NOT use `.Result` or `.Wait()` in middleware -- it risks deadlocks
 - DO NOT modify response headers after `_next(context)` returns -- use `Response.OnStarting()` callback instead
 - DO NOT write a custom rate limiter -- use the built-in `AddRateLimiter()` from .NET 7+

@@ -16,7 +16,6 @@ paths:
 | `resource()` | Async data fetching with Promise-based loaders (experimental) |
 | `rxResource()` | Same but loader returns Observable (experimental) |
 | `httpResource()` | Simple GET requests — replaces manual `HttpClient` + `toSignal()` (experimental) |
-| `linkedSignal()` | Derived writable state that resets when source changes (optimistic updates) |
 
 > **Note:** `resource()`, `rxResource()`, and `httpResource()` are experimental (as of Angular 21). API may change before stable release.
 
@@ -38,16 +37,6 @@ protected readonly usersResource = httpResource<User[]>({
 ```
 
 - DO prefer `httpResource()` over manual `HttpClient.get()` + `toSignal()`
-- DO NOT use `resource()` / `httpResource()` for mutations (POST/PUT/DELETE)
-
-## linkedSignal() — Writable Derived State
-
-- DO use `linkedSignal()` when you need a writable signal that resets on source change
-- Common pattern: optimistic updates backed by a resource
-
-```typescript
-protected readonly localItems = linkedSignal(() => this.itemsResource.value() ?? []);
-```
 
 ## Template: Handle All States
 

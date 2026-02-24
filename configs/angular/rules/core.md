@@ -11,29 +11,14 @@ alwaysApply: true
 - Nx monorepo with enforced boundaries
 - Vitest (unit) + Playwright (E2E)
 - TypeScript strict mode
-- Zoneless change detection (`provideZonelessChangeDetection()`) — stable since v20.2, default in v21
-
-## Architecture — Nx
-
-| Library type | Purpose | Can import |
-|---|---|---|
-| `feature/` | Smart components, pages (lazy-loaded) | Everything |
-| `data-access/` | Stores, API services, NgRx `+state/` | `data-access`, `util` |
-| `ui/` | Presentational components | `ui`, `util` |
-| `util/` | Pure functions, helpers | `util` only |
-
-Shared libraries live under `libs/shared/{ui,data-access,util}`.
+- Zoneless change detection (default in v21; use `provideZonelessChangeDetection()` only when migrating pre-v21 apps)
 
 ## Commands
 
 ```bash
-nx serve [app]                    # Dev server
-nx build [app] --configuration=production
-nx test [lib]                     # Unit tests (Vitest)
-nx affected -t test               # Test affected
-nx e2e [app]-e2e                  # E2E (Playwright)
 nx g @nx/angular:component [name] --project=[lib]
 nx g @nx/angular:library [name] --directory=libs/[domain]
+nx e2e [app]-e2e                  # E2E (Playwright)
 ```
 
 ## Code Style
@@ -45,5 +30,5 @@ nx g @nx/angular:library [name] --directory=libs/[domain]
 - DO use `inject()` function — never constructor injection
 - DO NOT add `standalone: true` — it is the default since Angular 19
 - DO NOT reference NgModules — they are legacy
-- DO NOT use `@Input()`, `@Output()`, `@ViewChild()` decorators — use signal-based APIs
+- Signal-based APIs (`input()`, `output()`, `viewChild()`) — see components rules
 - Prefix is configurable per project (default: `app`)

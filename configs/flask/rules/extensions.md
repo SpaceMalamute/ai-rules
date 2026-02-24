@@ -28,9 +28,8 @@ All extensions MUST be initialized in two phases:
 
 ## Flask-SQLAlchemy
 
-- Use SQLAlchemy 2.0 `Mapped` types for all models
-- Queries via `db.session.execute(select(...))`, not `Model.query`
-- Relationships: use `Mapped[list['Child']] = relationship(back_populates=...)` — always bidirectional, typed with Mapped annotations
+- See `flask.md` for SQLAlchemy 2.0 query patterns and model conventions
+- Use lazy `init_app` pattern — never `SQLAlchemy(app)` directly
 
 ## Flask-JWT-Extended
 
@@ -45,9 +44,7 @@ All extensions MUST be initialized in two phases:
 
 ## Flask-Limiter
 
-- Always set `storage_uri` to Redis in production — in-memory is single-process only
-- Rate-limit auth endpoints aggressively (e.g., `5 per minute` on login)
-- Use `@limiter.exempt` for health checks
+Rate limiting: see security rules for Flask-Limiter configuration.
 
 ## Flask-Caching
 
@@ -57,6 +54,5 @@ All extensions MUST be initialized in two phases:
 
 ## Anti-Patterns
 
-- Eager initialization with app — prevents multi-config and testing
 - Importing `app` in `extensions.py` — circular import guaranteed
 - Missing `init_app` call — extension silently non-functional

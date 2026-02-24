@@ -20,7 +20,7 @@ paths:
 - DO validate all input with Zod `safeParse` before processing
 - DO return structured error responses — never expose internal error messages
 - DO use `NextResponse.json()` with explicit status codes
-- DO `await params` — it is a `Promise` in Next.js 15
+- DO `await params` and `searchParams` — they are Promises (see routing rules)
 - DO `await headers()` and `await cookies()` — both are async in Next.js 15
 
 ## Route Segment Config

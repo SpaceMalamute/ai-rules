@@ -21,7 +21,7 @@ paths:
 - DO check auth in middleware or Server Components — never rely on client-side checks
 - DO use protected layouts (`app/(protected)/layout.tsx`) to guard route groups
 - DO extend session with custom fields (role, id) via `jwt` and `session` callbacks
-- DO use `useActionState` (not deprecated `useFormState`) for login forms
+- DO use `useActionState` for login forms
 - DO type-extend `next-auth` module for custom `User`, `Session`, `JWT` fields
 
 ## Route Protection Decision

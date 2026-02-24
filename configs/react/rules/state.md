@@ -33,7 +33,6 @@ paths:
 
 ## Anti-Patterns
 
-- Do NOT store server data in `useState` — use TanStack Query for caching and background sync
 - Do NOT sync props to state with `useEffect` — derive the value or use a key to reset
 - Do NOT put everything in global state — most state is local or server-owned
 - Do NOT use `useRef` for render-affecting values — refs do not trigger re-renders

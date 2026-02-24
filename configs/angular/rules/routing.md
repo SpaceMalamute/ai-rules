@@ -15,16 +15,16 @@ paths:
 - DO export feature routes as `export default [...] satisfies Routes`
 - DO add `withComponentInputBinding()` to `provideRouter()` for route param binding
 
-## Guards — Functional Only
+## Guards — Prefer Functional
 
-- DO use `CanActivateFn`, `CanDeactivateFn` — never class-based guards
+- DO prefer `CanActivateFn`, `CanDeactivateFn` — functional is simpler (class-based also supported)
 - DO use `inject()` inside guard functions for DI
 - DO return `UrlTree` for redirects (not `Router.navigate()` inside guards)
 - For parameterized guards, use factory: `roleGuard(['admin']): CanActivateFn`
 
 ## Resolvers
 
-- DO use `ResolveFn<T>` — never class-based resolvers
+- DO prefer `ResolveFn<T>` — functional is simpler (class-based also supported)
 - DO handle errors in resolvers (redirect on failure via `catchError` + `EMPTY`)
 - DO consume resolved data via `toSignal(this.route.data.pipe(map(...)))`
 
@@ -50,6 +50,6 @@ paths:
 
 ## Anti-patterns
 
-- DO prefer functional guards (`CanActivateFn`, `ResolveFn<T>`) over class-based — both are supported, but functional is simpler
-- DO NOT subscribe to route params in `ngOnInit` — use `toSignal()`
+- DO NOT default to class-based guards — functional guards are simpler and sufficient for most cases
+- See signals rules for `toSignal()` over manual subscriptions
 - DO NOT use named outlets unless absolutely necessary — they add complexity

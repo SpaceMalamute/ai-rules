@@ -41,5 +41,4 @@ Middleware runs first in the request lifecycle — before guards, interceptors, 
 - DO NOT perform heavy DB/API calls in middleware — it blocks every matched request
 - DO NOT forget to call `next()` — the request will hang indefinitely
 - DO NOT set response headers after calling `next()` — headers may already be sent
-- DO NOT use middleware for auth logic — it lacks `ExecutionContext` and cannot read decorator metadata
 - DO NOT use `app.use()` for middleware that needs DI — use `MiddlewareConsumer` in module instead

@@ -51,10 +51,6 @@ Examples: `feat/user-authentication`, `fix/BUG-456-null-pointer`
 - PR title follows conventional commit format
 - Ensure lint and tests pass before creating PR
 
-## .gitignore Essentials
-
-Always ignore: `node_modules/`, `.venv/`, `dist/`, `.env`, `.env.local`, `*.pem`, `*.key`, `credentials.json`, `.DS_Store`, `coverage/`
-
 ## Anti-patterns
 
 - DO NOT force push to shared branches

@@ -6,6 +6,8 @@ paths:
 
 # Flask Configuration Patterns
 
+Flask uses its native config system (class hierarchy + `from_prefixed_env()`). `pydantic-settings` (see shared Python config rules) is for FastAPI projects.
+
 ## Class-Based Config Hierarchy (Required)
 
 | Class | Purpose | Key Overrides |
@@ -39,7 +41,7 @@ Validate required config at startup in `create_app()` — fail fast with clear e
 
 ## Runtime Access
 
-- In routes/services: `current_app.config["KEY"]` — never import config directly
+- Use `current_app.config["KEY"]` in routes/services -- see context rules
 - Use `app.config.get("KEY", default)` for optional values
 - `app.config.setdefault("KEY", value)` for extension defaults
 
@@ -47,5 +49,5 @@ Validate required config at startup in `create_app()` — fail fast with clear e
 
 - Hardcoded secrets in config classes — use env vars or `from_prefixed_env()`
 - `os.environ["KEY"]` in config class body — crashes at import time if missing, use `.get()` with defaults
-- Config in routes/services without `current_app` — breaks with multiple app instances
+- Config access without `current_app` -- see context rules
 - Secrets in version control — use `.env` files (gitignored) + `python-dotenv` for dev

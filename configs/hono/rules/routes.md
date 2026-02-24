@@ -11,14 +11,7 @@ paths:
 ## Route Module Pattern
 
 - Each resource file exports a `new Hono()` instance with chained route definitions
-- Chain `.get().post().put().delete()` on the same instance — required for RPC type inference
-- Mount sub-applications with `app.route('/prefix', subApp)` in the root app
 - Use `basePath('/api/v1')` for API versioning on the root or sub-app
-
-## Inline Handlers
-
-- Always define handlers inline within the route chain
-- Never extract handlers into separate functions, classes, or controller files — breaks TypeScript param inference
 
 ## Path Parameters
 
@@ -47,8 +40,7 @@ paths:
 
 ## Anti-patterns
 
-- Do NOT use non-chained route definitions (`app.get(...)` on separate lines) — breaks RPC type export
+- Do NOT use non-chained route definitions (`app.get(...)` on separate lines)
 - Do NOT extract handlers into controller classes — loses path parameter type inference
 - Do NOT use `new Response(JSON.stringify(...))` — use `c.json()` for proper typing and headers
-- Do NOT use `c.req.json()` for body parsing in validated routes — use `c.req.valid('json')` instead
 - Do NOT create monolithic route files — split large resources into sub-routers mounted via `app.route()`

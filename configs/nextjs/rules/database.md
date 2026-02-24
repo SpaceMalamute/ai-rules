@@ -22,15 +22,14 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 ## Key Directives
 
 - DO query directly in Server Components — no API route needed
-- DO select only the fields the UI needs — never return full rows with sensitive data
-- DO use `include` / `join` for relations — avoid N+1 (one query per row in a loop)
-- DO use `Promise.all()` for independent queries — avoid sequential waterfalls
-- DO use transactions (`$transaction`) for multi-step writes that must be atomic
+- DO use Prisma `select` to return only needed fields — never return full rows with sensitive data
+- DO use Prisma `include` for relations instead of querying in a loop (N+1)
+- DO use `$transaction` for multi-step writes that must be atomic
 - DO handle `null` results — call `notFound()` for missing entities
 
 ## Pagination (Next.js 15)
 
-`searchParams` is a `Promise` in Next.js 15 — `await` it before parsing `page`/`limit`.
+`searchParams` is a Promise — `await` before parsing (see routing rules).
 DO always run `findMany` + `count` in `Promise.all()` for paginated responses.
 
 ## Connection Pooling (Serverless)
@@ -50,5 +49,4 @@ DO configure `directUrl` for migrations (bypasses pooler).
 - DO NOT instantiate a new client per request — exhausts connections
 - DO NOT return full user objects — leaks password hashes, tokens
 - DO NOT skip null checks — `findUnique` can return `null`
-- DO NOT write N+1 loops — use relations or batch queries
 - DO NOT run migrations through the connection pooler — use `directUrl`

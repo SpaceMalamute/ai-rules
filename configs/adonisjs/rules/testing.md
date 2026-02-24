@@ -29,13 +29,12 @@ paths:
 
 ## Database Isolation
 
-- Use global transactions for per-test isolation:
+- Use global transactions for per-test isolation via `testUtils`:
 
 ```typescript
-group.each.setup(async () => {
-  await Database.beginGlobalTransaction()
-  return () => Database.rollbackGlobalTransaction()
-})
+import testUtils from '@adonisjs/core/services/test_utils'
+
+group.each.setup(() => testUtils.db().withGlobalTransaction())
 ```
 
 ## Factories
@@ -59,7 +58,7 @@ group.each.setup(async () => {
 
 ## Anti-patterns
 
-- Do NOT use `beginGlobalTransaction` AND `truncate` in the same group -- pick one strategy
+- Do NOT use `withGlobalTransaction()` AND `truncate` in the same group -- pick one strategy
 - Do NOT test implementation details -- test behavior through public API
 - Do NOT skip `group.each.setup` for database tests -- leads to test pollution
 - Do NOT mock Lucid models directly -- use factories and real database queries

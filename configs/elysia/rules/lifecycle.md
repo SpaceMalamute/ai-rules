@@ -31,19 +31,11 @@ Request → onRequest → onParse → transform/derive → [Validation]
 | `mapResponse` | Before send | Custom serialization, set response headers |
 | `afterResponse` | After send | Cleanup, logging, metrics |
 
-## derive vs resolve
-
-| | `derive` | `resolve` |
-|---|---------|----------|
-| Runs | Before validation | After validation |
-| Access to | Raw request (headers, raw body) | Validated + derived context |
-| Use for | Token extraction, request metadata | User resolution, computed props |
+See plugins rules for `derive` vs `resolve` vs `decorate` vs `state` decision matrix.
 
 ## Key Rules
 
 - **`beforeHandle` for guards** — return `status(401)` or `status(403)` to short-circuit before the handler runs
-- **`derive()` for request-scoped deps** — runs per request, adds properties to context before validation
-- **`resolve()` for computed properties** — runs per request after validation, can depend on derived + validated values
 - **Global vs route-level** — global hooks (`.onBeforeHandle(...)`) apply to all subsequent routes; route-level hooks (`{ beforeHandle: fn }`) apply to one route
 - **Order is critical** — hooks only affect routes registered AFTER them; register middleware plugins before route plugins
 
@@ -52,4 +44,3 @@ Request → onRequest → onParse → transform/derive → [Validation]
 - Do NOT put auth checks inside handlers — use `beforeHandle` to short-circuit before the handler runs
 - Do NOT register hooks after routes they should protect — hooks only apply forward
 - Do NOT use `transform` for adding context — use `derive`; `transform` is for mutating input data
-- Do NOT confuse `derive` and `resolve` — `derive` cannot access validated body; `resolve` can

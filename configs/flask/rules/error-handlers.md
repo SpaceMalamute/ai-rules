@@ -20,23 +20,9 @@ Register all error handlers in a dedicated `register_error_handlers(app)` functi
 | `@app.errorhandler(HTTPException)` | Werkzeug HTTP errors | Error code + `{"error": name, "message": description}` |
 | `@app.errorhandler(Exception)` | Unhandled exceptions | 500 + generic message (log full traceback) |
 
-## Custom Exception Hierarchy
+## Flask-Specific Response Fields
 
-Define a base `AppException` with `status_code`, `error_code`, and `message`. Subclass for each domain error:
-
-| Exception | Status | Error Code |
-|---|---|---|
-| `NotFoundError` | 404 | `NOT_FOUND` |
-| `ValidationError` | 400 | `VALIDATION_ERROR` |
-| `UnauthorizedError` | 401 | `UNAUTHORIZED` |
-| `ForbiddenError` | 403 | `FORBIDDEN` |
-| `ConflictError` | 409 | `CONFLICT` |
-
-Raise these from services — the global handler converts them to JSON responses automatically.
-
-## Consistent Response Format
-
-All error responses MUST follow the same structure: `{"error": "<CODE>", "message": "<human-readable>"}` with optional `"details"` for validation errors and `"request_id"` from `g.request_id`.
+Include `"request_id"` from `g.request_id` in all error responses for traceability. See shared error-handling conventions for the base exception hierarchy and response format.
 
 ## Blueprint Error Handlers
 

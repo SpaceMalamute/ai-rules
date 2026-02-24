@@ -59,4 +59,4 @@ paths:
 - DO NOT put async logic in `withComputed` — use `withMethods`
 - DO NOT instantiate stores with `new` — always use `inject()`
 - DO NOT provide a `providedIn: 'root'` store in component `providers` — creates duplicate
-- DO NOT use `store.select()` — access signals directly (`store.myProp()`)
+- DO NOT confuse SignalStore with classic Store — SignalStore exposes signals directly (`store.myProp()`), not selectors

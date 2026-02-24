@@ -32,18 +32,8 @@ paths:
 
 ## ARIA Attributes in Templates
 
-- DO add `aria-label` on icon-only buttons
 - DO bind `[attr.aria-expanded]`, `[attr.aria-controls]` on expandable triggers
 - DO bind `[attr.aria-invalid]`, `[attr.aria-describedby]` on form inputs with errors
-- DO use `role="alert"` on dynamically shown error messages
-- DO use `aria-hidden="true"` on decorative icons
-- DO use `.sr-only` class for screen-reader-only text
-
-## Semantic HTML
-
-- DO use `<button>` for actions, `<a>` for navigation — never `<div (click)>`
-- DO use `<label for="id">` or `aria-label` on every form input
-- DO use descriptive link text — never "click here"
 
 ## Testing
 
@@ -52,7 +42,4 @@ paths:
 
 ## Anti-patterns
 
-- DO NOT use `<div>` or `<span>` as interactive elements — use semantic HTML
-- DO NOT rely on placeholder as the only label for inputs
-- DO NOT use `autoplay` on media — let users control playback
 - DO NOT use positive `tabindex` — it breaks natural tab order

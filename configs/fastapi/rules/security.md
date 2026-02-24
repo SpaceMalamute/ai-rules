@@ -36,20 +36,8 @@ AdminOnly = Annotated[User, Depends(require_roles(Role.ADMIN))]
 
 ## Password Handling
 
-- Use `bcrypt` directly (`bcrypt.hashpw` / `bcrypt.checkpw`) or `pwdlib` for password hashing -- `passlib` is unmaintained
-- Hash on create, verify on login -- NEVER compare plaintext
+- Use `pwdlib` (preferred) or `bcrypt` directly -- `passlib` is unmaintained since 2022
 - NEVER log or return passwords in responses
-
-## CORS Configuration
-
-- Whitelist exact origins in `allow_origins` -- NEVER `["*"]` in production
-- Set `allow_credentials=True` only when using cookies
-- Restrict `allow_methods` to actual methods used
-- Use `expose_headers` for custom response headers the client needs
-
-## Security Headers
-
-Add via middleware: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, `X-XSS-Protection: 0` (modern browsers).
 
 ## Rate Limiting
 
@@ -59,8 +47,8 @@ Add via middleware: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, 
 
 ## Anti-patterns
 
-- NEVER store JWT secret in code -- use environment variables via `pydantic-settings`
 - NEVER use `HS256` with a weak secret -- minimum 256-bit random key
 - NEVER skip token expiry (`exp` claim) -- always set reasonable TTL
 - NEVER trust client-provided user ID -- always derive from token
-- NEVER disable CORS in production -- configure it properly
+
+For CORS origin restrictions, see middleware rules. For secret storage, see shared secrets-management rules.

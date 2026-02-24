@@ -47,12 +47,12 @@ paths:
 
 - Define in Domain layer: `IRepository<T> where T : AggregateRoot`
 - Add specific query methods per aggregate (e.g., `GetWithLinesAsync`)
-- DO NOT expose `IQueryable` -- return concrete collections or single entities
+- See efcore.md for repository implementation rules (IQueryable exposure, Specification pattern)
 - DO NOT define generic CRUD-only repositories if every aggregate needs custom queries
 
 ## Anti-patterns
 
 - DO NOT create anemic domain models (public setters + logic in services) -- encapsulate behavior in entities
 - DO NOT expose mutable collections -- return `IReadOnlyList<T>` backed by private `List<T>`
-- DO NOT throw exceptions for business rule violations -- return `Result` objects
+- See result-pattern rules for error handling via Result objects
 - DO NOT reference other aggregates by navigation property -- reference by ID and load separately

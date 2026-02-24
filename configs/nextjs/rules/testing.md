@@ -10,47 +10,25 @@ paths:
 
 # Testing
 
-## Stack
+## Server Components
 
-- **Vitest** + **React Testing Library** for unit/integration tests (default)
-- **Playwright** for E2E tests
+DO test Server Components by calling them as async functions and asserting the result. Native async component testing in RTL is evolving; consider testing data-fetching and Server Actions separately as unit tests.
 
-## What to Test at Each Level
+## Server Actions
 
-| Level | What | Tools |
-|-------|------|-------|
-| Unit | Utils, hooks, store logic, Server Action validation | Vitest |
-| Integration | Component rendering, user interactions, form submissions | Vitest + RTL |
-| E2E | Critical user flows (auth, checkout, CRUD) | Playwright |
-
-## Key Directives
-
-- DO co-locate test files next to source: `component.tsx` + `component.test.tsx`
-- DO test Server Components by calling them as async functions and asserting the result. Native async component testing in RTL is evolving; consider testing data-fetching and Server Actions separately as unit tests.
-- DO test Server Actions as plain async functions with `FormData` input
-- DO mock `next/navigation` and `next/headers` in unit tests
-- DO use `vi.fn()` for callbacks and `vi.mock()` for modules
-- DO use `userEvent.setup()` over `fireEvent` — simulates real user behavior
-- DO use Page Object pattern in Playwright for maintainable E2E tests
-
-## Coverage Targets
-
-- >80% on business logic and Server Actions
-- All user interactions (clicks, form submissions, error states)
-- E2E for critical user flows only — not for unit-testable logic
+DO test Server Actions as plain async functions with `FormData` input.
+DO test `useActionState` flows by asserting pending state, returned data, and error states.
 
 ## Mocking Next.js
 
 Mock `next/navigation` (`useRouter`, `usePathname`, `useSearchParams`) and `next/headers` (`cookies`, `headers`) in unit tests. Both are commonly needed for Server Component and middleware tests.
 
-## Testing with Providers
+## MSW for Next.js
 
-DO create a `renderWithProviders` utility that wraps components in required context providers.
-DO NOT duplicate provider setup across test files.
+DO use MSW with the `next/server` adapter for mocking external API calls in integration tests.
+DO configure MSW handlers in a shared `mocks/` directory next to the app.
 
 ## Anti-Patterns
 
-- DO NOT test implementation details — test behavior and output
-- DO NOT write E2E tests for what unit tests cover — E2E is slow and flaky
-- DO NOT forget to reset mocks / store state in `beforeEach`
-- DO NOT skip error state testing — verify error boundaries and validation feedback
+- DO NOT import Server Components into client test files without mocking server-only modules
+- DO NOT skip error state testing — verify `error.tsx` boundaries and Server Action validation feedback

@@ -50,4 +50,4 @@ paths:
 
 - Do NOT return raw password hashes in API responses -- use `serializeAs: null` on password column
 - Do NOT check credentials manually in controllers -- delegate to auth guard or service
-- Do NOT mix guards in the same route group -- pick one guard per route group
+- Do NOT mix guards in the same route group — the first failing guard short-circuits, causing confusing 401s for valid users of other guard types
