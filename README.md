@@ -199,7 +199,7 @@ Cross-framework rules included by default (use `--minimal` to skip):
 | -------- | ----- | --------------- |
 | **conventions** | core, git, interaction, principles, documentation, npm, performance | Naming, commits, communication, SOLID, docs |
 | **quality** | testing-patterns, observability | AAA pattern, mocking, structured logging, tracing |
-| **security** | security, secrets-management | OWASP Top 10, env vars, vault patterns |
+| **security** | security, secrets-management | OWASP Top 10, mass assignment, file upload, CORS, supply chain, secrets |
 | **devops** | docker, ci-cd, nx | Dockerfile, GitHub Actions, Nx monorepo |
 | **domain** | accessibility, api-design | WCAG 2.1, REST conventions |
 | **lang** | typescript (3), python (10), csharp (3) | Language-specific patterns (auto-selected by tech) |
@@ -308,7 +308,7 @@ ai-rules update
 
 | Aspect     | Convention                                |
 | ---------- | ----------------------------------------- |
-| Components | Functional components with hooks          |
+| Components | Functional components, React Compiler      |
 | State      | useState, Context, Zustand/Jotai          |
 | Server     | TanStack Query for server state           |
 | Forms      | React 19 actions, useActionState          |
