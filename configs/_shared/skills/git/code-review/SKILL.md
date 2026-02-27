@@ -1,5 +1,5 @@
 ---
-name: review
+name: code-review
 description: Code review workflow with structured checklist
 argument-hint: [file-or-folder]
 ---

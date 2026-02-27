@@ -16,6 +16,7 @@ configs/
 ├── flask/            # Flask 3.0+ + Marshmallow
 ├── hono/             # Hono v4+ + Zod + Multi-runtime
 ├── elysia/           # Elysia v1.4+ + TypeBox + Bun
+├── electron/         # Electron 40+ + Forge + electron-vite
 └── _shared/
     ├── rules/        # Cross-tech conventions
     └── skills/       # Interactive workflows (/review, /debug, ...)

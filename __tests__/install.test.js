@@ -98,7 +98,7 @@ describe('ai-rules', () => {
 
       const skills = fs.readdirSync(skillsDir);
       expect(skills).toContain('learning');
-      expect(skills).toContain('review');
+      expect(skills).toContain('code-review');
       expect(skills).toContain('debug');
       expect(skills).toContain('explore');
 

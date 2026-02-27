@@ -67,6 +67,7 @@ npx @malamute/ai-rules <command>
 | **Flask**    | Marshmallow + SQLAlchemy 2.0 + pytest     | 3.0+    |
 | **Hono**     | Zod + Vitest + Multi-runtime              | 4+      |
 | **Elysia**   | TypeBox + Bun + Eden Treaty               | 1.4+    |
+| **Electron** | Forge + electron-vite + Vitest + Playwright | 40+    |
 
 ## Commands
 
@@ -160,7 +161,7 @@ Interactive workflows invoked with `/skill-name`:
 | Skill             | Description                               |
 | ----------------- | ----------------------------------------- |
 | `/learning`       | Pedagogical mode — explains before coding |
-| `/review`         | Code review with security/perf checklist  |
+| `/code-review`    | Code review with security/perf checklist  |
 | `/debug`          | Structured debugging workflow             |
 | `/spec`           | Write technical spec before implementing  |
 | `/sudden-death`   | Kill indecision with rapid-fire questions |
@@ -173,7 +174,7 @@ Interactive workflows invoked with `/skill-name`:
 | Skill             | Usage                         | Description                           |
 | ----------------- | ----------------------------- | ------------------------------------- |
 | `/learning`       | `/learning nextjs`            | Explains concepts before implementing |
-| `/review`         | `/review src/users/`          | Code review with checklist            |
+| `/code-review`    | `/code-review src/users/`     | Code review with checklist            |
 | `/spec`           | `/spec add auth`              | Technical specification               |
 | `/sudden-death`   | `/sudden-death backend`       | Kill indecision, get a verdict        |
 | `/debug`          | `/debug TypeError...`         | Systematic debugging                  |
@@ -417,6 +418,20 @@ ai-rules update
 | Routing    | Method chaining with end-to-end type inference  |
 | Tests      | bun:test + .handle() / Eden Treaty              |
 | Client     | Eden Treaty for type-safe client-server         |
+
+</details>
+
+<details>
+<summary><strong>Electron</strong></summary>
+
+| Aspect       | Convention                                      |
+| ------------ | ----------------------------------------------- |
+| Architecture | Main / Preload / Renderer process model         |
+| Build        | electron-vite (dev + build)                     |
+| Packaging    | Electron Forge                                  |
+| IPC          | invoke/handle, typed channels, contextBridge    |
+| Security     | contextIsolation, sandbox, strict CSP           |
+| Tests        | Vitest + Playwright `_electron.launch()`        |
 
 </details>
 

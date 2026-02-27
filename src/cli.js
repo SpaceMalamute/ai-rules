@@ -36,6 +36,8 @@ ${colors.bold('Technologies:')}
   dotnet     .NET 9 + EF Core
   fastapi    FastAPI + SQLAlchemy + Pydantic
   flask      Flask + SQLAlchemy + Marshmallow
+  ${colors.dim('Native')}
+  electron   Electron 40 + Forge + electron-vite
 
 ${colors.bold('AI Targets:')}
   claude     Claude Code (.claude/rules/)
@@ -110,6 +112,8 @@ async function interactiveInit() {
       { name: '.NET - .NET 9 + ASP.NET Core + EF Core', value: 'dotnet' },
       { name: 'FastAPI - FastAPI + SQLAlchemy 2.0 + Pydantic v2', value: 'fastapi' },
       { name: 'Flask - Flask + SQLAlchemy 2.0 + Marshmallow', value: 'flask' },
+      new Separator('── Native ──'),
+      { name: 'Electron - Electron 40 + Forge + electron-vite', value: 'electron' },
     ],
   });
 

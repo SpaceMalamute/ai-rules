@@ -70,6 +70,10 @@
     "elysia": {
       "type": "backend",
       "language": "typescript"
+    },
+    "electron": {
+      "type": "fullstack",
+      "language": "typescript"
     }
   },
   "ruleMapping": {
