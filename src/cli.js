@@ -38,6 +38,7 @@ ${colors.bold('Technologies:')}
   flask      Flask + SQLAlchemy + Marshmallow
   ${colors.dim('Native')}
   electron   Electron 40 + Forge + electron-vite
+  tauri      Tauri v2 + Rust + Vitest
 
 ${colors.bold('AI Targets:')}
   claude     Claude Code (.claude/rules/)
@@ -114,6 +115,7 @@ async function interactiveInit() {
       { name: 'Flask - Flask + SQLAlchemy 2.0 + Marshmallow', value: 'flask' },
       new Separator('── Native ──'),
       { name: 'Electron - Electron 40 + Forge + electron-vite', value: 'electron' },
+      { name: 'Tauri - Tauri v2 + Rust + TypeScript', value: 'tauri' },
     ],
   });
 

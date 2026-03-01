@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run tauri *)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run test*)",
+      "Bash(npm run lint*)",
+      "Bash(npm run format*)",
+      "Bash(npm run typecheck*)",
+      "Bash(npm install *)",
+      "Bash(npm ci)",
+      "Bash(npx tauri *)",
+      "Bash(cargo test *)",
+      "Bash(cargo test)",
+      "Bash(cargo clippy *)",
+      "Bash(cargo clippy)",
+      "Bash(cargo fmt *)",
+      "Bash(cargo fmt)",
+      "Bash(cargo build *)",
+      "Bash(cargo build)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Bash(git push)",
+      "Bash(rm -rf *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)",
+      "Read(**/certificates/**)",
+      "Read(**/src-tauri/gen/**)"
+    ]
+  },
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

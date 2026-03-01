@@ -17,6 +17,7 @@ configs/
 ├── hono/             # Hono v4+ + Zod + Multi-runtime
 ├── elysia/           # Elysia v1.4+ + TypeBox + Bun
 ├── electron/         # Electron 40+ + Forge + electron-vite
+├── tauri/            # Tauri v2+, Rust, Capabilities
 └── _shared/
     ├── rules/        # Cross-tech conventions
     └── skills/       # Interactive workflows (/review, /debug, ...)

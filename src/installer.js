@@ -356,6 +356,13 @@ export function listTechnologies() {
         { key: 'flask', desc: 'Flask + SQLAlchemy 2.0 + Marshmallow' },
       ],
     },
+    {
+      label: 'Native',
+      techs: [
+        { key: 'electron', desc: 'Electron 40 + Forge + electron-vite' },
+        { key: 'tauri', desc: 'Tauri v2 + Rust + TypeScript' },
+      ],
+    },
   ];
 
   for (const category of categories) {

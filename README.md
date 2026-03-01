@@ -68,6 +68,7 @@ npx @malamute/ai-rules <command>
 | **Hono**     | Zod + Vitest + Multi-runtime              | 4+      |
 | **Elysia**   | TypeBox + Bun + Eden Treaty               | 1.4+    |
 | **Electron** | Forge + electron-vite + Vitest + Playwright | 40+    |
+| **Tauri**    | Rust + Capabilities + Vitest + cargo test   | 2+     |
 
 ## Commands
 
@@ -432,6 +433,19 @@ ai-rules update
 | IPC          | invoke/handle, typed channels, contextBridge    |
 | Security     | contextIsolation, sandbox, strict CSP           |
 | Tests        | Vitest + Playwright `_electron.launch()`        |
+
+</details>
+
+<details>
+<summary><strong>Tauri</strong></summary>
+
+| Aspect       | Convention                                      |
+| ------------ | ----------------------------------------------- |
+| Architecture | Rust backend + TypeScript frontend              |
+| IPC          | invoke() commands, emit/listen events           |
+| Security     | Capabilities-based permissions, scoped FS       |
+| Config       | tauri.conf.json + capabilities/ directory       |
+| Tests        | Vitest + @tauri-apps/api/mocks, cargo test      |
 
 </details>
 

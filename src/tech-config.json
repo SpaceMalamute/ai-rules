@@ -74,6 +74,10 @@
     "electron": {
       "type": "fullstack",
       "language": "typescript"
+    },
+    "tauri": {
+      "type": "fullstack",
+      "language": "typescript"
     }
   },
   "ruleMapping": {
